@@ -17,6 +17,7 @@
     <Version>0.0.0</Version>
     <Product>OwlCore</Product>
     <Description>
+      An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
