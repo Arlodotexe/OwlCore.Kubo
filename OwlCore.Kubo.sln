@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.32802.463
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OwlCore.Kubo", "src\OwlCore.Kubo.csproj", "{595227CB-8079-47C1-B613-09B2095E11F9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OwlCore.Kubo.Tests", "tests\OwlCore.Kubo.Tests\OwlCore.Kubo.Tests.csproj", "{011C9F52-C41E-4799-83F2-E099FE142516}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{595227CB-8079-47C1-B613-09B2095E11F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{595227CB-8079-47C1-B613-09B2095E11F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{595227CB-8079-47C1-B613-09B2095E11F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{011C9F52-C41E-4799-83F2-E099FE142516}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{011C9F52-C41E-4799-83F2-E099FE142516}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{011C9F52-C41E-4799-83F2-E099FE142516}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{011C9F52-C41E-4799-83F2-E099FE142516}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
