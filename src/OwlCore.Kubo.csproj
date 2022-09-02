@@ -21,7 +21,7 @@
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
---- [0.1.1] ---
+--- 0.1.1 ---
 [Fixed]
 Fixed KuboBootstrapper failing to execute on Linux due to unset execute permission.
 
