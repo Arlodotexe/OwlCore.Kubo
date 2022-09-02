@@ -17,10 +17,16 @@
     <Version>0.0.0</Version>
     <Product>OwlCore</Product>
     <Description>
-
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.0.0 ---
+Initial release.
+
+[New]
+Added KuboBoostrapper.
+Added KuboDownloader.
+Added unit tests.
     </PackageReleaseNotes>
     <DebugType>embedded</DebugType>
     <NeutralLanguage>en</NeutralLanguage>
@@ -56,6 +62,8 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.0.0" />
+    <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.0.1" />
+    <PackageReference Include="OwlCore" Version="0.0.71" />
     <PackageReference Include="OwlCore.Storage" Version="0.2.0" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
