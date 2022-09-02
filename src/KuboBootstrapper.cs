@@ -1,6 +1,7 @@
 ﻿using OwlCore.Storage;
 using OwlCore.Storage.SystemIO;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace OwlCore.Kubo;
 
@@ -46,6 +47,11 @@ public class KuboBootstrapper : IDisposable
     {
         var executableBinary = await CopyToTempFolder(_kuboBinary, cancellationToken);
 
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            await SetExecutablePermissionsForBinary(executableBinary.Path);
+        }
+
         var processStartInfo = new ProcessStartInfo(executableBinary.Path, $"daemon --init --enable-pubsub-experiment --enable-namesys-pubsub --api /ip4/{ApiUri.Host}/tcp/{ApiUri.Port}");
         processStartInfo.EnvironmentVariables.Add("IPFS_PATH", RepoPath);
         processStartInfo.CreateNoWindow = true;
@@ -88,6 +94,22 @@ public class KuboBootstrapper : IDisposable
         }
     }
 
+    private Task SetExecutablePermissionsForBinary(string filePath)
+    {
+        // This should only be used on linux.
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            return Task.CompletedTask;
+
+        var proc = Process.Start("/bin/bash", $"-c \"chmod 777 {filePath}\"");
+
+#if NET5_0_OR_GREATER
+        return proc.WaitForExitAsync();
+#elif NETSTANDARD2_0_OR_GREATER
+        proc.WaitForExit();
+        return Task.CompletedTask;
+#endif
+    }
+
     /// <summary>
     /// Stops the bootstrapped process.
     /// </summary>
@@ -108,7 +130,7 @@ public class KuboBootstrapper : IDisposable
         var tempFolder = new SystemFolder(Path.GetTempPath());
         var newFolder = await tempFolder.CreateFolderAsync($"KuboBootstrapper-{Guid.NewGuid()}");
         var destination = (IModifiableFolder)newFolder;
-        
+
         var copiedFile = await destination.CreateCopyOfAsync(file, overwrite: true, cancellationToken);
 
         return (IAddressableFile)copiedFile;
