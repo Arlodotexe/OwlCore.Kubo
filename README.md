@@ -5,7 +5,7 @@ An essential toolkit for Kubo, IPFS and the distributed web.
 Highlighted features:
 - KuboDownloader. Automatically downloads and extracts the correct Kubo binary for the running operating system and architecture.
 - KuboBootstrapper. An easy process bootstrapper for the Kubo binary.
-- OwlCore.Storage implementations for immutable content on Ipfs.
+- [OwlCore.Storage](https://github.com/Arlodotexe/OwlCore.Storage) implementations for immutable content on Ipfs.
 
 Coming soon:
 - MFS implementations for OwlCore.Storage. 
