@@ -1,26 +1,25 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using OwlCore.Storage;
+﻿using OwlCore.Storage;
 using OwlCore.Storage.SystemIO;
+using System.Diagnostics;
 
 namespace OwlCore.Kubo;
 
 /// <summary>
 /// An easy bootstrapper for the Kubo binary.
 /// </summary>
-public class KuboBootstrapper
+public class KuboBootstrapper : IDisposable
 {
     private readonly IFile _kuboBinary;
-    private readonly Uri _apiUri;
 
-    public KuboBootstrapper(IFile kuboBinary, string repoPath, Uri apiUri)
+    /// <summary>
+    /// Create a new instance of <see cref="KuboBootstrapper"/>.
+    /// </summary>
+    /// <param name="kuboBinary">A kubo binary that is compatible with the currently running OS and Architecture.</param>
+    /// <param name="repoPath">The path to the kubo repository folder. Provided to Kubo.</param>
+    public KuboBootstrapper(IFile kuboBinary, string repoPath)
     {
         RepoPath = repoPath;
         _kuboBinary = kuboBinary;
-        _apiUri = apiUri;
     }
 
     /// <summary>
@@ -29,15 +28,25 @@ public class KuboBootstrapper
     public Process? Process { get; set; }
 
     /// <summary>
-    /// The path to the kubo repository folder.
+    /// The path to the kubo repository folder. Provided to Kubo.
     /// </summary>
     public string RepoPath { get; }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    /// <summary>
+    /// The address where the API should be hosted. Provided to Kubo.
+    /// </summary>
+    public Uri ApiUri { get; set; } = new Uri("http://127.0.0.1:5001");
+
+    /// <summary>
+    /// Loads the binary and starts it in a new process.
+    /// </summary>
+    /// <param name="cancellationToken">Cancels the startup process.</param>
+    /// <returns></returns>
+    public async Task StartAsync(CancellationToken cancellationToken = default)
     {
         var executableBinary = await CopyToTempFolder(_kuboBinary, cancellationToken);
 
-        var processStartInfo = new ProcessStartInfo(executableBinary.Path, $"daemon --init --enable-pubsub-experiment --enable-namesys-pubsub --api /ip4/{_apiUri.Host}/tcp/{_apiUri.Port}");
+        var processStartInfo = new ProcessStartInfo(executableBinary.Path, $"daemon --init --enable-pubsub-experiment --enable-namesys-pubsub --api /ip4/{ApiUri.Host}/tcp/{ApiUri.Port}");
         processStartInfo.EnvironmentVariables.Add("IPFS_PATH", RepoPath);
         processStartInfo.CreateNoWindow = true;
 
@@ -54,6 +63,8 @@ public class KuboBootstrapper
 
         Process.Start();
 
+        var cancellationCleanup = cancellationToken.Register(() => Process.Dispose());
+
         Process.BeginOutputReadLine();
         Process.BeginErrorReadLine();
 
@@ -68,6 +79,8 @@ public class KuboBootstrapper
 
         Process.OutputDataReceived -= Process_OutputDataReceived;
 
+        cancellationCleanup.Dispose();
+
         void Process_OutputDataReceived(object? sender, DataReceivedEventArgs e)
         {
             if (e.Data?.Contains("Daemon is ready") ?? false)
@@ -75,6 +88,9 @@ public class KuboBootstrapper
         }
     }
 
+    /// <summary>
+    /// Stops the bootstrapped process.
+    /// </summary>
     public void Stop()
     {
         if (Process is not null && !Process.HasExited)
@@ -94,5 +110,14 @@ public class KuboBootstrapper
         var copiedFile = await tempFolder.CreateCopyOfAsync(file, overwrite: true, cancellationToken);
 
         return (IAddressableFile)copiedFile;
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        if (Process is not null && !Process.HasExited)
+            Process.Kill();
+
+        Process?.Dispose();
     }
 }
