@@ -23,12 +23,30 @@ namespace OwlCore.Kubo
         /// <summary>
         /// Automatically downloads and extracts the correct Kubo binary for the running operating system and architecture, returning the downloaded binary.
         /// </summary>
-        public async Task<IFile> DownloadBinaryAsync(CancellationToken cancellationToken = default)
+        public async Task<IFile> DownloadLatestBinaryAsync(CancellationToken cancellationToken = default)
         {
             _client ??= new HttpClient(HttpMessageHandler);
 
             var latestVersion = await FindLatestVersion(_client);
             var downloadLink = await GetDownloadLink(_client, rootUrl: $"https://dist.ipfs.tech/kubo/{latestVersion}");
+            using var downloadStream = await _client.GetStreamAsync(downloadLink);
+            var file = await ArchiveCrawlForKuboBinary(downloadStream, cancellationToken);
+
+            Guard.IsNotNull(file);
+            return file;
+        }
+
+        /// <summary>
+        /// Automatically downloads and extracts the correct Kubo binary for the running operating system and architecture, returning the downloaded binary.
+        /// </summary>
+        public async Task<IFile> DownloadBinaryAsync(Version version, CancellationToken cancellationToken = default)
+        {
+            _client ??= new HttpClient(HttpMessageHandler);
+            Guard.IsGreaterThan(version.Major, -1);
+            Guard.IsGreaterThan(version.Minor, -1);
+            Guard.IsGreaterThan(version.Build, -1);
+
+            var downloadLink = await GetDownloadLink(_client, rootUrl: $"https://dist.ipfs.tech/kubo/v{version.Major}.{version.Minor}.{version.Build}");
             using var downloadStream = await _client.GetStreamAsync(downloadLink);
             var file = await ArchiveCrawlForKuboBinary(downloadStream, cancellationToken);
 

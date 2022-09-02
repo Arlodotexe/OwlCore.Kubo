@@ -9,7 +9,7 @@ namespace OwlCore.Kubo.Tests
         public async Task DownloadAndBootstrapAsync()
         {
             var downloader = new KuboDownloader();
-            var kuboBinary = await downloader.DownloadBinaryAsync();
+            var kuboBinary = await downloader.DownloadLatestBinaryAsync();
 
             using var bootstrapper = new KuboBootstrapper(kuboBinary, Path.GetTempPath())
             {
@@ -18,13 +18,6 @@ namespace OwlCore.Kubo.Tests
 
             await bootstrapper.StartAsync();
             bootstrapper.Stop();
-        }
-        
-        public static byte[] ToByteArray(Stream input)
-        {
-            MemoryStream ms = new MemoryStream();
-            input.CopyTo(ms);
-            return ms.ToArray();
         }
     }
 }
