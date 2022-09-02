@@ -106,8 +106,10 @@ public class KuboBootstrapper : IDisposable
     private async Task<IAddressableFile> CopyToTempFolder(IFile file, CancellationToken cancellationToken)
     {
         var tempFolder = new SystemFolder(Path.GetTempPath());
-
-        var copiedFile = await tempFolder.CreateCopyOfAsync(file, overwrite: true, cancellationToken);
+        var newFolder = await tempFolder.CreateFolderAsync($"KuboBootstrapper-{Guid.NewGuid()}");
+        var destination = (IModifiableFolder)newFolder;
+        
+        var copiedFile = await destination.CreateCopyOfAsync(file, overwrite: true, cancellationToken);
 
         return (IAddressableFile)copiedFile;
     }
