@@ -8,5 +8,16 @@ Highlighted features:
 - [OwlCore.Storage](https://github.com/Arlodotexe/OwlCore.Storage) implementations for immutable content on Ipfs.
 
 Coming soon:
-- MFS implementations for OwlCore.Storage. 
+- MFS implementations for OwlCore.Storage.
 - Join a swarm of devices with a preshared key, and securely communicate with OAuth-inspired message encryption over pubsub.
+
+## Getting started
+
+Published releases are available on [NuGet](https://www.nuget.org/packages/OwlCore.Kubo).  To install, run the following command in the [Package Manager Console](https://docs.nuget.org/docs/start-here/using-the-package-manager-console).
+
+    PM> Install-Package OwlCore.Kubo
+    
+Or using [dotnet](https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet)
+
+    > dotnet add package OwlCore.Kubo
+
