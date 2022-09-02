@@ -14,13 +14,22 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.0.0</Version>
+    <Version>0.1.0</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.1.0 ---
+[New]
+Added basic OwlCore.Storage implementations of IpfsFolder and IpfsFile.
+Renamed KuboDownloader.DownloadBinaryAsync to KuboDownload.DownloadLatestBinaryAsync.
+Added KuboDownloader.DownloadBinaryAsync, which takes a specific Version to install.
+
+[Improvements]
+Unit tests will now automatically use a local node when it's available, falling back to an embedded node if needed.
+
 --- 0.0.0 ---
 Initial release.
 
