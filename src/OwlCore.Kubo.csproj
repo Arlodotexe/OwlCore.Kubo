@@ -14,13 +14,17 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.1.1</Version>
+    <Version>0.1.2</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.1.2 ---
+[Improvement]
+Updated packages. Removes various transitive dependencies.
+
 --- 0.1.1 ---
 [Fixed]
 Fixed KuboBootstrapper failing to execute on Linux due to unset execute permission.
@@ -76,7 +80,7 @@ Added unit tests.
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.0.0" />
-    <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.0.1" />
+    <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.0.3" />
     <PackageReference Include="OwlCore" Version="0.0.71" />
     <PackageReference Include="OwlCore.Storage" Version="0.2.0" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
