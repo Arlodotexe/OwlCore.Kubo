@@ -56,9 +56,15 @@ namespace OwlCore.Kubo
                 var linkedItemInfo = await _client.FileSystem.ListFileAsync(link.Id, cancellationToken);
 
                 if (linkedItemInfo.IsDirectory)
-                    yield return new IpfsFolder(link.Id, link.Name, _client);
+                {
+                    if (type.HasFlag(StorableType.Folder))
+                        yield return new IpfsFolder(linkedItemInfo.Id, link.Name, _client);
+                }
                 else
-                    yield return new IpfsFile(link.Id, link.Name, _client);
+                {
+                    if (type.HasFlag(StorableType.File))
+                        yield return new IpfsFile(linkedItemInfo.Id, link.Name, _client);
+                }
             }
 
         }
