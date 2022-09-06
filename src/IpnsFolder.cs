@@ -1,9 +1,8 @@
-﻿using System.Collections.Concurrent;
-using System.Runtime.CompilerServices;
-using CommunityToolkit.Diagnostics;
+﻿using CommunityToolkit.Diagnostics;
 using Ipfs.Http;
 using OwlCore.Extensions;
 using OwlCore.Storage;
+using System.Runtime.CompilerServices;
 
 namespace OwlCore.Kubo;
 
@@ -38,7 +37,7 @@ public class IpnsFolder : IMutableFolder
     public TimeSpan UpdateCheckInterval { get; } = TimeSpan.FromMinutes(5);
 
     /// <inheritdoc />
-    public async IAsyncEnumerable<IStorable> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<IAddressableStorable> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var resolvedIpns = await _client.ResolveAsync(Id, recursive: true, cancel: cancellationToken);
         Guard.IsNotNull(resolvedIpns);

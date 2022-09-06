@@ -29,6 +29,7 @@ public class IpnsFile : IFile
     /// <inheritdoc />
     public string Name { get; protected set; }
 
+    /// <inheritdoc />
     public async Task<Stream> OpenStreamAsync(FileAccess accessMode = FileAccess.Read, CancellationToken cancellationToken = default)
     {
         var resolvedIpns = await _client.ResolveAsync(Id, recursive: true, cancel: cancellationToken);

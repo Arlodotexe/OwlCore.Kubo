@@ -16,7 +16,7 @@ public class IpnsFolderTimerWatcher : IFolderWatcher
     private readonly Timer _timer;
 
     private Cid? _lastKnownRootCid;
-    private List<IStorable> _knownItems = new();
+    private List<IAddressableStorable> _knownItems = new();
 
     /// <summary>
     /// Creates a new instance of <see cref="IpnsFolderTimerWatcher"/>.

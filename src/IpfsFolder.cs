@@ -45,7 +45,7 @@ namespace OwlCore.Kubo
         public string Name { get; }
 
         /// <inheritdoc/>
-        public virtual async IAsyncEnumerable<IStorable> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public virtual async IAsyncEnumerable<IAddressableStorable> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var itemInfo = await _client.FileSystem.ListFileAsync(Id, cancellationToken);
             Guard.IsTrue(itemInfo.IsDirectory);
