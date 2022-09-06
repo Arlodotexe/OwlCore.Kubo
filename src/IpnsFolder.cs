@@ -1,5 +1,6 @@
-﻿using CommunityToolkit.Diagnostics;
-using Ipfs;
+﻿using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
+using CommunityToolkit.Diagnostics;
 using Ipfs.Http;
 using OwlCore.Extensions;
 using OwlCore.Storage;
@@ -9,7 +10,7 @@ namespace OwlCore.Kubo;
 /// <summary>
 /// A folder that resides on IPFS behind an IPNS Address.
 /// </summary>
-public class IpnsFolder : IFolder
+public class IpnsFolder : IMutableFolder
 {
     private readonly IpfsClient _client;
 
@@ -31,8 +32,13 @@ public class IpnsFolder : IFolder
     /// <inheritdoc />
     public string Name { get; protected set; }
 
+    /// <summary>
+    /// The interval that IPNS should be checked for updates.
+    /// </summary>
+    public TimeSpan UpdateCheckInterval { get; } = TimeSpan.FromMinutes(5);
+
     /// <inheritdoc />
-    public async IAsyncEnumerable<IStorable> GetItemsAsync(StorableType type = StorableType.All, CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<IStorable> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var resolvedIpns = await _client.ResolveAsync(Id, recursive: true, cancel: cancellationToken);
         Guard.IsNotNull(resolvedIpns);
@@ -60,5 +66,11 @@ public class IpnsFolder : IFolder
             }
 
         }
+    }
+
+    /// <inheritdoc/>
+    public Task<IFolderWatcher> GetFolderWatcherAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult<IFolderWatcher>(new IpnsFolderTimerWatcher(_client, this, UpdateCheckInterval));
     }
 }

@@ -14,13 +14,17 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.2.0</Version>
+    <Version>0.2.1</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.2.1 ---
+[New]
+IpnsFolder now implements IMutableFolder. The folder watcher used is timer based, and periodically diffs the content.
+
 --- 0.2.0 ---
 [Breaking]
 Inheriting breaking changes from OwlCore.Storage. See release notes for 0.4.0.
