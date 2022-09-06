@@ -1,32 +1,29 @@
 ﻿using CommunityToolkit.Diagnostics;
-using Ipfs;
 using Ipfs.Http;
 using OwlCore.Storage;
 
 namespace OwlCore.Kubo;
 
 /// <summary>
-/// An addressable file that resides on IPFS.
+/// An addressable folder that resides on IPFS behind an IPNS Address.
 /// </summary>
-public class AddressableIpfsFile : IpfsFile, IAddressableFile, IAddressableIpfsStorable
+public class AddressableIpnsFolder : IpnsFolder, IAddressableFolder, IAddressableIpfsStorable
 {
     /// <summary>
-    /// Creates a new instance of <see cref="IpfsFile"/>.
+    /// Creates a new instance of <see cref="AddressableIpfsFolder"/>.
     /// </summary>
-    /// <param name="cid">The CID of the file, such as "QmXg9Pp2ytZ14xgmQjYEiHjVjMFXzCVVEcRTWJBmLgR39V".</param>
-    /// <param name="name">The name of the file.</param>
+    /// <param name="ipnsAddress">A resolvable IPNS address, such as "ipfs.tech" or "k51qzi5uqu5dip7dqovvkldk0lz03wjkc2cndoskxpyh742gvcd5fw4mudsorj".</param>
+    /// <param name="name">The name of the file, provided by the parent folder.</param>
     /// <param name="client">The IPFS Client to use for retrieving the content.</param>
     /// <param name="parentChain">A list of parent folders. The first item is the root, the last item is the parent.</param>
-    public AddressableIpfsFile(Cid cid, string name, IpfsClient client, IFolder[] parentChain)
-        : base(cid, name, client)
+    public AddressableIpnsFolder(string ipnsAddress, string name, IpfsClient client, IFolder[] parentChain)
+        : base(ipnsAddress, client)
     {
+        Name = name;
         Guard.IsGreaterThanOrEqualTo(parentChain.Length, 1);
-
-        if (parentChain.Length == 1)
-            Path = $"/ipfs/{cid}/{name}";
-        else
-            Path = $"/ipfs/{cid}/{string.Join("/", parentChain.Select(x => x.Name))}/{name}";
-
+        Path = $"{ipnsAddress}/{string.Join("/", parentChain.Select(x => x.Name))}";
+        Id = Path;
+        Name = name;
         ParentChain = parentChain;
     }
 

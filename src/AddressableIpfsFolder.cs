@@ -8,7 +8,7 @@ namespace OwlCore.Kubo;
 /// <summary>
 /// An addressable folder that resides on IPFS.
 /// </summary>
-public class AddressableIpfsFolder : IpfsFolder, IAddressableFolder
+public class AddressableIpfsFolder : IpfsFolder, IAddressableFolder, IAddressableIpfsStorable
 {
     /// <summary>
     /// Creates a new instance of <see cref="AddressableIpfsFolder"/>.
@@ -20,8 +20,8 @@ public class AddressableIpfsFolder : IpfsFolder, IAddressableFolder
         : base(cid, client)
     {
         Guard.IsGreaterThanOrEqualTo(parentChain.Length, 1);
+        Path = $"/ipfs/{cid}/{string.Join("/", parentChain.Select(x => x.Name))}";
         ParentChain = parentChain;
-        Path = string.Join("/", parentChain.Select(x => x.Name));
     }
 
     /// <summary>
@@ -35,8 +35,8 @@ public class AddressableIpfsFolder : IpfsFolder, IAddressableFolder
         : base(cid, name, client)
     {
         Guard.IsGreaterThanOrEqualTo(parentChain.Length, 1);
+        Path = $"/ipfs/{cid}/{string.Join("/", parentChain.Select(x => x.Name))}";
         ParentChain = parentChain;
-        Path = string.Join("/", parentChain.Select(x => x.Name));
     }
 
     /// <summary>

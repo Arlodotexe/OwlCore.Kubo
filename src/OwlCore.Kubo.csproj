@@ -27,6 +27,7 @@ Inheriting breaking changes from OwlCore.Storage. See release notes for 0.4.0.
 
 [New]
 Added AddressableIpfsFile and AddressableIpfsFolder. Any item returned from a folder will now implement IAddressableStorage, allowing you to traverse back to the root folder.
+Added IpnsFile and IpnsFolder, with properly transforming IDs during traversal. For example, you can start with a new IpnsFolder("/ipns/ipfs.tech"), and calling GetItemsAsync recursively could yield you with a file or folder with an ID and path of "/ipns/ipfs.tech/some/really/deep/path/".
 
 --- 0.1.4 ---
 Fixed IpfsFolder.GetItemsAsync returning all items, regardless of the StorableType used.
