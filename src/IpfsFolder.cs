@@ -45,7 +45,7 @@ namespace OwlCore.Kubo
         public string Name { get; }
 
         /// <inheritdoc/>
-        public async IAsyncEnumerable<IStorable> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public virtual async IAsyncEnumerable<IStorable> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var itemInfo = await _client.FileSystem.ListFileAsync(Id, cancellationToken);
             Guard.IsTrue(itemInfo.IsDirectory);
@@ -58,12 +58,12 @@ namespace OwlCore.Kubo
                 if (linkedItemInfo.IsDirectory)
                 {
                     if (type.HasFlag(StorableType.Folder))
-                        yield return new IpfsFolder(linkedItemInfo.Id, link.Name, _client);
+                        yield return new AddressableIpfsFolder(linkedItemInfo.Id, link.Name, _client, new IFolder[] { this });
                 }
                 else
                 {
                     if (type.HasFlag(StorableType.File))
-                        yield return new IpfsFile(linkedItemInfo.Id, link.Name, _client);
+                        yield return new AddressableIpfsFile(linkedItemInfo.Id, link.Name, _client, new IFolder[] { this });
                 }
             }
 
