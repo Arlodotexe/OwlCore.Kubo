@@ -14,13 +14,20 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.1.4</Version>
+    <Version>0.2.0</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.2.0 ---
+[Breaking]
+Inheriting breaking changes from OwlCore.Storage. See release notes for 0.4.0.
+
+[New]
+Added AddressableIpfsFile and AddressableIpfsFolder. Any item returned from a folder will now implement IAddressableStorage, allowing you to traverse back to the root folder.
+
 --- 0.1.4 ---
 Fixed IpfsFolder.GetItemsAsync returning all items, regardless of the StorableType used.
 
@@ -88,7 +95,7 @@ Added unit tests.
     <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.0.0" />
     <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.0.3" />
     <PackageReference Include="OwlCore" Version="0.0.71" />
-    <PackageReference Include="OwlCore.Storage" Version="0.3.1" />
+    <PackageReference Include="OwlCore.Storage" Version="0.4.0" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
     <PackageReference Include="SharpCompress" Version="0.32.2" />
