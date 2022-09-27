@@ -27,13 +27,14 @@
             var rootFolder = new MfsFolder("/", KuboAccess.Ipfs);
             var file = await rootFolder.CreateFileAsync("test.bin", overwrite: true);
 
-            // Write random data
-            using var stream = new MfsStream("/test.bin", 0, KuboAccess.Ipfs);
+            // Write random data, manually testing MfsStream (instead of opening MfsStream from file)
             var randomData = GenerateRandomData(256);
-            stream.Write(randomData, 0, 256);
-            stream.Flush();
+            using (var stream = new MfsStream("/test.bin", 0, KuboAccess.Ipfs))
+            {
+                stream.Write(randomData, 0, 256);
+            }
 
-            // Read data back via file.
+            // Open MfsStream from file, as standard stream.
             using var fileStream = await file.OpenStreamAsync();
 
             var buffer = new byte[256];

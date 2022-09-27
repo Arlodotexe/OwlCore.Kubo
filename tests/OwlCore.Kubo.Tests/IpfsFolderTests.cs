@@ -1,8 +1,5 @@
-﻿using Ipfs.Http;
-using OwlCore.Storage;
+﻿using OwlCore.Storage;
 using System.Diagnostics;
-using System.IO;
-using System.Threading.Channels;
 
 namespace OwlCore.Kubo.Tests
 {

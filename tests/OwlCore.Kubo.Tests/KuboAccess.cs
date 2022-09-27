@@ -1,10 +1,5 @@
 ﻿using Ipfs.Http;
-using OwlCore.Provisos;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using OwlCore.Extensions;
 
 namespace OwlCore.Kubo.Tests
 {
@@ -23,7 +18,7 @@ namespace OwlCore.Kubo.Tests
             if (IsInitialized)
                 return;
 
-            using (await Flow.EasySemaphore(_setupSemaphore))
+            using (await _setupSemaphore.DisposableWaitAsync())
             {
                 if (IsInitialized)
                     return;
@@ -40,7 +35,7 @@ namespace OwlCore.Kubo.Tests
                     var downloader = new KuboDownloader();
                     var kuboBinary = await downloader.DownloadLatestBinaryAsync();
 
-                    Bootstrapper = new KuboBootstrapper(kuboBinary, Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()))
+                    Bootstrapper = new KuboBootstrapper(kuboBinary, repoPath: Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}"))
                     {
                         ApiUri = new Uri("http://127.0.0.1:5577"),
                     };

@@ -14,13 +14,20 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.4.0</Version>
+    <Version>0.5.0</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.5.0 ---
+[Improvements]
+Updated to OwlCore 0.1.0. Removes a number of uneeded transient dependencies.
+
+[Breaking]
+All breaking changes from OwlCore 0.1.0 have been inherited. See release notes for OwlCore 0.1.0.
+
 --- 0.4.0 ---
 [New]
 Added MfsFile and MfsFolder. MFS acts like a regular name-based filesystem. You can add, remove, move, and edit MFS files, but the actual content is on IPFS, and can be distributed like any other content on IPFS. MfsFolder is modifiable, so it can be hotswapped for SystemFolder, WindowsStorageFolder, etc. for the vast majority of use cases
@@ -57,7 +64,7 @@ Fixed IpfsFolder.GetItemsAsync returning all items, regardless of the StorableTy
 Updated OwlCore.Storage dependency to the latest version.
 
 --- 0.1.2 ---
-[Improvement]
+[Improvements]
 Updated packages. Removes various transitive dependencies.
 
 --- 0.1.1 ---
@@ -116,7 +123,7 @@ Added unit tests.
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.0.0" />
     <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.0.3" />
-    <PackageReference Include="OwlCore" Version="0.0.71" />
+    <PackageReference Include="OwlCore" Version="0.1.0" />
     <PackageReference Include="OwlCore.Storage" Version="0.5.0" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
