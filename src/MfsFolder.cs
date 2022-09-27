@@ -135,7 +135,7 @@ namespace OwlCore.Kubo
             var parentDirectoryName = isFolder ? System.IO.Path.GetDirectoryName(System.IO.Path.GetDirectoryName(relativePath)) : System.IO.Path.GetDirectoryName(relativePath);
 
             // It also doesn't return a string that has a path separator at the end.
-            return parentDirectoryName.Replace('\\', '/') + (isFolder ? directorySeparatorChar : string.Empty);
+            return parentDirectoryName?.Replace('\\', '/') + (isFolder ? directorySeparatorChar : string.Empty) ?? string.Empty;
         }
 
         internal static string GetParentDirectoryName(string relativePath)
