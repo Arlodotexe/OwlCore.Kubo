@@ -8,7 +8,7 @@ namespace OwlCore.Kubo;
 /// <summary>
 /// An addressable folder that resides on IPFS.
 /// </summary>
-public class AddressableIpfsFolder : IpfsFolder, IAddressableFolder, IAddressableIpfsStorable
+public class AddressableIpfsFolder : IpfsFolder, IAddressableFolder, IChainedAddressableStorable
 {
     /// <summary>
     /// Creates a new instance of <see cref="AddressableIpfsFolder"/>.

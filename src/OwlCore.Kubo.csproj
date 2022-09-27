@@ -14,13 +14,26 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.3.0</Version>
+    <Version>0.4.0</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.4.0 ---
+[New]
+Added MfsFile and MfsFolder. MFS acts like a regular name-based filesystem. You can add, remove, move, and edit MFS files, but the actual content is on IPFS, and can be distributed like any other content on IPFS. MfsFolder is modifiable, so it can be hotswapped for SystemFolder, WindowsStorageFolder, etc. for the vast majority of use cases
+Added MfsStream. This is a standard System.IO.Stream implementation that reads directly from a file in MFS.
+
+[Fixed]
+Fixed invalid NotifyCollectionChanged arguments that prevented TimerBasedIpnsWatcher from working.
+
+[Breaking]
+All folder watchers now reside in the namespace OwlCore.Kubo.FolderWatchers.
+Renamed IpnsFolderTimerWatcher to TimerBasedIpnsWatcher.
+Renamed IAddressableIpfsStorable to IChainedAddressableStorable.
+
 --- 0.3.0 ---
 [Breaking]
 Inheriting breaking changes from OwlCore.Storage. See release notes for 0.5.0.
@@ -35,7 +48,7 @@ Inheriting breaking changes from OwlCore.Storage. See release notes for 0.4.0.
 
 [New]
 Added AddressableIpfsFile and AddressableIpfsFolder. Any item returned from a folder will now implement IAddressableStorage, allowing you to traverse back to the root folder.
-Added IpnsFile and IpnsFolder, with properly transforming IDs during traversal. For example, you can start with a new IpnsFolder("/ipns/ipfs.tech"), and calling GetItemsAsync recursively could yield you with a file or folder with an ID and path of "/ipns/ipfs.tech/some/really/deep/path/".
+Added IpnsFile and IpnsFolder, with properly transforming IDs during traversal. For example, you can start with a new IpnsFolder("/ipns/ipfs.tech"), and calling GetItemsAsync recursively could yield you with a file or folderwith an ID and path of "/ipns/ipfs.tech/some/really/deep/path/".
 
 --- 0.1.4 ---
 Fixed IpfsFolder.GetItemsAsync returning all items, regardless of the StorableType used.

@@ -66,7 +66,6 @@ namespace OwlCore.Kubo
                         yield return new AddressableIpfsFile(linkedItemInfo.Id, link.Name, _client, new IFolder[] { this });
                 }
             }
-
         }
     }
 }

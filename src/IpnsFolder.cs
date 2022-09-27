@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Diagnostics;
 using Ipfs.Http;
 using OwlCore.Extensions;
+using OwlCore.Kubo.FolderWatchers;
 using OwlCore.Storage;
 using System.Runtime.CompilerServices;
 
@@ -34,7 +35,7 @@ public class IpnsFolder : IMutableFolder
     /// <summary>
     /// The interval that IPNS should be checked for updates.
     /// </summary>
-    public TimeSpan UpdateCheckInterval { get; } = TimeSpan.FromMinutes(5);
+    public TimeSpan UpdateCheckInterval { get; } = TimeSpan.FromMinutes(1);
 
     /// <inheritdoc />
     public async IAsyncEnumerable<IAddressableStorable> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -50,7 +51,7 @@ public class IpnsFolder : IMutableFolder
         {
             if (item is IFolder subFolder)
             {
-                if (item is IAddressableIpfsStorable addressableSubFolder)
+                if (item is IChainedAddressableStorable addressableSubFolder)
                     yield return new AddressableIpnsFolder(Id, subFolder.Name, _client, addressableSubFolder.ParentChain.Concat(((IFolder)this).IntoList()).ToArray());
                 else
                     yield return new AddressableIpnsFolder(Id, subFolder.Name, _client, new IFolder[] { this });
@@ -58,7 +59,7 @@ public class IpnsFolder : IMutableFolder
 
             if (item is IFile file)
             {
-                if (item is IAddressableIpfsStorable addressableFile)
+                if (item is IChainedAddressableStorable addressableFile)
                     yield return new AddressableIpnsFile(Id, file.Name, _client, addressableFile.ParentChain.Concat(((IFolder)this).IntoList()).ToArray());
                 else
                     yield return new AddressableIpnsFile(Id, file.Name, _client, new IFolder[] { this });
@@ -70,6 +71,6 @@ public class IpnsFolder : IMutableFolder
     /// <inheritdoc/>
     public Task<IFolderWatcher> GetFolderWatcherAsync(CancellationToken cancellationToken = default)
     {
-        return Task.FromResult<IFolderWatcher>(new IpnsFolderTimerWatcher(_client, this, UpdateCheckInterval));
+        return Task.FromResult<IFolderWatcher>(new TimerBasedIpnsWatcher(_client, this, UpdateCheckInterval));
     }
 }

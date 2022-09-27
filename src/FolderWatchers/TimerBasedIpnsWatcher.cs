@@ -5,41 +5,38 @@ using Ipfs.Http;
 using OwlCore.Extensions;
 using OwlCore.Storage;
 
-namespace OwlCore.Kubo;
+namespace OwlCore.Kubo.FolderWatchers;
 
 /// <summary>
-/// Watches the provided IpnsFolder for changes to the contents.
+/// Checks the provided IpnsFolder for changes to the contents at an interval.
 /// </summary>
-public class IpnsFolderTimerWatcher : IFolderWatcher
+public class TimerBasedIpnsWatcher : TimerBasedFolderWatcher
 {
     private readonly IpfsClient _ipfsClient;
-    private readonly Timer _timer;
 
     private Cid? _lastKnownRootCid;
     private List<IAddressableStorable> _knownItems = new();
 
     /// <summary>
-    /// Creates a new instance of <see cref="IpnsFolderTimerWatcher"/>.
+    /// Creates a new instance of <see cref="TimerBasedIpnsWatcher"/>.
     /// </summary>
     /// <param name="ipfsClient">The IpfsClient used to check for changes to the IPNS address.</param>
     /// <param name="folder">The folder being watched for changes.</param>
     /// <param name="interval">The interval that IPNS should be checked for updates.</param>
-    public IpnsFolderTimerWatcher(IpfsClient ipfsClient, IpnsFolder folder, TimeSpan interval)
+    public TimerBasedIpnsWatcher(IpfsClient ipfsClient, IpnsFolder folder, TimeSpan interval)
+        : base(folder, interval)
     {
         _ipfsClient = ipfsClient;
-        Folder = folder;
-
-        _timer = new Timer(_ => ExecuteAsync().Forget());
-        _timer.Change(TimeSpan.MinValue, interval);
     }
 
     /// <inheritdoc/>
-    public event NotifyCollectionChangedEventHandler? CollectionChanged;
+    public override event NotifyCollectionChangedEventHandler? CollectionChanged;
 
-    /// <inheritdoc/>
-    public IMutableFolder Folder { get; }
-
-    private async Task ExecuteAsync()
+    /// <summary>
+    /// Executes the folder check.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
+    public override async Task ExecuteAsync()
     {
         var ipnsPath = Folder.Id;
 
@@ -55,22 +52,15 @@ public class IpnsFolderTimerWatcher : IFolderWatcher
         var folder = new IpfsFolder(cid, _ipfsClient);
         var items = await folder.GetItemsAsync().ToListAsync();
 
-        CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, items, _knownItems));
-        CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, items, _knownItems));
+        var addedItems = items.Except(_knownItems).ToList();
+        var removedItems = _knownItems.Except(addedItems).ToList();
+
+        if (addedItems.Count >= 1)
+            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, addedItems));
+
+        if (removedItems.Count >= 1)
+            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, removedItems));
 
         _knownItems = items;
-    }
-
-    /// <inheritdoc/>
-    public void Dispose()
-    {
-        _timer.Dispose();
-    }
-
-    /// <inheritdoc/>
-    public ValueTask DisposeAsync()
-    {
-        Dispose();
-        return default;
     }
 }

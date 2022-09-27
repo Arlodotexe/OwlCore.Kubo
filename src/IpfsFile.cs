@@ -9,8 +9,6 @@ namespace OwlCore.Kubo;
 /// </summary>
 public class IpfsFile : IFile
 {
-    private readonly IpfsClient _client;
-
     /// <summary>
     /// Creates a new instance of <see cref="IpfsFile"/>.
     /// </summary>
@@ -20,7 +18,7 @@ public class IpfsFile : IFile
     {
         Name = cid;
         Id = cid;
-        _client = client;
+        Client = client;
     }
 
     /// <summary>
@@ -33,8 +31,13 @@ public class IpfsFile : IFile
     {
         Name = !string.IsNullOrWhiteSpace(name) ? name : cid;
         Id = cid;
-        _client = client;
+        Client = client;
     }
+
+    /// <summary>
+    /// The IPFS Client to use for retrieving the content.
+    /// </summary>
+    protected IpfsClient Client { get; }
 
     /// <inheritdoc/>
     public string Id { get; }
@@ -48,7 +51,7 @@ public class IpfsFile : IFile
         if (accessMode.HasFlag(FileAccess.Write))
             throw new NotSupportedException("Attempted to write data to an immutable file on IPFS.");
 
-        return _client.FileSystem.ReadFileAsync(Id, cancellationToken);
+        return Client.FileSystem.ReadFileAsync(Id, cancellationToken);
     }
 }
 
