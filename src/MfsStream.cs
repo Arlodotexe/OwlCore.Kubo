@@ -47,7 +47,7 @@ public class MfsStream : Stream
     /// <inheritdoc/>
     public override void Flush()
     {
-        FlushAsync(CancellationToken.None).GetResultOrDefault();
+        _ = _client.DoCommandAsync("files/flush", CancellationToken.None, _path).Result;
     }
 
     /// <inheritdoc/>

@@ -73,7 +73,6 @@
             using var stream = new MfsStream("/test.bin", 0, KuboAccess.Ipfs);
             var randomData = GenerateRandomData(256);
             await stream.WriteAsync(randomData, 0, 256);
-            await stream.FlushAsync();
 
             // Read data back via file.
             using var fileStream = await file.OpenStreamAsync();
