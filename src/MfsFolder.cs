@@ -141,7 +141,7 @@ namespace OwlCore.Kubo
         internal static string GetParentDirectoryName(string relativePath)
         {
             // If the provided path is the root.
-            if (System.IO.Path.GetPathRoot(relativePath).Replace('\\', '/') == relativePath)
+            if (System.IO.Path.GetPathRoot(relativePath)?.Replace('\\', '/') == relativePath)
                 return relativePath;
 
             var directorySeparatorChar = System.IO.Path.DirectorySeparatorChar;

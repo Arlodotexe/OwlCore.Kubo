@@ -55,7 +55,7 @@ namespace OwlCore.Kubo
         {
             if (source is IAddressableFolder addressableSource)
             {
-                Guard.IsTrue(addressableSource.Path.StartsWith(System.IO.Path.GetDirectoryName(fileToMove.Path)), nameof(source), $"{fileToMove.Id} does not exist in {source.Id}.");
+                Guard.IsTrue(addressableSource.Path.StartsWith(System.IO.Path.GetDirectoryName(fileToMove.Path) ?? string.Empty), nameof(source), $"{fileToMove.Id} does not exist in {source.Id}.");
             }
 
             cancellationToken.ThrowIfCancellationRequested();
