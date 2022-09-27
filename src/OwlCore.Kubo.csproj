@@ -21,6 +21,10 @@
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.5.1 ---
+[Fixed]
+Fixed an issue where Disposing an MfsStream would not flush the data, resulting in errors when a separate MfsStream to the same resource was opened.
+
 --- 0.5.0 ---
 [Improvements]
 Updated to OwlCore 0.1.0. Removes a number of uneeded transient dependencies.

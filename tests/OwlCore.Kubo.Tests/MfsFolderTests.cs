@@ -77,7 +77,6 @@ namespace OwlCore.Kubo.Tests
             var buffer = GenerateRandomData(256);
             using var stream = await file.OpenStreamAsync(FileAccess.ReadWrite);
             await stream.WriteAsync(buffer);
-            await stream.FlushAsync();
             Assert.AreEqual(buffer.Length, stream.Length);
 
             // Recreate the file

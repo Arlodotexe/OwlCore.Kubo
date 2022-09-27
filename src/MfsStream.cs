@@ -47,7 +47,7 @@ public class MfsStream : Stream
     /// <inheritdoc/>
     public override void Flush()
     {
-        _ = _client.PostDownloadAsync("files/flush", CancellationToken.None, _path).Result;
+        FlushAsync(CancellationToken.None).GetResultOrDefault();
     }
 
     /// <inheritdoc/>
@@ -124,6 +124,22 @@ public class MfsStream : Stream
     public override void Write(byte[] buffer, int offset, int count)
     {
         WriteAsync(buffer, offset, count, CancellationToken.None).GetResultOrDefault();
+    }
+
+    /// <inheritdoc/>
+    protected override void Dispose(bool disposing)
+    {
+        try
+        {
+            Flush();
+        }
+        catch (AggregateException ex) when (ex.InnerExceptions.Any(x => x.Message.Contains("not exist")))
+        {
+            // Ignored. Using statements cause disposing to happen when the stream leaves execution scope.
+            // However, the containing file can be deleted before scope is left.
+        }
+
+        base.Dispose(disposing);
     }
 
     /// <inheritdoc/>
