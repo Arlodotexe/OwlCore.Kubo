@@ -34,9 +34,6 @@
             stream.Flush();
 
             // Read data back via file.
-            // Incorrect size?
-            // stream was written to and Length was adjusted
-            // the new stream was opened and should have 
             using var fileStream = await file.OpenStreamAsync();
 
             var buffer = new byte[256];
