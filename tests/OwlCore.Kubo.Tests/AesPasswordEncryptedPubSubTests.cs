@@ -8,9 +8,9 @@
         {
             await KuboAccess.TryInitAsync();
 
-            var encryptedPubsub = new AesPasswordEncryptedPubSub(KuboAccess.Ipfs.PubSub, password: "testing");
+            var encryptedPubsub = new AesPasswordEncryptedPubSub(KuboAccess.Ipfs.PubSub, password: "testing", salt: null);
             
-            await encryptedPubsub.PublishAsync("owlcore-kubo-test-runner", "hello world!");
+            await encryptedPubsub.PublishAsync(topic: "owlcore-kubo-test-runner", message: "hello world!");
         }
     }
 }
