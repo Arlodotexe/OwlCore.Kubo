@@ -6,9 +6,7 @@ Highlighted features:
 - KuboDownloader. Automatically downloads and extracts the correct Kubo binary for the running operating system and architecture.
 - KuboBootstrapper. An easy process bootstrapper for the Kubo binary.
 - [OwlCore.Storage](https://github.com/Arlodotexe/OwlCore.Storage) implementations for Ipfs, Ipns and Mfs content.
-
-Coming soon:
-- Join a swarm of devices with a preshared key, and securely communicate with message encryption over pubsub.
+- AES encrypt/decrypt pubsub messages using a pre-shared passkey.
 
 ## Getting started
 
