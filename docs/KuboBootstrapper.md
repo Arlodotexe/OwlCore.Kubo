@@ -43,7 +43,7 @@ bootstrapper.Dispose();
 ```
 
 ## Start the IpfsClient
-Now that you can a running node, you can start using Kubo by passing the API url to a new `IpfsClient`.
+Now that you have a running node, you can start using Kubo by passing the API url to a new `IpfsClient`.
 
 ```cs
 // Start the binary
