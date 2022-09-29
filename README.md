@@ -3,8 +3,8 @@
 An essential toolkit for Kubo, IPFS and the distributed web.
 
 Highlighted features:
-- [KuboDownloader](docs/KuboDownloader.md). Automatically downloads and extracts the correct Kubo binary for the running operating system and architecture.
-- [KuboBootstrapper](docs/KuboBootstrapper.md). An easy process bootstrapper for the Kubo binary.
+- KuboDownloader. Automatically downloads and extracts the correct Kubo binary for the running operating system and architecture.
+- KuboBootstrapper. An easy process bootstrapper for the Kubo binary.
 - [OwlCore.Storage](https://github.com/Arlodotexe/OwlCore.Storage) implementations for Ipfs, Ipns and Mfs content.
 - AES encrypt/decrypt pubsub messages using a pre-shared passkey.
 
@@ -17,3 +17,5 @@ Published releases are available on [NuGet](https://www.nuget.org/packages/OwlCo
 Or using [dotnet](https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet)
 
     > dotnet add package OwlCore.Kubo
+
+See the [documentation](/docs/) for usage examples.
