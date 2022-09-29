@@ -1,5 +1,5 @@
 # KuboBootstrapper
-A no-hassle Kubo binary bootstrapper.
+A no-hassle bootstrapper for the Kubo binary.
 
 On startup, the binary is copied to the users's temp directory, where it can be executed on any platform.
 
