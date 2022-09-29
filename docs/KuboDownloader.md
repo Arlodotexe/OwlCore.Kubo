@@ -26,7 +26,7 @@ Once you have the binary downloaded, save it somewhere so you don't need to redo
 
 ```cs
 // Copy the binary to a known location.
-// Any modifiable folder can be used, not just local storage!
+// Any modifiable folder can be used, even if it's not on local disk!
 IModifiableFolder destination = new SystemFolder("/some/path");
 
 IAddressableFile copiedFile = await destination.CreateCopyOfAsync(kuboBinary);
