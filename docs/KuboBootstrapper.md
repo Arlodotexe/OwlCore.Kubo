@@ -41,3 +41,18 @@ await bootstrapper.StartAsync();
 // Dispose of the bootstrapper to kill the process and clean up.
 bootstrapper.Dispose();
 ```
+
+## Start the IpfsClient
+Now that you can a running node, you can start using Kubo by passing the API url to a new `IpfsClient`.
+
+```cs
+// Start the binary
+var bootstrapper = new KuboBootstrapper(kuboBinary, repoPath);
+await bootstrapper.StartAsync();
+
+// Create a client
+var ipfsClient = new IpfsClient(bootstrapper.ApiUri.ToString());
+
+// Start using it
+var ipnsFile = new IpnsFile("/ipns/ipfs.tech/index.html", ipfsClient);
+```
