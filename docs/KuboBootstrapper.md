@@ -1,7 +1,9 @@
 # KuboBootstrapper
-A no-hassle bootstrapper for the Kubo binary.
+A no-hassle Kubo binary bootstrapper.
 
 On startup, the binary is copied to the users's temp directory, where it can be executed on any platform.
+
+> **Warning** Don't use the bootstrapper unless you need to. If the user already has a running Kubo node, use that instead of spawning another one.
 
 ## Get a Kubo binary
 Before you can use the bootstrapper, you need an `IFile` that points to the Kubo binary. 
