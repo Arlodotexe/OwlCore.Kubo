@@ -46,7 +46,7 @@ public class PeerRoom : IDisposable
         _ = pubSubApi.SubscribeAsync(topicName, msg => ReceiveMessage(msg), _disconnectTokenSource.Token);
     }
 
-    private void Timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+    private void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
     {
         _ = BroadcastHeartbeat();
         PruneStalePeers();
