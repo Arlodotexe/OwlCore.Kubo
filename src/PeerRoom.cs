@@ -111,7 +111,9 @@ public class PeerRoom : IDisposable
         if (System.Text.Encoding.UTF8.GetString(publishedMessage.DataBytes) == "KuboPeerRoomHeartbeat")
         {
             _lastSeenData[publishedMessage.Sender] = DateTime.Now;
-            ConnectedPeers.Add(publishedMessage.Sender);
+
+            if (ConnectedPeers.All(x => x.Id != publishedMessage.Sender.Id))
+                ConnectedPeers.Add(publishedMessage.Sender);
         }
         else if (ConnectedPeers.Any(x => x.Id == publishedMessage.Sender.Id))
         {
