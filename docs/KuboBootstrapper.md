@@ -8,7 +8,7 @@ On startup, the binary is copied to the users's temp directory, where it can be 
 ## Get a Kubo binary
 Before you can use the bootstrapper, you need an `IFile` that points to the Kubo binary. 
 
-If the user is online,  [KuboDownloader](KuboDownloader.md) can automatically download and extract the correct Kubo binary for the running operating system and architecture from the IPFS shipyard.
+If the user is online, [KuboDownloader](KuboDownloader.md) can automatically download and extract the correct Kubo binary for the running operating system and architecture from the IPFS shipyard.
 
 ## Basic usage
 

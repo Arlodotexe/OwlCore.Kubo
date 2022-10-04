@@ -14,13 +14,17 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.6.0</Version>
+    <Version>0.7.0</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.7.0 ---
+[New]
+Added PeerRoom and PubSubPeerFilter.
+
 --- 0.6.0 ---
 [New]
 Added AesPasswordEncryptedPubSub. Wrap around an instance of IPubSubApi and automatically encrypt/decrypt messages using a pre-shared passkey.
