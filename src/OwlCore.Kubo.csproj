@@ -14,13 +14,21 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.7.0</Version>
+    <Version>0.8.0</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.8.0 ---
+[New]
+Added MessageReceived event to PeerRoom. Only messages from peers in the room will be emitted.
+Added BroadcastMessageAsync to PeerRoom.
+
+[Fixed]
+Fixed an issue where PeerRoom heartbeat would be trigger more frequently than specified.
+
 --- 0.7.0 ---
 [New]
 Added PeerRoom and PubSubPeerFilter.

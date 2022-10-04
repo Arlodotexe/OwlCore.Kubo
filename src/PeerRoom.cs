@@ -1,6 +1,7 @@
 ﻿using Ipfs;
 using Ipfs.CoreApi;
 using System.Collections.ObjectModel;
+using OwlCore.Extensions;
 using Timer = System.Timers.Timer;
 
 namespace OwlCore.Kubo;
@@ -17,7 +18,7 @@ public class PeerRoom : IDisposable
     private readonly IPubSubApi _pubSubApi;
     private readonly Timer? _timer;
     private readonly int _heartbeatExpirationTimeSeconds;
-    private readonly CancellationTokenSource _disconnectTokenSource = new CancellationTokenSource();
+    private readonly CancellationTokenSource _disconnectTokenSource = new();
     private readonly Dictionary<Peer, DateTime> _lastSeenData = new();
 
     /// <summary>
@@ -38,12 +39,12 @@ public class PeerRoom : IDisposable
 
         if (heartbeatIntervalMilliseconds > 0)
         {
-            _timer = new Timer(heartbeatIntervalMilliseconds / 1000);
+            _timer = new Timer(heartbeatIntervalMilliseconds);
             _timer.Elapsed += Timer_Elapsed;
             _timer.Start();
         }
 
-        _ = pubSubApi.SubscribeAsync(topicName, msg => ReceiveMessage(msg), _disconnectTokenSource.Token);
+        _ = pubSubApi.SubscribeAsync(topicName, ReceiveMessage, _disconnectTokenSource.Token);
     }
 
     private void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
@@ -56,6 +57,11 @@ public class PeerRoom : IDisposable
     /// The peers which have successfully authenticated and joined the room.
     /// </summary>
     public ObservableCollection<Peer> ConnectedPeers { get; } = new();
+
+    /// <summary>
+    /// Raised when a new message is received.
+    /// </summary>
+    public EventHandler<IPublishedMessage>? MessageReceived;
 
     /// <summary>
     /// The peer which represents this device.
@@ -76,12 +82,40 @@ public class PeerRoom : IDisposable
         await _pubSubApi.PublishAsync(TopicName, "KuboPeerRoomHeartbeat");
     }
 
+    /// <summary>
+    /// Broadcasts a message to all other peers in the room.
+    /// </summary>
+    /// <param name="message">The message to broadcast.</param>
+    /// <param name="cancel">The token to use for cancellation</param>
+    /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
+    public Task BroadcastMessageAsync(string message, CancellationToken cancel = default) => _pubSubApi.PublishAsync(TopicName, message, cancel);
+
+    /// <summary>
+    /// Broadcasts a message to all other peers in the room.
+    /// </summary>
+    /// <param name="message">The message to broadcast.</param>
+    /// <param name="cancel">The token to use for cancellation</param>
+    /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
+    public Task BroadcastMessageAsync(byte[] message, CancellationToken cancel = default) => _pubSubApi.PublishAsync(TopicName, message, cancel);
+
+    /// <summary>
+    /// Broadcasts a message to all other peers in the room.
+    /// </summary>
+    /// <param name="message">The message to broadcast.</param>
+    /// <param name="cancel">The token to use for cancellation</param>
+    /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
+    public Task BroadcastMessageAsync(Stream message, CancellationToken cancel = default) => _pubSubApi.PublishAsync(TopicName, message, cancel);
+
     private void ReceiveMessage(IPublishedMessage publishedMessage)
     {
         if (System.Text.Encoding.UTF8.GetString(publishedMessage.DataBytes) == "KuboPeerRoomHeartbeat")
         {
             _lastSeenData[publishedMessage.Sender] = DateTime.Now;
             ConnectedPeers.Add(publishedMessage.Sender);
+        }
+        else if (ConnectedPeers.Any(x => x.Id == publishedMessage.Sender.Id))
+        {
+            MessageReceived?.Invoke(this, publishedMessage);
         }
     }
 
