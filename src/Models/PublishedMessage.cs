@@ -17,7 +17,6 @@ public class PublishedMessage : IPublishedMessage
         SequenceNumber = sequenceNumber;
         DataBytes = dataBytes;
         DataStream = dataStream;
-        Id = id;
         Size = size;
     }
 
