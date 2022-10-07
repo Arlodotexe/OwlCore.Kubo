@@ -99,7 +99,7 @@ public class AesPasswordEncryptedPubSub : IPubSubApi, IDelegatable<IPubSubApi>
 
             var outputBytes = outputStream.ToBytes();
 
-            return new PublishedMessage(publishedMessage.Sender, publishedMessage.Topics, publishedMessage.SequenceNumber, outputBytes, outputStream, publishedMessage.Id, publishedMessage.Size);
+            return new PublishedMessage(publishedMessage.Sender, publishedMessage.Topics, publishedMessage.SequenceNumber, outputBytes, outputStream, publishedMessage.Size);
         }
         catch
         {

@@ -10,7 +10,7 @@ public class PublishedMessage : IPublishedMessage
     /// <summary>
     /// Creates a new instance of <see cref="PublishedMessage"/>.
     /// </summary>
-    public PublishedMessage(Peer sender, IEnumerable<string> topics, byte[] sequenceNumber, byte[] dataBytes, Stream dataStream, Cid id, long size)
+    public PublishedMessage(Peer sender, IEnumerable<string> topics, byte[] sequenceNumber, byte[] dataBytes, Stream dataStream, long size)
     {
         Sender = sender;
         Topics = topics;
@@ -37,7 +37,7 @@ public class PublishedMessage : IPublishedMessage
     public Stream DataStream { get; }
 
     /// <inheritdoc/>
-    public Cid Id { get; }
+    public Cid Id { get; } = string.Empty;
 
     /// <inheritdoc/>
     public long Size { get; }
