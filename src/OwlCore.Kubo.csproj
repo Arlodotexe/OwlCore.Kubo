@@ -14,13 +14,25 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.8.2</Version>
+    <Version>0.9.0</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.9.0 ---
+[Improvement]
+Added proper unit tests around PeerRoom.
+
+[Fixed]
+Fixed invalid default CID with PublishedMessage.Id.
+Fixed various issues with PeerRoom.
+
+[Breaking]
+PeerRoom.BroadcastHeartbeat has been renamed to PeerRoom.BroadcastHeartbeatAsync.
+PeerRoom.BroadcastMessageAsync has been renamed to PublishAsync.
+
 --- 0.8.2 ---
 [Fixed]
 Fixed an issue where AesPasswordEncryptedPubSub would swallow incoming decrypted messages due to a silent error being thrown by the underlying library.

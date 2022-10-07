@@ -20,6 +20,7 @@ public class PeerRoom : IDisposable
     private readonly int _heartbeatExpirationTimeSeconds;
     private readonly CancellationTokenSource _disconnectTokenSource = new();
     private readonly Dictionary<Peer, DateTime> _lastSeenData = new();
+    private readonly SemaphoreSlim _receivedMessageMutex = new(1, 1);
 
     /// <summary>
     /// Creates a new instance of <see cref="PeerRoom"/>.
@@ -49,7 +50,7 @@ public class PeerRoom : IDisposable
 
     private void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
     {
-        _ = BroadcastHeartbeat();
+        _ = BroadcastHeartbeatAsync();
         PruneStalePeers();
     }
 
@@ -77,7 +78,7 @@ public class PeerRoom : IDisposable
     /// Broadcasts a heartbeat to listeners on the topic.
     /// </summary>
     /// <returns></returns>
-    public async Task BroadcastHeartbeat()
+    public async Task BroadcastHeartbeatAsync()
     {
         await _pubSubApi.PublishAsync(TopicName, "KuboPeerRoomHeartbeat");
     }
@@ -88,7 +89,7 @@ public class PeerRoom : IDisposable
     /// <param name="message">The message to broadcast.</param>
     /// <param name="cancel">The token to use for cancellation</param>
     /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
-    public Task BroadcastMessageAsync(string message, CancellationToken cancel = default) => _pubSubApi.PublishAsync(TopicName, message, cancel);
+    public Task PublishAsync(string message, CancellationToken cancel = default) => _pubSubApi.PublishAsync(TopicName, message, cancel);
 
     /// <summary>
     /// Broadcasts a message to all other peers in the room.
@@ -96,7 +97,7 @@ public class PeerRoom : IDisposable
     /// <param name="message">The message to broadcast.</param>
     /// <param name="cancel">The token to use for cancellation</param>
     /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
-    public Task BroadcastMessageAsync(byte[] message, CancellationToken cancel = default) => _pubSubApi.PublishAsync(TopicName, message, cancel);
+    public Task PublishAsync(byte[] message, CancellationToken cancel = default) => _pubSubApi.PublishAsync(TopicName, message, cancel);
 
     /// <summary>
     /// Broadcasts a message to all other peers in the room.
@@ -104,10 +105,12 @@ public class PeerRoom : IDisposable
     /// <param name="message">The message to broadcast.</param>
     /// <param name="cancel">The token to use for cancellation</param>
     /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
-    public Task BroadcastMessageAsync(Stream message, CancellationToken cancel = default) => _pubSubApi.PublishAsync(TopicName, message, cancel);
+    public Task PublishAsync(Stream message, CancellationToken cancel = default) => _pubSubApi.PublishAsync(TopicName, message, cancel);
 
     private void ReceiveMessage(IPublishedMessage publishedMessage)
     {
+        _receivedMessageMutex.Wait();
+
         if (System.Text.Encoding.UTF8.GetString(publishedMessage.DataBytes) == "KuboPeerRoomHeartbeat")
         {
             _lastSeenData[publishedMessage.Sender] = DateTime.Now;
@@ -119,6 +122,8 @@ public class PeerRoom : IDisposable
         {
             MessageReceived?.Invoke(this, publishedMessage);
         }
+
+        _receivedMessageMutex.Release();
     }
 
     private void PruneStalePeers()
