@@ -109,6 +109,9 @@ public class PeerRoom : IDisposable
 
     private void ReceiveMessage(IPublishedMessage publishedMessage)
     {
+        if (publishedMessage.Sender.Id == ThisPeer.Id)
+            return;
+
         _receivedMessageMutex.Wait();
 
         if (System.Text.Encoding.UTF8.GetString(publishedMessage.DataBytes) == "KuboPeerRoomHeartbeat")

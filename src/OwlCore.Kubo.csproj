@@ -14,13 +14,17 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.9.0</Version>
+    <Version>0.9.1</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.9.1 ---
+[Fixed]
+Fixed an issue where PeerRoom would handle and emit messages from the current peer.
+
 --- 0.9.0 ---
 [Improvement]
 Added proper unit tests around PeerRoom.
