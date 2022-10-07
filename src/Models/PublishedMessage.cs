@@ -1,4 +1,5 @@
-﻿using Ipfs;
+﻿using System.Text;
+using Ipfs;
 
 namespace OwlCore.Kubo.Models;
 
@@ -36,7 +37,7 @@ public class PublishedMessage : IPublishedMessage
     public Stream DataStream { get; }
 
     /// <inheritdoc/>
-    public Cid Id { get; } = string.Empty;
+    public Cid Id { get; } = MultiHash.ComputeHash(Encoding.UTF8.GetBytes(nameof(PublishedMessage)));
 
     /// <inheritdoc/>
     public long Size { get; }
