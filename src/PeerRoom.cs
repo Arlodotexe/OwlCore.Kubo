@@ -1,6 +1,8 @@
 ﻿using Ipfs;
 using Ipfs.CoreApi;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using OwlCore.Diagnostics;
 using OwlCore.Extensions;
 using Timer = System.Timers.Timer;
 
@@ -17,9 +19,9 @@ public class PeerRoom : IDisposable
 {
     private readonly IPubSubApi _pubSubApi;
     private readonly Timer? _timer;
-    private readonly int _heartbeatExpirationTimeSeconds;
+    private readonly TimeSpan _heartbeatExpirationTime;
     private readonly CancellationTokenSource _disconnectTokenSource = new();
-    private readonly Dictionary<Peer, DateTime> _lastSeenData = new();
+    private readonly Dictionary<MultiHash, (Peer Peer, DateTime LastSeen)> _lastSeenDates = new();
     private readonly SemaphoreSlim _receivedMessageMutex = new(1, 1);
 
     /// <summary>
@@ -28,29 +30,38 @@ public class PeerRoom : IDisposable
     /// <param name="thisPeer">The peer information about the current node.</param>
     /// <param name="pubSubApi">An existing, functional <see cref="IPubSubApi"/> instance to use for sending and receiving messages.</param>
     /// <param name="topicName">The PubSub topic (or "channel") name to use for communicating with other peers.</param>
-    /// <param name="heartbeatIntervalMilliseconds">How often this peer will broadcast a heartbeat.</param>
-    /// <param name="heartbeatExpirationTimeMilliseconds">When another peer hasn't broadcast a heartbeat for this many milliseconds, they will be removed from the list of connected peers.</param>
-    public PeerRoom(Peer thisPeer, IPubSubApi pubSubApi, string topicName, int heartbeatIntervalMilliseconds = 2000, int heartbeatExpirationTimeMilliseconds = 5000)
+    public PeerRoom(Peer thisPeer, IPubSubApi pubSubApi, string topicName)
+        : this(thisPeer, pubSubApi, topicName, TimeSpan.FromMilliseconds(500), TimeSpan.FromMilliseconds(2000))
+    {
+
+    }
+
+    /// <summary>
+    /// Creates a new instance of <see cref="PeerRoom"/>.
+    /// </summary>
+    /// <param name="thisPeer">The peer information about the current node.</param>
+    /// <param name="pubSubApi">An existing, functional <see cref="IPubSubApi"/> instance to use for sending and receiving messages.</param>
+    /// <param name="topicName">The PubSub topic (or "channel") name to use for communicating with other peers.</param>
+    /// <param name="heartbeatInterval">How often this peer will broadcast a heartbeat.</param>
+    /// <param name="heartbeatExpirationTime">When another peer hasn't broadcast a heartbeat for this many milliseconds, they will be removed from the list of connected peers.</param>
+    public PeerRoom(Peer thisPeer, IPubSubApi pubSubApi, string topicName, TimeSpan heartbeatInterval, TimeSpan heartbeatExpirationTime)
     {
         _pubSubApi = pubSubApi;
-        _heartbeatExpirationTimeSeconds = heartbeatExpirationTimeMilliseconds;
+        _heartbeatExpirationTime = heartbeatExpirationTime;
 
         ThisPeer = thisPeer;
         TopicName = topicName;
 
-        if (heartbeatIntervalMilliseconds > 0)
-        {
-            _timer = new Timer(heartbeatIntervalMilliseconds);
-            _timer.Elapsed += Timer_Elapsed;
-            _timer.Start();
-        }
+        _timer = new Timer(heartbeatInterval.TotalMilliseconds);
+        _timer.Elapsed += Timer_Elapsed;
+        _timer.Start();
 
         _ = pubSubApi.SubscribeAsync(topicName, ReceiveMessage, _disconnectTokenSource.Token);
     }
 
-    private void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
+    private async void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
     {
-        _ = BroadcastHeartbeatAsync();
+        await BroadcastHeartbeatAsync();
         PruneStalePeers();
     }
 
@@ -74,13 +85,16 @@ public class PeerRoom : IDisposable
     /// </summary>
     public string TopicName { get; }
 
+    internal bool HeartbeatEnabled { get; set; } = true;
+
     /// <summary>
     /// Broadcasts a heartbeat to listeners on the topic.
     /// </summary>
     /// <returns></returns>
     public async Task BroadcastHeartbeatAsync()
     {
-        await _pubSubApi.PublishAsync(TopicName, "KuboPeerRoomHeartbeat");
+        if (HeartbeatEnabled)
+            await _pubSubApi.PublishAsync(TopicName, "KuboPeerRoomHeartbeat", _disconnectTokenSource.Token);
     }
 
     /// <summary>
@@ -112,14 +126,17 @@ public class PeerRoom : IDisposable
         if (publishedMessage.Sender.Id == ThisPeer.Id)
             return;
 
+        if (_disconnectTokenSource.Token.IsCancellationRequested)
+            return;
+
         _receivedMessageMutex.Wait();
 
-        if (System.Text.Encoding.UTF8.GetString(publishedMessage.DataBytes) == "KuboPeerRoomHeartbeat")
+        if (System.Text.Encoding.UTF8.GetString(publishedMessage.DataBytes) == "KuboPeerRoomHeartbeat" && HeartbeatEnabled)
         {
-            _lastSeenData[publishedMessage.Sender] = DateTime.Now;
-
-            if (ConnectedPeers.All(x => x.Id != publishedMessage.Sender.Id))
+            if (!_lastSeenDates.ContainsKey(publishedMessage.Sender.Id))
                 ConnectedPeers.Add(publishedMessage.Sender);
+
+            _lastSeenDates[publishedMessage.Sender.Id] = (publishedMessage.Sender, DateTime.Now);
         }
         else if (ConnectedPeers.Any(x => x.Id == publishedMessage.Sender.Id))
         {
@@ -129,26 +146,35 @@ public class PeerRoom : IDisposable
         _receivedMessageMutex.Release();
     }
 
-    private void PruneStalePeers()
+    internal void PruneStalePeers()
     {
-        foreach (var peer in ConnectedPeers)
+        _receivedMessageMutex.Wait();
+
+        var now = DateTime.Now;
+
+        foreach (var peer in ConnectedPeers.ToArray())
         {
-            if (DateTime.Now - _lastSeenData[peer] > TimeSpan.FromMilliseconds(_heartbeatExpirationTimeSeconds))
+            if (now - _heartbeatExpirationTime > _lastSeenDates[peer.Id].LastSeen)
             {
-                ConnectedPeers.Remove(peer);
+                ConnectedPeers.Remove(ConnectedPeers.First(x => x.Id == peer.Id));
+                _lastSeenDates.Remove(_lastSeenDates.First(x => x.Key == peer.Id).Key);
             }
         }
+
+        _receivedMessageMutex.Release();
     }
 
     /// <inheritdoc/>
     public void Dispose()
     {
+        HeartbeatEnabled = false;
+        _disconnectTokenSource.Cancel();
+
         if (_timer is not null)
         {
             _timer.Elapsed -= Timer_Elapsed;
+            _timer.Stop();
             _timer.Dispose();
         }
-
-        _disconnectTokenSource.Cancel();
     }
 }

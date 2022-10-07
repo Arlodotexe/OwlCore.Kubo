@@ -12,6 +12,8 @@ public class LoopbackPubSubApi : IPubSubApi
 {
     private readonly Peer _senderPeer;
     private readonly List<IPubSubApi> _loopbackApis = new();
+    private static readonly HashSet<int> _emittedMessageHashCodes = new();
+    private static readonly HashSet<int> _subscribedHandlersHashCodes = new();
 
     public LoopbackPubSubApi(Peer senderPeer)
     {
@@ -36,28 +38,55 @@ public class LoopbackPubSubApi : IPubSubApi
 
     public Task PublishAsync(string topic, Stream message, CancellationToken cancel = new())
     {
+        cancel.ThrowIfCancellationRequested();
+
         if (_handlers.TryGetValue(topic, out var handlers))
         {
             foreach (var handler in handlers)
             {
+                cancel.ThrowIfCancellationRequested();
+
                 handler(new PublishedMessage(_senderPeer, topic.IntoList(), Array.Empty<byte>(), message.ToBytes(),
                     message, message.Length));
             }
         }
 
-        return _loopbackApis.InParallel(x => x.PublishAsync(topic, message, cancel));
+        return _loopbackApis.InParallel(x =>
+        {
+            cancel.ThrowIfCancellationRequested();
+
+            if (_emittedMessageHashCodes.Add(message.GetHashCode()))
+                return x.PublishAsync(topic, message, cancel);
+
+            return Task.CompletedTask;
+        });
     }
 
     public Task SubscribeAsync(string topic, Action<IPublishedMessage> handler, CancellationToken cancellationToken)
     {
-        _handlers.TryAdd(topic, new HashSet<Action<IPublishedMessage>>());
-        _handlers[topic].Add(handler); 
+        cancellationToken.ThrowIfCancellationRequested();
 
-        return _loopbackApis.InParallel(x => x.SubscribeAsync(topic, handler, cancellationToken));
+        _handlers.TryAdd(topic, new HashSet<Action<IPublishedMessage>>());
+        _handlers[topic].Add(handler);
+
+        return _loopbackApis.InParallel(x =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (_subscribedHandlersHashCodes.Add(handler.GetHashCode()))
+                return x.SubscribeAsync(topic, handler, cancellationToken);
+
+            return Task.CompletedTask;
+        });
     }
 
     public void AddLoopback(IPubSubApi api)
     {
         _loopbackApis.Add(api);
+    }
+
+    public void RemoveLoopback(IPubSubApi api)
+    {
+        _loopbackApis.Remove(api);
     }
 }

@@ -22,7 +22,11 @@
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
 --- 0.9.1 ---
+[Improvement]
+Added more unit tests around PeerRoom.
+
 [Fixed]
+Fixed an issue where PeerRoom wouldn't properly remove peers with expired heartbeats
 Fixed an issue where PeerRoom would handle and emit messages from the current peer.
 
 --- 0.9.0 ---
