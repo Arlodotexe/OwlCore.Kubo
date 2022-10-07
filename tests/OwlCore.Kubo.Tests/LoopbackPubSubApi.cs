@@ -38,14 +38,10 @@ public class LoopbackPubSubApi : IPubSubApi
 
     public Task PublishAsync(string topic, Stream message, CancellationToken cancel = new())
     {
-        cancel.ThrowIfCancellationRequested();
-
         if (_handlers.TryGetValue(topic, out var handlers))
         {
             foreach (var handler in handlers)
             {
-                cancel.ThrowIfCancellationRequested();
-
                 handler(new PublishedMessage(_senderPeer, topic.IntoList(), Array.Empty<byte>(), message.ToBytes(),
                     message, message.Length));
             }
