@@ -53,7 +53,8 @@ public class LoopbackPubSubApi : IPubSubApi
 
         return _loopbackApis.InParallel(x =>
         {
-            cancel.ThrowIfCancellationRequested();
+            if (cancel.IsCancellationRequested)
+                return Task.CompletedTask;
 
             if (_emittedMessageHashCodes.Add(message.GetHashCode()))
                 return x.PublishAsync(topic, message, cancel);
@@ -64,14 +65,16 @@ public class LoopbackPubSubApi : IPubSubApi
 
     public Task SubscribeAsync(string topic, Action<IPublishedMessage> handler, CancellationToken cancellationToken)
     {
-        cancellationToken.ThrowIfCancellationRequested();
+        if (cancellationToken.IsCancellationRequested)
+            return Task.CompletedTask;
 
         _handlers.TryAdd(topic, new HashSet<Action<IPublishedMessage>>());
         _handlers[topic].Add(handler);
 
         return _loopbackApis.InParallel(x =>
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            if (cancellationToken.IsCancellationRequested)
+                return Task.CompletedTask;
 
             if (_subscribedHandlersHashCodes.Add(handler.GetHashCode()))
                 return x.SubscribeAsync(topic, handler, cancellationToken);
