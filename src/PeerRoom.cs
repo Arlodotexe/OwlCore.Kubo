@@ -44,7 +44,7 @@ public class PeerRoom : IDisposable
     /// <param name="heartbeatExpirationTime">When another peer hasn't broadcast a heartbeat for this many milliseconds, they will be removed from the list of connected peers.</param>
     public PeerRoom(Peer thisPeer, IPubSubApi pubSubApi, string topicName, TimeSpan heartbeatInterval, TimeSpan heartbeatExpirationTime)
     {
-        _syncContext = SynchronizationContext.Current;
+        _syncContext = SynchronizationContext.Current ?? new SynchronizationContext();
         _pubSubApi = pubSubApi;
         _heartbeatExpirationTime = heartbeatExpirationTime;
 
