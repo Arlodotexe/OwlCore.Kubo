@@ -1,9 +1,6 @@
 ﻿using Ipfs;
 using Ipfs.CoreApi;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using OwlCore.Diagnostics;
-using OwlCore.Extensions;
 using Timer = System.Timers.Timer;
 
 namespace OwlCore.Kubo;
@@ -17,6 +14,7 @@ namespace OwlCore.Kubo;
 /// </remarks>
 public class PeerRoom : IDisposable
 {
+    private readonly SynchronizationContext _syncContext;
     private readonly IPubSubApi _pubSubApi;
     private readonly Timer? _timer;
     private readonly TimeSpan _heartbeatExpirationTime;
@@ -46,6 +44,7 @@ public class PeerRoom : IDisposable
     /// <param name="heartbeatExpirationTime">When another peer hasn't broadcast a heartbeat for this many milliseconds, they will be removed from the list of connected peers.</param>
     public PeerRoom(Peer thisPeer, IPubSubApi pubSubApi, string topicName, TimeSpan heartbeatInterval, TimeSpan heartbeatExpirationTime)
     {
+        _syncContext = SynchronizationContext.Current;
         _pubSubApi = pubSubApi;
         _heartbeatExpirationTime = heartbeatExpirationTime;
 
@@ -134,7 +133,9 @@ public class PeerRoom : IDisposable
         if (System.Text.Encoding.UTF8.GetString(publishedMessage.DataBytes) == "KuboPeerRoomHeartbeat" && HeartbeatEnabled)
         {
             if (!_lastSeenDates.ContainsKey(publishedMessage.Sender.Id))
-                ConnectedPeers.Add(publishedMessage.Sender);
+            {
+                _syncContext.Post(_ => ConnectedPeers.Add(publishedMessage.Sender), null);
+            }
 
             _lastSeenDates[publishedMessage.Sender.Id] = (publishedMessage.Sender, DateTime.Now);
         }
@@ -156,7 +157,7 @@ public class PeerRoom : IDisposable
         {
             if (now - _heartbeatExpirationTime > _lastSeenDates[peer.Id].LastSeen)
             {
-                ConnectedPeers.Remove(ConnectedPeers.First(x => x.Id == peer.Id));
+                _syncContext.Post(_ => ConnectedPeers.Remove(ConnectedPeers.First(x => x.Id == peer.Id)), null);
                 _lastSeenDates.Remove(_lastSeenDates.First(x => x.Key == peer.Id).Key);
             }
         }
