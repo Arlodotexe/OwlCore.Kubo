@@ -1,6 +1,7 @@
 ﻿using Ipfs;
 using Ipfs.CoreApi;
 using System.Collections.ObjectModel;
+using OwlCore.Extensions;
 using Timer = System.Timers.Timer;
 
 namespace OwlCore.Kubo;
@@ -61,7 +62,7 @@ public class PeerRoom : IDisposable
     private async void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
     {
         await BroadcastHeartbeatAsync();
-        PruneStalePeers();
+        await PruneStalePeersAsync();
     }
 
     /// <summary>
@@ -120,7 +121,7 @@ public class PeerRoom : IDisposable
     /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
     public Task PublishAsync(Stream message, CancellationToken cancel = default) => _pubSubApi.PublishAsync(TopicName, message, cancel);
 
-    private void ReceiveMessage(IPublishedMessage publishedMessage)
+    private async void ReceiveMessage(IPublishedMessage publishedMessage)
     {
         if (publishedMessage.Sender.Id == ThisPeer.Id)
             return;
@@ -128,13 +129,17 @@ public class PeerRoom : IDisposable
         if (_disconnectTokenSource.Token.IsCancellationRequested)
             return;
 
-        _receivedMessageMutex.Wait();
+        await _receivedMessageMutex.WaitAsync();
 
         if (System.Text.Encoding.UTF8.GetString(publishedMessage.DataBytes) == "KuboPeerRoomHeartbeat" && HeartbeatEnabled)
         {
             if (!_lastSeenDates.ContainsKey(publishedMessage.Sender.Id))
             {
-                _syncContext.Post(_ => ConnectedPeers.Add(publishedMessage.Sender), null);
+                await _syncContext.PostAsync(() =>
+                {
+                    ConnectedPeers.Add(publishedMessage.Sender);
+                    return Task.CompletedTask;
+                });
             }
 
             _lastSeenDates[publishedMessage.Sender.Id] = (publishedMessage.Sender, DateTime.Now);
@@ -147,9 +152,9 @@ public class PeerRoom : IDisposable
         _receivedMessageMutex.Release();
     }
 
-    internal void PruneStalePeers()
+    internal async Task PruneStalePeersAsync()
     {
-        _receivedMessageMutex.Wait();
+        await _receivedMessageMutex.WaitAsync();
 
         var now = DateTime.Now;
 
@@ -157,7 +162,7 @@ public class PeerRoom : IDisposable
         {
             if (now - _heartbeatExpirationTime > _lastSeenDates[peer.Id].LastSeen)
             {
-                _syncContext.Post(_ => ConnectedPeers.Remove(ConnectedPeers.First(x => x.Id == peer.Id)), null);
+                await _syncContext.PostAsync(() => Task.FromResult(ConnectedPeers.Remove(ConnectedPeers.First(x => x.Id == peer.Id))));
                 _lastSeenDates.Remove(_lastSeenDates.First(x => x.Key == peer.Id).Key);
             }
         }

@@ -21,6 +21,10 @@
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.9.3 ---
+[Fixed]
+When modifying PeerRoom.Connectedpeers, always wait for execution of the fire-and-forget method SyncronizationContext.Post to complete.
+
 --- 0.9.2 ---
 [Improvement]
 PeerRoom.ConnectedPeers now always raises the CollectionChanged event on the original synchronization context.
