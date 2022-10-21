@@ -66,9 +66,6 @@ public class TimerBasedMfsWatcher : TimerBasedFolderWatcher
             if (removedItems.Count >= 1)
                 CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, removedItems));
 
-            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, items, _knownItems));
-            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, items, _knownItems));
-
             _lastKnownRootCid = data.Hash;
             _knownItems = items;
         }
