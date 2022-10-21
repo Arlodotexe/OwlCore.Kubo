@@ -111,7 +111,7 @@ namespace OwlCore.Kubo.Tests
         {
             await KuboAccess.TryInitAsync();
 
-            var mfs = new MfsFolder("/Music/", KuboAccess.Ipfs);
+            var mfs = new MfsFolder("/", KuboAccess.Ipfs);
 
             var watcher = await mfs.GetFolderWatcherAsync();
 
