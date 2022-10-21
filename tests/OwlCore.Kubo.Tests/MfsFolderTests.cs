@@ -1,4 +1,5 @@
-﻿using OwlCore.Storage;
+﻿using OwlCore.Kubo.FolderWatchers;
+using OwlCore.Storage;
 
 namespace OwlCore.Kubo.Tests
 {
@@ -101,6 +102,20 @@ namespace OwlCore.Kubo.Tests
             Assert.AreEqual(mfs.Id, parent?.Id);
 
             await mfs.DeleteAsync(folder);
+        }
+
+
+
+        [TestMethod]
+        public async Task CreateAndRunFolderWatcher()
+        {
+            await KuboAccess.TryInitAsync();
+
+            var mfs = new MfsFolder("/Music/", KuboAccess.Ipfs);
+
+            var watcher = await mfs.GetFolderWatcherAsync();
+
+            await ((TimerBasedFolderWatcher)watcher).ExecuteAsync();
         }
 
         static byte[] GenerateRandomData(int length)
