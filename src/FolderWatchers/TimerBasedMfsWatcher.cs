@@ -3,6 +3,9 @@ using Ipfs;
 using Ipfs.Http;
 using OwlCore.Storage;
 using System.Collections.Specialized;
+using System.Text;
+using System.Text.Json;
+using OwlCore.Kubo.Models;
 
 namespace OwlCore.Kubo.FolderWatchers;
 
@@ -13,6 +16,7 @@ public class TimerBasedMfsWatcher : TimerBasedFolderWatcher
 {
     private readonly IpfsClient _client;
 
+    private bool _running;
     private Cid? _lastKnownRootCid;
     private List<IAddressableStorable> _knownItems = new();
 
@@ -34,12 +38,22 @@ public class TimerBasedMfsWatcher : TimerBasedFolderWatcher
     /// <inheritdoc/>
     public override async Task ExecuteAsync()
     {
+        if (_running)
+            return;
+
+        _running = true;
+
         var folder = (MfsFolder)Folder;
 
-        var itemInfo = await _client.FileSystem.ListFileAsync(folder.Path);
-        Guard.IsNotNull(itemInfo);
+        // This can be a long running operation, so reruns should be prevented for the duration to avoid concurrent requests.
+        var serialized = await _client.DoCommandAsync("files/stat", CancellationToken.None, folder.Path, "long=true");
+        var result = await JsonSerializer.DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(serialized)), typeof(MfsFileStatData), ModelSerializer.Default);
 
-        if (_lastKnownRootCid != itemInfo.Id)
+        Guard.IsNotNull(result);
+
+        var data = (MfsFileStatData)result;
+
+        if (_lastKnownRootCid != data.Hash)
         {
             var items = await folder.GetItemsAsync().ToListAsync();
 
@@ -55,8 +69,10 @@ public class TimerBasedMfsWatcher : TimerBasedFolderWatcher
             CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, items, _knownItems));
             CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, items, _knownItems));
 
-            _lastKnownRootCid = itemInfo.Id;
+            _lastKnownRootCid = data.Hash;
             _knownItems = items;
         }
+
+        _running = false;
     }
 }
