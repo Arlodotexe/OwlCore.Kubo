@@ -5,7 +5,15 @@
 
 Automatically downloads and extracts the correct Kubo binary for the running operating system and architecture
 
-Works on Windows, Linux, MacOS and FreeBSD (with .NET 5+) and with the architectures x64, x86, ARM and ARM64.
+## Supported environments
+
+### Platforms:
+
+Works on Windows, Linux, MacOS and FreeBSD (with .NET 5+)
+
+### Architectures:
+
+Works on x64, x86, ARM and ARM64
 
 ## Download latest version
 ```cs
