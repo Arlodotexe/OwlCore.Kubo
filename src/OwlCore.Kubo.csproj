@@ -14,13 +14,21 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.9.3</Version>
+    <Version>0.9.4</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.9.4 ---
+[Fixed]
+Fixed an issue where TimerBasedMfsWatcher wasn't reading from Mfs correct to check for changes
+
+[Improvements]
+MfsFolder.GetItemsAsync now passes the cancelation token to the deserializer.
+Added unit tests for TimerBasedMfsWatcher.
+
 --- 0.9.3 ---
 [Fixed]
 When modifying PeerRoom.ConnectedPeers, always wait for execution of the fire-and-forget method SyncronizationContext.Post to complete.
