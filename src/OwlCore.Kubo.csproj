@@ -14,7 +14,7 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.9.2</Version>
+    <Version>0.9.3</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
@@ -23,7 +23,8 @@
     <PackageReleaseNotes>
 --- 0.9.3 ---
 [Fixed]
-When modifying PeerRoom.Connectedpeers, always wait for execution of the fire-and-forget method SyncronizationContext.Post to complete.
+When modifying PeerRoom.ConnectedPeers, always wait for execution of the fire-and-forget method SyncronizationContext.Post to complete.
+Fixed timer-based file watchers throwing on construction.
 
 --- 0.9.2 ---
 [Improvement]

@@ -21,7 +21,7 @@ public abstract class TimerBasedFolderWatcher : IFolderWatcher
         Folder = folder;
 
         _timer = new Timer(_ => ExecuteAsync().Forget());
-        _timer.Change(TimeSpan.MinValue, interval);
+        _timer.Change(TimeSpan.Zero, interval);
     }
 
     /// <inheritdoc/>
