@@ -48,7 +48,7 @@ namespace OwlCore.Kubo
         public virtual async IAsyncEnumerable<IAddressableStorable> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var serialized = await _client.DoCommandAsync("files/ls", cancellationToken, Path, "long=true");
-            var result = await JsonSerializer.DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(serialized)), typeof(MfsFileContentsBody), ModelSerializer.Default);
+            var result = await JsonSerializer.DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(serialized)), typeof(MfsFileContentsBody), ModelSerializer.Default, cancellationToken);
 
             Guard.IsNotNull(result);
 
