@@ -7,8 +7,7 @@ using Timer = System.Timers.Timer;
 namespace OwlCore.Kubo;
 
 /// <summary>
-/// A "room" of peers listening on a common topic name.
-/// Broadcasts a heartbeat to peers on the same topic name, and listens for the heartbeats of other peers.
+/// Observe a topic for other nodes present in the PeerRoom by emitting and listening for a heartbeat. 
 /// </summary>
 /// <remarks>
 /// Unless you provide an encrypted <see cref="IPubSubApi"/>, the room should be considered publicly joinable. 
