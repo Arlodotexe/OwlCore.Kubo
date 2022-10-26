@@ -1,6 +1,6 @@
 # PeerRoom
 
-Observe a topic for other nodes present in the PeerRoom by emitting and listening for a heartbeat. 
+Watch a pubsub topic for other nodes that join the room.
 
 > **Warning** Unless you provide an [encrypted `IPubSubApi`](./AesPasswordEncryptedPubSub.md), the room should be considered publicly joinable.
 

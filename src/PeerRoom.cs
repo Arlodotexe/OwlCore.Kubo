@@ -7,7 +7,7 @@ using Timer = System.Timers.Timer;
 namespace OwlCore.Kubo;
 
 /// <summary>
-/// Observe a topic for other nodes present in the PeerRoom by emitting and listening for a heartbeat. 
+/// Watch a pubsub topic for other nodes that join the room.
 /// </summary>
 /// <remarks>
 /// Unless you provide an encrypted <see cref="IPubSubApi"/>, the room should be considered publicly joinable. 

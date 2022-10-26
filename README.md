@@ -3,10 +3,12 @@
 An essential toolkit for Kubo, IPFS and the distributed web.
 
 Featuring:
-- [[docs]](/docs/KuboDownloader.md) Auto-download and extract a Kubo binary for the running operating system and architecture.
+- [[docs]](/docs/KuboDownloader.md) KuboDownloader: Automatically download / extract the correct Kubo binary for the running OS and architecture.
 - [[docs]](/docs/KuboBootstrapper.md) KuboBootstrapper: A no-hassle bootstrapper for the Kubo binary.
 - [[docs]](/docs/storageproviders.md) OwlCore.Storage implementations for Ipfs, Ipns and Mfs content.
 - [[docs]](/docs/AesPasswordEncryptedPubSub.md) AES encrypt/decrypt pubsub messages using a pre-shared passkey.
+- [[docs]](/docs/PeerRoom.md) PeerRoom: Watch a pubsub topic for other nodes that join the room.
+
 
 ## Install
 
