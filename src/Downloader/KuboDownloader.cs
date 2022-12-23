@@ -27,8 +27,8 @@ namespace OwlCore.Kubo
         {
             _client ??= new HttpClient(HttpMessageHandler);
 
-            var latestVersion = await FindLatestVersion(_client);
-            var downloadLink = await GetDownloadLink(_client, rootUrl: $"https://dist.ipfs.tech/kubo/{latestVersion}");
+            var latestVersion = await GetLatestKuboVersionAsync();
+            var downloadLink = await GetDownloadLink(_client, rootUrl: $"https://dist.ipfs.tech/kubo/{latestVersion.RawVersion}");
             using var downloadStream = await _client.GetStreamAsync(downloadLink);
             var file = await ArchiveCrawlForKuboBinary(downloadStream, cancellationToken);
 
@@ -131,14 +131,21 @@ namespace OwlCore.Kubo
             return $"{rootUrl}{relativeFilePath}";
         }
 
-        private static async Task<string> FindLatestVersion(HttpClient client, string url = "https://dist.ipfs.tech/kubo/versions")
+        /// <summary>
+        /// Retrieves and parses the the latest version of Kubo from the provided url.
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        public async Task<(Version Version, string RawVersion)> GetLatestKuboVersionAsync(string url = "https://dist.ipfs.tech/kubo/versions")
         {
-            var versionInformationFromServer = await client.GetStringAsync(url);
+            _client ??= new HttpClient(HttpMessageHandler);
+
+            var versionInformationFromServer = await _client.GetStringAsync(url);
             Guard.IsNotNullOrWhiteSpace(versionInformationFromServer);
 
             var versions = versionInformationFromServer.Split('\n').Where(x => !x.Contains("-rc") && x.Length > 0).Select(GetVersionFromRawCanonicalString);
 
-            return versions.OrderByDescending(x => x.Version).First().RawVersion;
+            return versions.OrderByDescending(x => x.Version).First();
 
             (Version Version, string RawVersion) GetVersionFromRawCanonicalString(string rawVersionString)
             {
