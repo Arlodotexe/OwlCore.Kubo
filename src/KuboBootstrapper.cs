@@ -53,7 +53,10 @@ public class KuboBootstrapper : IDisposable
         }
 
         var processStartInfo = new ProcessStartInfo(executableBinary.Path, $"daemon --init --enable-pubsub-experiment --enable-namesys-pubsub --api /ip4/{ApiUri.Host}/tcp/{ApiUri.Port}");
-        processStartInfo.EnvironmentVariables.Add("IPFS_PATH", RepoPath);
+
+        if (!processStartInfo.EnvironmentVariables.ContainsKey("IPFS_PATH"))
+            processStartInfo.EnvironmentVariables.Add("IPFS_PATH", RepoPath);
+        
         processStartInfo.CreateNoWindow = true;
 
         Process = new Process
