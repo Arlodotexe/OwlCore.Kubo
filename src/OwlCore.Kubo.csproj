@@ -14,13 +14,18 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.9.5</Version>
+    <Version>0.9.6</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.9.6 ---
+[Fixed]
+Fixed an issue where KuboBootstrapper would crash on machines with the IPFS_PATH environment variable set.
+Renamed FindLatestVersion to GetLatestKuboVersionAsync, made public and non-static.
+
 --- 0.9.5 ---
 [Fixed]
 Fixed duplicate CollectionChanged invocation for TimerBasedMfsWatcher
