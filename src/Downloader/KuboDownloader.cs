@@ -89,15 +89,14 @@ namespace OwlCore.Kubo
 
         private IFolder ExtractArchive(Stream stream)
         {
-            var tempLocation = Path.GetTempPath();
-            var tempArchiveFolder = Directory.CreateDirectory(Path.Combine(tempLocation, $"{typeof(KuboDownloader).FullName}.{Guid.NewGuid()}"));
+            var extractDirectory = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}"));
 
             using var reader = ReaderFactory.Open(stream);
             while (reader.MoveToNextEntry())
             {
                 if (!reader.Entry.IsDirectory)
                 {
-                    reader.WriteEntryToDirectory(tempArchiveFolder.FullName, new ExtractionOptions
+                    reader.WriteEntryToDirectory(extractDirectory.FullName, new ExtractionOptions
                     {
                         ExtractFullPath = true,
                         Overwrite = true
@@ -105,7 +104,7 @@ namespace OwlCore.Kubo
                 }
             }
 
-            return new SystemFolder(tempArchiveFolder.FullName);
+            return new SystemFolder(extractDirectory.FullName);
         }
 
         private static async Task<string> GetDownloadLink(HttpClient client, string rootUrl)
