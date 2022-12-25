@@ -45,18 +45,17 @@ public class KuboBootstrapper : IDisposable
     /// <returns></returns>
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
-        var executableBinary = await CopyToTempFolder(_kuboBinary, cancellationToken);
+        var tempPath = new SystemFolder(Path.GetTempPath());
+        var kuboFolder = (SystemFolder)await tempPath.CreateFolderAsync(nameof(KuboBootstrapper), overwrite: false, cancellationToken);
+        var executableBinary = (SystemFile)await kuboFolder.CreateCopyOfAsync(_kuboBinary, overwrite: false, cancellationToken);
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
             await SetExecutablePermissionsForBinary(executableBinary.Path);
         }
 
-        var processStartInfo = new ProcessStartInfo(executableBinary.Path, $"daemon --init --enable-pubsub-experiment --enable-namesys-pubsub --api /ip4/{ApiUri.Host}/tcp/{ApiUri.Port}");
+        var processStartInfo = new ProcessStartInfo(executableBinary.Path, $"daemon --init --enable-pubsub-experiment --enable-namesys-pubsub --api /ip4/{ApiUri.Host}/tcp/{ApiUri.Port} --repo-dir {RepoPath}");
 
-        if (!processStartInfo.EnvironmentVariables.ContainsKey("IPFS_PATH"))
-            processStartInfo.EnvironmentVariables.Add("IPFS_PATH", RepoPath);
-        
         processStartInfo.CreateNoWindow = true;
 
         Process = new Process
@@ -122,21 +121,6 @@ public class KuboBootstrapper : IDisposable
             Process.Kill();
 
         Process = null;
-    }
-
-    /// <summary>
-    /// Copies the provided <paramref name="file"/> to a temporary, addressable folder in local storage so it can be safely executed by <see cref="ProcessStartInfo"/>.
-    /// </summary>
-    /// <returns>A file in temporary storage.</returns>
-    private async Task<IAddressableFile> CopyToTempFolder(IFile file, CancellationToken cancellationToken)
-    {
-        var tempFolder = new SystemFolder(Path.GetTempPath());
-        var newFolder = await tempFolder.CreateFolderAsync($"KuboBootstrapper-{Guid.NewGuid()}");
-        var destination = (IModifiableFolder)newFolder;
-
-        var copiedFile = await destination.CreateCopyOfAsync(file, overwrite: true, cancellationToken);
-
-        return (IAddressableFile)copiedFile;
     }
 
     /// <inheritdoc/>

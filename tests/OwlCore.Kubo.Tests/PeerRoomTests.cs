@@ -89,7 +89,7 @@ public class PeerRoomTests
         {
             // Peer room must not emit messages from the sender peer.
             var room = (PeerRoom)sender;
-            Assert.AreNotEqual(room.ThisPeer, message.Sender.Id);
+            Assert.AreNotEqual(room.ThisPeer.Id, message.Sender.Id);
 
             messages++;
         };

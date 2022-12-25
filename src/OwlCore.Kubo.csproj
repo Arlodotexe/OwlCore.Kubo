@@ -14,13 +14,19 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.9.6</Version>
+    <Version>0.9.7</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.9.7 ---
+[Improvements]
+KuboBootstrapper now copies to the same temp folder every time, opening the file if it already exists.
+KuboBootstrapper now uses the --repo-dir CLI argument instead of the IPFS_PATH environment variable.
+Updated dependent packages to latest version.
+
 --- 0.9.6 ---
 [Fixed]
 Fixed an issue where KuboBootstrapper would crash on machines with the IPFS_PATH environment variable set.
@@ -198,11 +204,11 @@ Added unit tests.
     <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.0.0" />
     <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.0.4" />
     <PackageReference Include="OwlCore" Version="0.1.0" />
-    <PackageReference Include="OwlCore.Storage" Version="0.5.0" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
+    <PackageReference Include="OwlCore.Storage" Version="0.5.2" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
     <PackageReference Include="SharpCompress" Version="0.32.2" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
-    <PackageReference Include="System.Text.Json" Version="6.0.5" />  <None Include="logo.png" Pack="true" PackagePath="" />    
+    <PackageReference Include="System.Text.Json" Version="7.0.1" />  <None Include="logo.png" Pack="true" PackagePath="" />    
   </ItemGroup>
 </Project>
