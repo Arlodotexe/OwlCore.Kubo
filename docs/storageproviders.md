@@ -1,5 +1,5 @@
 # Storage providers
-We provide [OwlCore.Storage](https://github.com/Arlodotexe/OwlCore.Storage) implementations for IPFS, IPNS and MFS.
+OwlCore.Kubo provides [OwlCore.Storage](https://github.com/Arlodotexe/OwlCore.Storage) implementations for IPFS, IPNS and MFS.
 
 ## Prerequisites
 
