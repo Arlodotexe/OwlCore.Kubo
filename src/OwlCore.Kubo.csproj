@@ -14,13 +14,20 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.9.7</Version>
+    <Version>0.9.8</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.9.8 ---
+[Improvement]
+Updated transitive dependencies to latest version.
+
+[Fixed]
+Inherited a fix from IpfsShipyard.Ipfs.Core where retrieving peer information would crash due to missing quic-v1 support.
+
 --- 0.9.7 ---
 [Improvements]
 KuboBootstrapper now copies to the same temp folder every time, opening the file if it already exists.
@@ -201,10 +208,10 @@ Added unit tests.
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.0.0" />
-    <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.0.4" />
+    <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.1.0" />
+    <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.0.5" />
     <PackageReference Include="OwlCore" Version="0.1.0" />
-    <PackageReference Include="OwlCore.Storage" Version="0.5.2" />
+    <PackageReference Include="OwlCore.Storage" Version="0.7.1" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
     <PackageReference Include="SharpCompress" Version="0.32.2" />
