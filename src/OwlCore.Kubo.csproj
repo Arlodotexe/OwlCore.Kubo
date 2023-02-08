@@ -14,13 +14,21 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.9.8</Version>
+    <Version>0.9.9</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.9.9 ---
+[Improvement]
+Updated transitive dependencies to latest version.
+
+[Fixed]
+Fixed an issue where the KuboBoostrapper wouldn't start.
+Inherited a fix from IpfsShipyard.Ipfs.Core where retrieving peer information would crash due to missing support for webtransport and certhash.
+
 --- 0.9.8 ---
 [Improvement]
 Updated transitive dependencies to latest version.
@@ -209,7 +217,7 @@ Added unit tests.
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.1.0" />
-    <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.0.5" />
+    <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.0.6" />
     <PackageReference Include="OwlCore" Version="0.1.0" />
     <PackageReference Include="OwlCore.Storage" Version="0.7.1" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />

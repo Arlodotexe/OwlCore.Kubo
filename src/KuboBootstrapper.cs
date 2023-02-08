@@ -5,12 +5,6 @@ using System.Runtime.InteropServices;
 
 namespace OwlCore.Kubo;
 
-[Flags]
-public enum KuboProfile
-{
-    Server,
-}
-
 /// <summary>
 /// An easy bootstrapper for the Kubo binary.
 /// </summary>
@@ -60,7 +54,7 @@ public class KuboBootstrapper : IDisposable
             await SetExecutablePermissionsForBinary(executableBinary.Path);
         }
 
-        var processStartInfo = new ProcessStartInfo(executableBinary.Path, $"daemon --routing= --init --enable-pubsub-experiment --enable-namesys-pubsub --api /ip4/{ApiUri.Host}/tcp/{ApiUri.Port} --repo-dir {RepoPath}")
+        var processStartInfo = new ProcessStartInfo(executableBinary.Path, $"daemon --init --enable-pubsub-experiment --enable-namesys-pubsub --api /ip4/{ApiUri.Host}/tcp/{ApiUri.Port} --repo-dir {RepoPath}")
         {
             CreateNoWindow = true
         };
