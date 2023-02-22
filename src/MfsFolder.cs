@@ -12,7 +12,7 @@ namespace OwlCore.Kubo
     /// <summary>
     /// A folder that resides in Kubo's Mutable Filesystem.
     /// </summary>
-    public partial class MfsFolder : IFolder, IAddressableFolder, IFolderCanFastGetItem
+    public partial class MfsFolder : IFolder, IChildFolder, IFastGetItem, IFastGetItemRecursive, IFastGetFirstByName, IFastGetRoot
     {
         private readonly IpfsClient _client;
 
@@ -41,11 +41,13 @@ namespace OwlCore.Kubo
         /// <inheritdoc/>
         public string Name { get; }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// The MFS path to the file. Relative to the root of MFS.
+        /// </summary>
         public string Path { get; }
 
         /// <inheritdoc/>
-        public virtual async IAsyncEnumerable<IAddressableStorable> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public virtual async IAsyncEnumerable<IStorableChild> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var serialized = await _client.DoCommandAsync("files/ls", cancellationToken, Path, "long=true");
             var result = await JsonSerializer.DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(serialized)), typeof(MfsFileContentsBody), ModelSerializer.Default, cancellationToken);
@@ -73,17 +75,45 @@ namespace OwlCore.Kubo
         }
 
         /// <inheritdoc/>
-        public virtual Task<IFolder?> GetParentAsync(CancellationToken cancellationToken = default) => Task.FromResult<IFolder?>(new MfsFolder(GetParentPath(Path), _client));
+        public virtual async Task<IStorableChild> GetFirstByNameAsync(string name, CancellationToken cancellationToken = new CancellationToken())
+        {
+            var mfsPath = $"{Id}{name}";
+
+            try
+            {
+                Guard.IsNotNullOrWhiteSpace(name);
+
+                var serialized = await _client.DoCommandAsync("files/stat", cancellationToken, mfsPath, "long=true");
+                var result = await JsonSerializer.DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(serialized)), typeof(MfsFileStatData), ModelSerializer.Default, cancellationToken);
+
+                Guard.IsNotNull(result);
+
+                var data = (MfsFileStatData)result;
+                Guard.IsNotNullOrWhiteSpace(data.Type);
+
+                return data.Type == "directory" ? new MfsFolder(mfsPath, _client) : new MfsFile(mfsPath, _client);
+            }
+            catch (HttpRequestException httpRequestException) when (httpRequestException.Message.Contains("file does not exist"))
+            {
+                throw new FileNotFoundException();
+            }
+        }
 
         /// <inheritdoc/>
-        public async Task<IAddressableStorable> GetItemAsync(string id, CancellationToken cancellationToken = default)
+        public virtual Task<IFolder?> GetParentAsync(CancellationToken cancellationToken = default) => Task.FromResult<IFolder?>(new MfsFolder(GetParentPath(Path), _client));
+        
+        /// <inheritdoc/>
+        public Task<IFolder?> GetRootAsync() => Task.FromResult<IFolder?>(new MfsFolder("/", _client));
+
+        /// <inheritdoc/>
+        public virtual async Task<IStorableChild> GetItemAsync(string id, CancellationToken cancellationToken = default)
         {
             try
             {
                 Guard.IsNotNullOrWhiteSpace(id);
 
                 var serialized = await _client.DoCommandAsync("files/stat", cancellationToken, id, "long=true");
-                var result = await JsonSerializer.DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(serialized)), typeof(MfsFileStatData), ModelSerializer.Default);
+                var result = await JsonSerializer.DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(serialized)), typeof(MfsFileStatData), ModelSerializer.Default, cancellationToken);
 
                 Guard.IsNotNull(result);
 
@@ -98,16 +128,19 @@ namespace OwlCore.Kubo
             }
         }
 
+        /// <inheritdoc/>
+        public virtual Task<IStorableChild> GetItemRecursiveAsync(string id, CancellationToken cancellationToken = default) => GetItemAsync(id, cancellationToken);
+
         /// <summary>
         /// Flushes the folder contents to disk and returns the CID of the folder contents.
         /// </summary>
         /// <returns>A Task that represents the asynchronous operation. Value is the CID of the folder that was flushed to disk.</returns>
-        public async Task<Cid> FlushAsync(CancellationToken cancellationToken = default)
+        public virtual async Task<Cid> FlushAsync(CancellationToken cancellationToken = default)
         {
             var serialized = await _client.DoCommandAsync("files/flush", cancellationToken, Path);
             Guard.IsNotNullOrWhiteSpace(serialized);
 
-            var result = await JsonSerializer.DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(serialized)), typeof(FilesFlushResponse), ModelSerializer.Default);
+            var result = await JsonSerializer.DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(serialized)), typeof(FilesFlushResponse), ModelSerializer.Default, cancellationToken);
             Guard.IsNotNull(result);
 
             var response = (FilesFlushResponse)result;
@@ -117,7 +150,7 @@ namespace OwlCore.Kubo
         internal static string GetFolderItemName(string path)
         {
             var parts = path.Trim('/').Split('/').ToArray();
-            return parts[parts.Length - 1];
+            return parts[^1];
         }
 
         internal static string GetParentPath(string relativePath)

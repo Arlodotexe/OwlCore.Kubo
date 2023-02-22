@@ -9,7 +9,7 @@ namespace OwlCore.Kubo
     /// <summary>
     /// A folder that resides on IPFS.
     /// </summary>
-    public class IpfsFolder : IFolder
+    public class IpfsFolder : IFolder, IChildFolder
     {
         private readonly IpfsClient _client;
 
@@ -44,8 +44,16 @@ namespace OwlCore.Kubo
         /// <inheritdoc/>
         public string Name { get; }
 
+        /// <summary>
+        /// The parent directory, if any.
+        /// </summary>
+        internal IpfsFolder? Parent { get; init; } = null;
+
         /// <inheritdoc/>
-        public virtual async IAsyncEnumerable<IAddressableStorable> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public Task<IFolder?> GetParentAsync(CancellationToken cancellationToken = default) => Task.FromResult<IFolder?>(Parent);
+
+        /// <inheritdoc/>
+        public virtual async IAsyncEnumerable<IStorableChild> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var itemInfo = await _client.FileSystem.ListFileAsync(Id, cancellationToken);
             Guard.IsTrue(itemInfo.IsDirectory);
@@ -55,15 +63,19 @@ namespace OwlCore.Kubo
                 Guard.IsNotNullOrWhiteSpace(link.Id);
                 var linkedItemInfo = await _client.FileSystem.ListFileAsync(link.Id, cancellationToken);
 
-                if (linkedItemInfo.IsDirectory)
+                if (linkedItemInfo.IsDirectory && type.HasFlag(StorableType.Folder))
                 {
-                    if (type.HasFlag(StorableType.Folder))
-                        yield return new AddressableIpfsFolder(linkedItemInfo.Id, link.Name, _client, new IFolder[] { this });
+                    yield return new IpfsFolder(linkedItemInfo.Id, link.Name, _client)
+                    {
+                        Parent = this,
+                    };
                 }
-                else
+                else if (type.HasFlag(StorableType.File))
                 {
-                    if (type.HasFlag(StorableType.File))
-                        yield return new AddressableIpfsFile(linkedItemInfo.Id, link.Name, _client, new IFolder[] { this });
+                    yield return new IpfsFile(linkedItemInfo.Id, link.Name, _client)
+                    {
+                        Parent = this,
+                    };
                 }
             }
         }

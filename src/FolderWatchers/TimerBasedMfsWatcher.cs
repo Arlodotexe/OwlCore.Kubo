@@ -18,7 +18,7 @@ public class TimerBasedMfsWatcher : TimerBasedFolderWatcher
 
     private bool _running;
     private Cid? _lastKnownRootCid;
-    private List<IAddressableStorable> _knownItems = new();
+    private List<IStorableChild> _knownItems = new();
 
     /// <summary>
     /// Creates a new instance of <see cref="TimerBasedMfsWatcher"/>.

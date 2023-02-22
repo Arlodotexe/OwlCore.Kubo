@@ -7,7 +7,7 @@ namespace OwlCore.Kubo;
 /// <summary>
 /// A file that resides on IPFS.
 /// </summary>
-public class IpfsFile : IFile
+public class IpfsFile : IFile, IChildFile
 {
     /// <summary>
     /// Creates a new instance of <see cref="IpfsFile"/>.
@@ -44,6 +44,14 @@ public class IpfsFile : IFile
 
     /// <inheritdoc/>
     public string Name { get; }
+
+    /// <summary>
+    /// The parent directory, if any.
+    /// </summary>
+    internal IpfsFolder? Parent { get; init; } = null;
+
+    /// <inheritdoc/>
+    public Task<IFolder?> GetParentAsync(CancellationToken cancellationToken = default) => Task.FromResult<IFolder?>(Parent);
 
     /// <inheritdoc/>
     public Task<Stream> OpenStreamAsync(FileAccess accessMode = FileAccess.Read, CancellationToken cancellationToken = default)

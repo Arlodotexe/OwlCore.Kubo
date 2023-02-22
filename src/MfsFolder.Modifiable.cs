@@ -4,7 +4,7 @@ using OwlCore.Storage;
 
 namespace OwlCore.Kubo
 {
-    public partial class MfsFolder : IModifiableFolder
+    public partial class MfsFolder : IModifiableFolder, IFastFileMove<MfsFile>, IFastFileCopy<MfsFile>, IFastFileCopy<IpfsFile>, IFastFileCopy<IpnsFile>
     {
         /// <summary>
         /// The interval that MFS should be checked for updates.
@@ -12,72 +12,54 @@ namespace OwlCore.Kubo
         public TimeSpan UpdateCheckInterval { get; } = TimeSpan.FromSeconds(10);
 
         /// <inheritdoc/>
-        public async Task DeleteAsync(IAddressableStorable item, CancellationToken cancellationToken = default)
+        public async Task DeleteAsync(IStorableChild item, CancellationToken cancellationToken = default)
         {
-            Guard.IsNotNullOrWhiteSpace(item.Name);
             cancellationToken.ThrowIfCancellationRequested();
+            Guard.IsNotNullOrWhiteSpace(item.Name);
 
             await _client.DoCommandAsync("files/rm", cancellationToken, $"{Path}{item.Name}", "recursive=true", "force=true");
         }
 
         /// <inheritdoc/>
-        public async Task<IAddressableFile> CreateCopyOfAsync(IFile fileToCopy, bool overwrite = false, CancellationToken cancellationToken = default)
+        public async Task<IChildFile> CreateCopyOfAsync(MfsFile fileToCopy, bool overwrite = false, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (fileToCopy is MfsFile mfsFile)
-            {
-                await _client.DoCommandAsync("files/cp", cancellationToken, arg: mfsFile.Path, $"arg={Path}");
-            }
-            else if (fileToCopy is IpfsFile ipfsFile)
-            {
-                await _client.DoCommandAsync("files/cp", cancellationToken, arg: ipfsFile.Id, $"arg={Path}");
-            }
-            else
-            {
-                // Manual file copy. Slower, but covers all other scenarios.
-                using var sourceStream = await fileToCopy.OpenStreamAsync(cancellationToken: cancellationToken);
+            await _client.DoCommandAsync("files/cp", cancellationToken, arg: fileToCopy.Path, $"arg={Path}");
+            return new MfsFile($"{Path}{fileToCopy.Name}", _client);
+        }
 
-                if (sourceStream.CanSeek)
-                    sourceStream.Seek(0, SeekOrigin.Begin);
+        /// <inheritdoc/>
+        public async Task<IChildFile> CreateCopyOfAsync(IpfsFile fileToCopy, bool overwrite = false, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
 
-                var file = await CreateFileAsync(fileToCopy.Name, overwrite, cancellationToken);
-                using var destinationStream = await file.OpenStreamAsync(FileAccess.ReadWrite);
+            await _client.DoCommandAsync("files/cp", cancellationToken, arg: $"/ipfs/{fileToCopy.Id}", $"arg={Path}");
+            return new MfsFile($"{Path}{fileToCopy.Name}", _client);
+        }
 
-                await sourceStream.CopyToAsync(destinationStream, bufferSize: 81920, cancellationToken);
-            }
+        /// <inheritdoc/>
+        public async Task<IChildFile> CreateCopyOfAsync(IpnsFile fileToCopy, bool overwrite = false, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var cid = await fileToCopy.ResolveCidAsync(cancellationToken);
+            await _client.DoCommandAsync("files/cp", cancellationToken, arg: $"/ipfs/{cid}", $"arg={Path}");
 
             return new MfsFile($"{Path}{fileToCopy.Name}", _client);
         }
 
         /// <inheritdoc/>
-        public async Task<IAddressableFile> MoveFromAsync(IAddressableFile fileToMove, IModifiableFolder source, bool overwrite = false, CancellationToken cancellationToken = default)
+        public async Task<IChildFile> MoveFromAsync(MfsFile fileToMove, IModifiableFolder source, bool overwrite = false, CancellationToken cancellationToken = default)
         {
-            if (source is IAddressableFolder addressableSource)
-            {
-                Guard.IsTrue(addressableSource.Path.StartsWith(System.IO.Path.GetDirectoryName(fileToMove.Path) ?? string.Empty), nameof(source), $"{fileToMove.Id} does not exist in {source.Id}.");
-            }
-
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (fileToMove is MfsFile mfsFile)
-            {
-                await _client.DoCommandAsync("files/mv", cancellationToken, arg: mfsFile.Path, $"arg={Path}{fileToMove.Name}");
-
-                return new MfsFile($"{Path}{fileToMove.Name}", _client);
-            }
-            else
-            {
-                // Manual move. Slower, but covers all other scenarios.
-                var newFile = await CreateCopyOfAsync(fileToMove, overwrite, cancellationToken);
-                await source.DeleteAsync(fileToMove, cancellationToken);
-
-                return newFile;
-            }
+            await _client.DoCommandAsync("files/mv", cancellationToken, arg: fileToMove.Path, $"arg={Path}{fileToMove.Name}");
+            return new MfsFile($"{Path}{fileToMove.Name}", _client);
         }
 
         /// <inheritdoc/>
-        public async Task<IAddressableFolder> CreateFolderAsync(string name, bool overwrite = false, CancellationToken cancellationToken = default)
+        public async Task<IChildFolder> CreateFolderAsync(string name, bool overwrite = false, CancellationToken cancellationToken = default)
         {
             if (overwrite)
             {
@@ -90,7 +72,7 @@ namespace OwlCore.Kubo
         }
 
         /// <inheritdoc/>
-        public async Task<IAddressableFile> CreateFileAsync(string name, bool overwrite = false, CancellationToken cancellationToken = default)
+        public async Task<IChildFile> CreateFileAsync(string name, bool overwrite = false, CancellationToken cancellationToken = default)
         {
             await _client.UploadAsync("files/write", CancellationToken.None, new MemoryStream(), null, $"arg={Path}{name}", $"create=true", overwrite ? $"truncate=true" : string.Empty);
 

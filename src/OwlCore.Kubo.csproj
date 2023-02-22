@@ -14,13 +14,17 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.9.9</Version>
+    <Version>0.10.0</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.10.0 ---
+[Breaking]
+Inherited breaking changes from OwlCore.Storage 0.8.0.
+
 --- 0.9.9 ---
 [Improvement]
 Updated transitive dependencies to latest version.
@@ -212,18 +216,18 @@ Added unit tests.
       <PackagePath></PackagePath>
     </None>
 
-    <None Include="logo.png" Pack="true" PackagePath="" />    
+    <None Include="logo.png" Pack="true" PackagePath="" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.1.0" />
     <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.0.6" />
     <PackageReference Include="OwlCore" Version="0.1.0" />
-    <PackageReference Include="OwlCore.Storage" Version="0.7.1" />
+    <PackageReference Include="OwlCore.Storage" Version="0.8.0" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
     <PackageReference Include="SharpCompress" Version="0.32.2" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
-    <PackageReference Include="System.Text.Json" Version="7.0.1" />  <None Include="logo.png" Pack="true" PackagePath="" />    
+    <PackageReference Include="System.Text.Json" Version="7.0.2" />
   </ItemGroup>
 </Project>

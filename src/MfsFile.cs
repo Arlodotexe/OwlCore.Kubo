@@ -11,7 +11,7 @@ namespace OwlCore.Kubo;
 /// <summary>
 /// An file that resides in Kubo's Mutable Filesystem.
 /// </summary>
-public class MfsFile : IFile, IAddressableFile
+public class MfsFile : IFile, IChildFile
 {
     private readonly IpfsClient _client;
 
@@ -40,7 +40,9 @@ public class MfsFile : IFile, IAddressableFile
         return Task.FromResult<IFolder?>(new MfsFolder(MfsFolder.GetParentPath(Path), _client));
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// The MFS path to the file. Relative to the root of MFS.
+    /// </summary>
     public string Path { get; }
 
     /// <inheritdoc/>
@@ -53,7 +55,7 @@ public class MfsFile : IFile, IAddressableFile
     public async Task<Stream> OpenStreamAsync(FileAccess accessMode = FileAccess.Read, CancellationToken cancellationToken = default)
     {
         var serialized = await _client.DoCommandAsync("files/stat", cancellationToken, Path, "long=true");
-        var result = await JsonSerializer.DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(serialized)), typeof(MfsFileStatData), ModelSerializer.Default);
+        var result = await JsonSerializer.DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(serialized)), typeof(MfsFileStatData), ModelSerializer.Default, cancellationToken);
 
         Guard.IsNotNull(result);
 
@@ -73,7 +75,7 @@ public class MfsFile : IFile, IAddressableFile
         var serialized = await _client.DoCommandAsync("files/flush", cancellationToken, Path);
         Guard.IsNotNullOrWhiteSpace(serialized);
 
-        var result = await JsonSerializer.DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(serialized)), typeof(FilesFlushResponse), ModelSerializer.Default);
+        var result = await JsonSerializer.DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(serialized)), typeof(FilesFlushResponse), ModelSerializer.Default, cancellationToken);
         Guard.IsNotNull(result);
 
         var response = (FilesFlushResponse)result;
