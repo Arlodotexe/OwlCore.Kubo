@@ -14,13 +14,17 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.10.0</Version>
+    <Version>0.10.1</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.10.1 ---
+[Fixes]
+Inherited fixes from OwlCore.Storage 0.8.2.
+
 --- 0.10.0 ---
 [Breaking]
 Inherited breaking changes from OwlCore.Storage 0.8.0.
@@ -223,7 +227,7 @@ Added unit tests.
     <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.1.0" />
     <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.0.6" />
     <PackageReference Include="OwlCore" Version="0.1.0" />
-    <PackageReference Include="OwlCore.Storage" Version="0.8.0" />
+    <PackageReference Include="OwlCore.Storage" Version="0.8.2" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
     <PackageReference Include="SharpCompress" Version="0.32.2" />
