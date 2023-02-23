@@ -21,7 +21,7 @@ public class IpnsFile : IFile, IChildFile
     public IpnsFile(string ipnsAddress, IpfsClient client)
     {
         Id = ipnsAddress;
-        Name = ipnsAddress;
+        Name = MfsFolder.GetFolderItemName(ipnsAddress);
         _client = client;
     }
 
