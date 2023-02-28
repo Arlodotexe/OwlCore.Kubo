@@ -153,19 +153,19 @@ public class KuboBootstrapper : IDisposable
 
         try
         {
-            await RunAsync(_executableBinary, $"init --repo-dir {RepoPath} --empty-repo", cancellationToken);
+            await RunAsync(_executableBinary, $"init --repo-dir {RepoPath} --empty-repo", throwOnError: false, cancellationToken);
         }
         catch
         {
             // ignored
         }
 
-        await RunAsync(_executableBinary, $"config --repo-dir {RepoPath} Routing.Type {RoutingMode.ToString().ToLowerInvariant()}", cancellationToken);
-        await RunAsync(_executableBinary, $"config --repo-dir {RepoPath} Addresses.API /ip4/{ApiUri.Host}/tcp/{ApiUri.Port}", cancellationToken);
-        await RunAsync(_executableBinary, $"config --repo-dir {RepoPath} Addresses.Gateway /ip4/{GatewayUri.Host}/tcp/{GatewayUri.Port}", cancellationToken);
+        await RunAsync(_executableBinary, $"config --repo-dir {RepoPath} Routing.Type {RoutingMode.ToString().ToLowerInvariant()}", throwOnError: true, cancellationToken);
+        await RunAsync(_executableBinary, $"config --repo-dir {RepoPath} Addresses.API /ip4/{ApiUri.Host}/tcp/{ApiUri.Port}", throwOnError: true, cancellationToken);
+        await RunAsync(_executableBinary, $"config --repo-dir {RepoPath} Addresses.Gateway /ip4/{GatewayUri.Host}/tcp/{GatewayUri.Port}", throwOnError: true, cancellationToken);
 
         foreach (var profile in StartupProfiles)
-            await RunAsync(_executableBinary, $"config --repo-dir {RepoPath} profile apply {profile}", cancellationToken);
+            await RunAsync(_executableBinary, $"config --repo-dir {RepoPath} profile apply {profile}", throwOnError: true, cancellationToken);
     }
 
     private Task SetExecutablePermissionsForBinary(SystemFile file)
@@ -174,10 +174,10 @@ public class KuboBootstrapper : IDisposable
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             return Task.CompletedTask;
 
-        return RunAsync(new SystemFile("/bin/bash"), $"-c \"chmod 777 {file}\"");
+        return RunAsync(new SystemFile("/bin/bash"), $"-c \"chmod 777 {file}\"", throwOnError: true);
     }
 
-    private async Task RunAsync(SystemFile file, string arguments, CancellationToken cancellationToken = default)
+    private async Task RunAsync(SystemFile file, string arguments, bool throwOnError, CancellationToken cancellationToken = default)
     {
         var processStartInfo = new ProcessStartInfo(file.Path, arguments)
         {
@@ -224,7 +224,7 @@ public class KuboBootstrapper : IDisposable
 
         void ProcOnErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
-            if (!string.IsNullOrWhiteSpace(e.Data))
+            if (!string.IsNullOrWhiteSpace(e.Data) && throwOnError)
             {
                 throw new InvalidOperationException($"Error received while running {file.Path} {arguments}: {e.Data}");
             }
