@@ -21,7 +21,7 @@ namespace OwlCore.Kubo
         public HttpMessageHandler HttpMessageHandler { get; set; } = new HttpClientHandler();
 
         /// <summary>
-        /// Automatically downloads and extracts the correct Kubo binary for the running operating system and architecture, returning the downloaded binary.
+        /// Automatically downloads and extracts the latest Kubo binary for the running operating system and architecture, returning the downloaded binary.
         /// </summary>
         public async Task<IFile> DownloadLatestBinaryAsync(CancellationToken cancellationToken = default)
         {
@@ -58,7 +58,7 @@ namespace OwlCore.Kubo
         {
             var folder = ExtractArchive(archiveStream);
 
-            await foreach (var item in DepthFirstSearch(folder))
+            await foreach (var item in DepthFirstSearch(folder).WithCancellation(cancellationToken))
             {
                 var noExtName = Path.GetFileNameWithoutExtension(item.Name);
                 if (noExtName == "ipfs" || noExtName == "kubo")

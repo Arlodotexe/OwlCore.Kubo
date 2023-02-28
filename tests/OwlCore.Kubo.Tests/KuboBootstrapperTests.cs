@@ -5,7 +5,7 @@ namespace OwlCore.Kubo.Tests
     [TestClass]
     public class KuboBootstrapperTests
     {
-        [TestMethod, Timeout(20_000)]
+        [TestMethod, Timeout(45_000)]
         public async Task DownloadAndBootstrapAsync()
         {
             if (KuboAccess.Bootstrapper is not null)

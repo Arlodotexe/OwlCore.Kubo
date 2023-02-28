@@ -14,13 +14,23 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.10.2</Version>
+    <Version>0.11.0</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.11.0 ---
+[New]
+Added KuboBootstrapper.GatewayUri to specify the address the gateway should be hosted.
+Added KuboBootstrapper.RoutingMode to swap between the full DHT and the client DHT before starting the node.
+Added KuboBootstrapper.StartupProfiles. These will be applied before starting the node.
+Added KuboBootstrapper.BinaryWorkingFolder. This is the folder where Kubo is copied to before being run and can be changed to a custom location.
+
+[Fixes]
+Fixed an issue where KuboBootstrapper.StartAsync would not throw when the process failed to start.
+
 --- 0.10.2 ---
 [Fixes]
 Fixed IpnsFile not providing the correct name.
