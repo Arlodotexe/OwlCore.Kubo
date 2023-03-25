@@ -46,7 +46,7 @@ The recommended approach is to save the file ID, and provide it to `GetItemAsync
 ```cs
 var kuboBinary = await destination.GetItemAsync(copiedFileId);
 ```
-This will work for all storage implementations, with maximum performance when `OwlCore.Storage.IFolderCanFastGetItem` is supported by the storage implementor.
+This will work for all storage implementations, with maximum performance when the fast path supported by the storage implementor.
 
 
 ## Use the binary
