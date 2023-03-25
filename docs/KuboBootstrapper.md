@@ -25,7 +25,8 @@ await bootstrapper.StartAsync();
 bootstrapper.Dispose();
 ```
 
-## Custom API address
+## Additional options
+To make it easy to give users control over their node, we've exposed several options for the bootstrapper. 
 ```cs
 IFile kuboBinary = await GetKuboBinary();
 
@@ -33,6 +34,12 @@ IFile kuboBinary = await GetKuboBinary();
 var bootstrapper = new KuboBootstrapper(kuboBinary, repoPath)
 {
     ApiUri = new Uri("http://127.0.0.1:7700"),
+    GatewayUri = new Uri("http://127.0.0.1:8081"),
+    RoutingMode = DhtRoutingMode.DhtClient,
+    StartupProfiles = new() 
+    {
+        "lowpower"
+    },
 };
 
 // Start the boostrapper. Once this task finishes, the API and Gateway will be ready for use.
