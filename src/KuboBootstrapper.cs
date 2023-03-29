@@ -124,7 +124,7 @@ public class KuboBootstrapper : IDisposable
 
         void ProcessOnErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
-            if (!string.IsNullOrWhiteSpace(e.Data))
+            if (!string.IsNullOrWhiteSpace(e.Data) && !e.Data.Contains("[WARN]"))
             {
                 throw new InvalidOperationException($"Error received while starting daemon: {e.Data}");
             }

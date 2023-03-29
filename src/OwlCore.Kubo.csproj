@@ -14,13 +14,17 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.11.1</Version>
+    <Version>0.11.2</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.11.2 ---
+[Fixes]
+Fixed an issue where KuboBootstrapper would throw when initializing if a warning was output to the error stream.
+
 --- 0.11.1 ---
 [Fixes]
 Fixed an issue where KuboBootstrapper would throw when initializing a non-empty repo.
