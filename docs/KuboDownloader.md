@@ -37,16 +37,16 @@ Once you have the binary downloaded, save it somewhere so you don't need to redo
 // Any modifiable folder can be used, even if it's not on local disk!
 IModifiableFolder destination = new SystemFolder("/some/path");
 
-IAddressableFile copiedFile = await destination.CreateCopyOfAsync(kuboBinary);
+var copiedFile = await destination.CreateCopyOfAsync(kuboBinary);
 ```
 
 ## Retrieve the saved binary
 The recommended approach is to save the file ID, and provide it to `GetItemAsync()` in the folder that you copied the binary to:
 
 ```cs
-IAddressableStorable kuboBinary = await destination.GetItemAsync(copiedFileId);
+var kuboBinary = await destination.GetItemAsync(copiedFileId);
 ```
-This will work for all storage implementations, with maximum performance when `OwlCore.Storage.IFolderCanFastGetItem` is supported by the storage implementor.
+This will work for all storage implementations, with maximum performance when the fast path supported by the storage implementor.
 
 
 ## Use the binary
