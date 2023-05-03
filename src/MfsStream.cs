@@ -159,6 +159,6 @@ public class MfsStream : Stream
     static string GetFileName(string path)
     {
         var dirName = Path.GetDirectoryName(path);
-        return path.Replace(dirName ?? string.Empty, string.Empty).Trim('/');
+        return path.Replace('/', '\\').Replace(dirName ?? string.Empty, string.Empty).Trim('/').Trim('\\');
     }
 }
