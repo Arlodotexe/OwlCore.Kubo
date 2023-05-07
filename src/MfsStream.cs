@@ -68,23 +68,18 @@ public class MfsStream : Stream
         Guard.IsLessThanOrEqualTo(offset + count, Length);
         Guard.IsGreaterThanOrEqualTo(offset, 0);
 
-        var result = await _client.PostDownloadAsync("files/read", cancellationToken, _path, $"offset={Position}", $"count={count}");
+        var result = await _client.PostDownloadAsync("files/read", cancellationToken, _path, $"offset={Position + offset}", $"count={count}");
 
-        var bytesRead = 0;
+        using var memStream = new MemoryStream();
+        await result.CopyToAsync(memStream);
+        var bytes = memStream.ToArray();
 
-        for (; bytesRead < count; bytesRead++)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            var nextByte = result.ReadByte();
+        for (var i = 0; i < bytes.Length; i++)
+            buffer[i] = bytes[i];
 
-            // If reached end of stream.
-            if (nextByte == -1 || Position++ == _length)
-                return bytesRead;
+        Position += bytes.Length;
 
-            buffer[offset + bytesRead] = (byte)nextByte;
-        }
-
-        return bytesRead;
+        return bytes.Length;
     }
 
     /// <inheritdoc/>
