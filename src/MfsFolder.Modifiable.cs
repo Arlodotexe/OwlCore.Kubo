@@ -66,7 +66,14 @@ namespace OwlCore.Kubo
                 await _client.DoCommandAsync("files/rm", cancellationToken, $"{Path}{name}", "recursive=true");
             }
 
-            await _client.DoCommandAsync("files/mkdir", cancellationToken, arg: $"{Path}{name}");
+            try
+            {
+                await _client.DoCommandAsync("files/mkdir", cancellationToken, arg: $"{Path}{name}");
+            }
+            catch (Exception ex) when (ex.Message.ToLower().Contains("file already exists"))
+            {
+                // Ignored, return existing path if exists
+            }
 
             return new MfsFolder($"{Path}{name}", _client);
         }
