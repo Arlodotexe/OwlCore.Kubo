@@ -53,7 +53,7 @@ public class TimerBasedMfsWatcher : TimerBasedFolderWatcher
 
         var data = (MfsFileStatData)result;
 
-        if (_lastKnownRootCid != data.Hash)
+        if (data.Hash is not null && _lastKnownRootCid != data.Hash)
         {
             var items = await folder.GetItemsAsync().ToListAsync();
 

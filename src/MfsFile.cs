@@ -70,7 +70,7 @@ public class MfsFile : IFile, IChildFile
     /// Flushes the file contents to disk and returns the CID of the folder contents.
     /// </summary>
     /// <returns>A Task that represents the asynchronous operation. Value is the CID of the file that was flushed to disk.</returns>
-    public async Task<Cid> FlushAsync(CancellationToken cancellationToken = default)
+    public async Task<Cid?> FlushAsync(CancellationToken cancellationToken = default)
     {
         var serialized = await _client.DoCommandAsync("files/flush", cancellationToken, Path);
         Guard.IsNotNullOrWhiteSpace(serialized);
@@ -79,6 +79,9 @@ public class MfsFile : IFile, IChildFile
         Guard.IsNotNull(result);
 
         var response = (FilesFlushResponse)result;
+        if (response.Cid is null)
+            return null;
+
         return response.Cid;
     }
 }

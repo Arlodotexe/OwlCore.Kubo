@@ -1,6 +1,7 @@
 ﻿using Ipfs;
 using Ipfs.CoreApi;
 using System.Collections.ObjectModel;
+using CommunityToolkit.Diagnostics;
 using OwlCore.Extensions;
 using Timer = System.Timers.Timer;
 
@@ -122,6 +123,9 @@ public class PeerRoom : IDisposable
 
     private async void ReceiveMessage(IPublishedMessage publishedMessage)
     {
+        if (publishedMessage.Sender.Id is null)
+            return;
+
         if (publishedMessage.Sender.Id == ThisPeer.Id)
             return;
 
@@ -159,6 +163,8 @@ public class PeerRoom : IDisposable
 
         foreach (var peer in ConnectedPeers.ToArray())
         {
+            Guard.IsNotNull(peer.Id);
+
             if (now - _heartbeatExpirationTime > _lastSeenDates[peer.Id].LastSeen)
             {
                 await _syncContext.PostAsync(() => Task.FromResult(ConnectedPeers.Remove(ConnectedPeers.First(x => x.Id == peer.Id))));

@@ -14,13 +14,20 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.11.3</Version>
+    <Version>0.12.0</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.12.0 ---
+[Breaking]
+Inherited breaking changes from transient dependencies.
+
+[Improvements]
+Updated all dependencies to latest version.
+
 --- 0.11.3 ---
 [Fixes]
 Fixed an issue where MfsStream would throw when writing due to a potentially malformed path.
@@ -250,14 +257,14 @@ Added unit tests.
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.1.0" />
-    <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.0.6" />
-    <PackageReference Include="OwlCore" Version="0.1.0" />
-    <PackageReference Include="OwlCore.Storage" Version="0.8.2" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
+    <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.2.0" />
+    <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.0.7" />
+    <PackageReference Include="OwlCore" Version="0.2.1" />
+    <PackageReference Include="OwlCore.Storage" Version="0.8.3" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0-preview.3.23174.8" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
-    <PackageReference Include="SharpCompress" Version="0.32.2" />
+    <PackageReference Include="SharpCompress" Version="0.33.0" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
-    <PackageReference Include="System.Text.Json" Version="7.0.2" />
+    <PackageReference Include="System.Text.Json" Version="8.0.0-preview.3.23174.8" />
   </ItemGroup>
 </Project>

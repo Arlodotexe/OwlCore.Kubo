@@ -101,7 +101,7 @@ namespace OwlCore.Kubo
 
         /// <inheritdoc/>
         public virtual Task<IFolder?> GetParentAsync(CancellationToken cancellationToken = default) => Task.FromResult<IFolder?>(new MfsFolder(GetParentPath(Path), _client));
-        
+
         /// <inheritdoc/>
         public Task<IFolder?> GetRootAsync() => Task.FromResult<IFolder?>(new MfsFolder("/", _client));
 
@@ -135,7 +135,7 @@ namespace OwlCore.Kubo
         /// Flushes the folder contents to disk and returns the CID of the folder contents.
         /// </summary>
         /// <returns>A Task that represents the asynchronous operation. Value is the CID of the folder that was flushed to disk.</returns>
-        public virtual async Task<Cid> FlushAsync(CancellationToken cancellationToken = default)
+        public virtual async Task<Cid?> FlushAsync(CancellationToken cancellationToken = default)
         {
             var serialized = await _client.DoCommandAsync("files/flush", cancellationToken, Path);
             Guard.IsNotNullOrWhiteSpace(serialized);
@@ -144,6 +144,9 @@ namespace OwlCore.Kubo
             Guard.IsNotNull(result);
 
             var response = (FilesFlushResponse)result;
+            if (response.Cid is null)
+                return null;
+
             return response.Cid;
         }
 

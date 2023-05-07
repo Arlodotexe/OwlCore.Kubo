@@ -61,6 +61,8 @@ namespace OwlCore.Kubo
             foreach (var link in itemInfo.Links)
             {
                 Guard.IsNotNullOrWhiteSpace(link.Id);
+                Guard.IsNotNull(link.Name);
+
                 var linkedItemInfo = await _client.FileSystem.ListFileAsync(link.Id, cancellationToken);
 
                 if (linkedItemInfo.IsDirectory && type.HasFlag(StorableType.Folder))
