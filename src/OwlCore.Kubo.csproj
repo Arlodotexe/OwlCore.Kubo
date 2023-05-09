@@ -266,16 +266,13 @@ Added unit tests.
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.2.0" />
+    <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.0.7" />
     <PackageReference Include="OwlCore" Version="0.2.1" />
-    <PackageReference Include="OwlCore.Storage" Version="0.8.3" />
+    <PackageReference Include="OwlCore.Storage" Version="0.8.4" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0-preview.3.23174.8" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
     <PackageReference Include="SharpCompress" Version="0.33.0" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
     <PackageReference Include="System.Text.Json" Version="8.0.0-preview.3.23174.8" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\net-ipfs-http-client\src\IpfsHttpClient.csproj" />
   </ItemGroup>
 </Project>
