@@ -142,9 +142,9 @@ public class MfsStream : Stream
     {
         Guard.IsGreaterThanOrEqualTo(offset, 0);
 
-        if (offset + count > Length)
+        if (Position + count > Length)
         {
-            SetLength(offset + count);
+            SetLength(Position + count);
         }
 
         await _client.Upload2Async("files/write", cancellationToken, new MemoryStream(buffer, offset, count), GetFileName(_path), $"arg={_path}", $"offset={Position}", $"count={count}", $"create=true");

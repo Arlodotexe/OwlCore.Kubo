@@ -14,13 +14,17 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.12.2</Version>
+    <Version>0.12.3</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.12.3 ---
+[Fixes]
+Fixed an issue in MfsStream.WriteAsync where the length adjustment when writing past the end of the stream was calculated incorrectly.
+
 --- 0.12.2 ---
 [Fixes]
 Fixed an issue that prevented MfsStream.ReadAsync from reading the requested byte count. Reading file content from Mfs is now much faster.
