@@ -14,13 +14,17 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.12.4</Version>
+    <Version>0.12.5</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.12.5 ---
+[Fixes]
+Updated transient dependency on OwlCore.Storage to latest verison. Fixes some issues with starting the KuboBootstrapper.
+
 --- 0.12.4 ---
 [Fixes]
 Downgraded System.Text.Json from prerelease to latest stable.
@@ -277,7 +281,7 @@ Added unit tests.
     <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.2.0" />
     <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.0.7" />
     <PackageReference Include="OwlCore" Version="0.2.1" />
-    <PackageReference Include="OwlCore.Storage" Version="0.8.4" />
+    <PackageReference Include="OwlCore.Storage" Version="0.8.5" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
     <PackageReference Include="SharpCompress" Version="0.33.0" />
