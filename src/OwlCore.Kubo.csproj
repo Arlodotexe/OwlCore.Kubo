@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net6.0;</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net6.0;net7.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <LangVersion>10.0</LangVersion>
     <WarningsAsErrors>nullable</WarningsAsErrors>
@@ -14,13 +14,20 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.13.1</Version>
+    <Version>0.13.2</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.13.2 ---
+[Fixed]
+Fixed an issue with KuboBootstrapper not starting on Linux (caused by warning-based stderr used by newer versions of Kubo).
+
+[Improvements]
+Added support for net7.0
+
 --- 0.13.1 ---
 [Fixed]
 Fixed an issue with KuboBootstrapper not starting on Linux.

@@ -12,14 +12,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v2
+
+    - name: Install .NET SDK
+      uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: '7.0.x'
+
     - name: Restore dependencies
       run: dotnet restore
+
     - name: Build
       run: dotnet build --no-restore -p:Configuration=Release
+      
     - name: Publish to NuGet
       run: dotnet nuget push "/home/runner/work/OwlCore.Kubo/OwlCore.Kubo/src/bin/Release/OwlCore.Kubo.*.*.*.nupkg" --skip-duplicate --api-key ${{secrets.NUGET_KEY}} --source https://api.nuget.org/v3/index.json
       
