@@ -174,7 +174,7 @@ public class KuboBootstrapper : IDisposable
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             return Task.CompletedTask;
 
-        return RunAsync(new SystemFile("/bin/bash"), $"-c \"chmod 777 {file}\"", throwOnError: true);
+        return RunAsync(new SystemFile("/bin/bash"), $"-c \"chmod 777 {file.Path}\"", throwOnError: true);
     }
 
     private async Task RunAsync(SystemFile file, string arguments, bool throwOnError, CancellationToken cancellationToken = default)
