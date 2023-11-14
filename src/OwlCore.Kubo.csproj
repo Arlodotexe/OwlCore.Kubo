@@ -23,7 +23,7 @@
     <PackageReleaseNotes>
 --- 0.13.0 ---
 [New]
-Added IGetCid and StorableKuboExtensions.GetCidAsync() for easier content comparison. Enables returning the CID defined by any implementation of IGetCid.
+Added IGetCid and StorableKuboExtensions.GetCidAsync() for easier content comparison. Enables returning the CID for any IStorable item, falling back to stream hashing for files when IGetCid isn't implemented.
 Added GenericKuboExtensions.GetCidAsync(object) extension method, a shorthand for ipfsClient.Dag.PutAsync(JObject) with pinning disabled.
 All OwlCore.Storage implementations for Kubo now implement GetCidAsync() and call Kubo directly (IpfsFile, IpfsFolder, IpnsFile, IpnsFolder, MfsFile, MfsFolder).
 Added ContentAddressedSystemFile and ContentAddressedSystemFolder, enabling a fastpath when the GetCidAsync() extension method is called on SystemFolder or SystemFile.
@@ -31,9 +31,6 @@ Added ContentAddressedSystemFile and ContentAddressedSystemFolder, enabling a fa
 [Improvements]
 All Kubo-based OwlCore.Storage implementations now consistently expose the IpfsClient it uses as a public property Client.
 Codebase uses IDelegable{T} instead of IDelegatable{T}. Functionally, no change - IDelegatable{T} inherits from IDelegable{T} to smooth the migration process. IDelegatable is spelled incorrectly and marked obsolete. 
-
-[Breaking]
-Path helpers were moved from MfsFolder to a new static class, PathHelpers.
 
 --- 0.12.5 ---
 [Fixes]
