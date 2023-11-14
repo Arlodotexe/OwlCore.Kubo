@@ -10,7 +10,6 @@ namespace OwlCore.Kubo;
 public class MfsStream : Stream
 {
     private readonly string _path;
-    private readonly IpfsClient _client;
     private long _length;
 
     /// <summary>
@@ -23,8 +22,13 @@ public class MfsStream : Stream
     {
         _path = path;
         _length = length;
-        _client = client;
+        Client = client;
     }
+
+    /// <summary>
+    /// The IPFS Client to use for retrieving the content.
+    /// </summary>
+    public IpfsClient Client { get; }
 
     /// <inheritdoc/>
     public override bool CanRead => true;
@@ -47,13 +51,13 @@ public class MfsStream : Stream
     /// <inheritdoc/>
     public override void Flush()
     {
-        _ = _client.DoCommandAsync("files/flush", CancellationToken.None, _path).Result;
+        _ = Client.DoCommandAsync("files/flush", CancellationToken.None, _path).Result;
     }
 
     /// <inheritdoc/>
     public override Task FlushAsync(CancellationToken cancellationToken)
     {
-        return _client.DoCommandAsync("files/flush", cancellationToken, _path);
+        return Client.DoCommandAsync("files/flush", cancellationToken, _path);
     }
 
     /// <inheritdoc/>
@@ -68,7 +72,7 @@ public class MfsStream : Stream
         Guard.IsLessThanOrEqualTo(offset + count, Length);
         Guard.IsGreaterThanOrEqualTo(offset, 0);
 
-        var result = await _client.PostDownloadAsync("files/read", cancellationToken, _path, $"offset={Position + offset}", $"count={count}");
+        var result = await Client.PostDownloadAsync("files/read", cancellationToken, _path, $"offset={Position + offset}", $"count={count}");
 
         using var memStream = new MemoryStream();
         await result.CopyToAsync(memStream);
@@ -147,7 +151,7 @@ public class MfsStream : Stream
             SetLength(Position + count);
         }
 
-        await _client.Upload2Async("files/write", cancellationToken, new MemoryStream(buffer, offset, count), GetFileName(_path), $"arg={_path}", $"offset={Position}", $"count={count}", $"create=true");
+        await Client.Upload2Async("files/write", cancellationToken, new MemoryStream(buffer, offset, count), GetFileName(_path), $"arg={_path}", $"offset={Position}", $"count={count}", $"create=true");
         Position += count;
     }
 

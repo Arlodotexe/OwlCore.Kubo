@@ -7,7 +7,7 @@ namespace OwlCore.Kubo;
 /// <summary>
 /// A file that resides on IPFS.
 /// </summary>
-public class IpfsFile : IFile, IChildFile
+public class IpfsFile : IFile, IChildFile, IGetCid
 {
     /// <summary>
     /// Creates a new instance of <see cref="IpfsFile"/>.
@@ -37,7 +37,7 @@ public class IpfsFile : IFile, IChildFile
     /// <summary>
     /// The IPFS Client to use for retrieving the content.
     /// </summary>
-    protected IpfsClient Client { get; }
+    public IpfsClient Client { get; }
 
     /// <inheritdoc/>
     public string Id { get; }
@@ -61,5 +61,8 @@ public class IpfsFile : IFile, IChildFile
 
         return Client.FileSystem.ReadFileAsync(Id, cancellationToken);
     }
+
+    /// <inheritdoc/>
+    public Task<Cid> GetCidAsync(CancellationToken cancellationToken) => Task.FromResult<Cid>(Id);
 }
 

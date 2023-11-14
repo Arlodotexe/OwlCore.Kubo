@@ -14,13 +14,27 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.12.5</Version>
+    <Version>0.13.0</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.13.0 ---
+[New]
+Added IGetCid and StorableKuboExtensions.GetCidAsync() for easier content comparison. Enables returning the CID defined by any implementation of IGetCid.
+Added GenericKuboExtensions.GetCidAsync(object) extension method, a shorthand for ipfsClient.Dag.PutAsync(JObject) with pinning disabled.
+All OwlCore.Storage implementations for Kubo now implement GetCidAsync() and call Kubo directly (IpfsFile, IpfsFolder, IpnsFile, IpnsFolder, MfsFile, MfsFolder).
+Added ContentAddressedSystemFile and ContentAddressedSystemFolder, enabling a fastpath when the GetCidAsync() extension method is called on SystemFolder or SystemFile.
+
+[Improvements]
+All Kubo-based OwlCore.Storage implementations now consistently expose the IpfsClient it uses as a public property Client.
+Codebase uses IDelegable{T} instead of IDelegatable{T}. Functionally, no change - IDelegatable{T} inherits from IDelegable{T} to smooth the migration process. IDelegatable is spelled incorrectly and marked obsolete. 
+
+[Breaking]
+Path helpers were moved from MfsFolder to a new static class, PathHelpers.
+
 --- 0.12.5 ---
 [Fixes]
 Updated transient dependency on OwlCore.Storage to latest verison. Fixes some issues with starting the KuboBootstrapper.
@@ -278,14 +292,16 @@ Added unit tests.
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.2.0" />
+    <PackageReference Include="CommunityToolkit.Common" Version="8.2.2" />
+    <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.2.2" />
     <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.0.7" />
-    <PackageReference Include="OwlCore" Version="0.2.1" />
-    <PackageReference Include="OwlCore.Storage" Version="0.8.5" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
+    <PackageReference Include="OwlCore" Version="0.4.0" />
+    <PackageReference Include="OwlCore.ComponentModel" Version="0.4.0" />
+    <PackageReference Include="OwlCore.Storage" Version="0.8.7" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
-    <PackageReference Include="SharpCompress" Version="0.33.0" />
+    <PackageReference Include="SharpCompress" Version="0.34.1" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
-    <PackageReference Include="System.Text.Json" Version="7.0.2" />
+    <PackageReference Include="System.Text.Json" Version="8.0.0" />
   </ItemGroup>
 </Project>

@@ -11,7 +11,7 @@ namespace OwlCore.Kubo;
 /// <summary>
 /// Encrypts outgoing and decrypts incoming pubsub messages using AES encryption derived from a pre-shared passkey.
 /// </summary>
-public class AesPasswordEncryptedPubSub : IPubSubApi, IDelegatable<IPubSubApi>
+public class AesPasswordEncryptedPubSub : IPubSubApi, IDelegable<IPubSubApi>
 {
     private readonly string _password;
     private readonly string? _salt;

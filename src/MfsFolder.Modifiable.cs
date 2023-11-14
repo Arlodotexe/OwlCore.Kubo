@@ -17,7 +17,7 @@ namespace OwlCore.Kubo
             cancellationToken.ThrowIfCancellationRequested();
             Guard.IsNotNullOrWhiteSpace(item.Name);
 
-            await _client.DoCommandAsync("files/rm", cancellationToken, $"{Path}{item.Name}", "recursive=true", "force=true");
+            await Client.DoCommandAsync("files/rm", cancellationToken, $"{Path}{item.Name}", "recursive=true", "force=true");
         }
 
         /// <inheritdoc/>
@@ -25,8 +25,8 @@ namespace OwlCore.Kubo
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            await _client.DoCommandAsync("files/cp", cancellationToken, arg: fileToCopy.Path, $"arg={Path}");
-            return new MfsFile($"{Path}{fileToCopy.Name}", _client);
+            await Client.DoCommandAsync("files/cp", cancellationToken, arg: fileToCopy.Path, $"arg={Path}");
+            return new MfsFile($"{Path}{fileToCopy.Name}", Client);
         }
 
         /// <inheritdoc/>
@@ -34,8 +34,8 @@ namespace OwlCore.Kubo
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            await _client.DoCommandAsync("files/cp", cancellationToken, arg: $"/ipfs/{fileToCopy.Id}", $"arg={Path}");
-            return new MfsFile($"{Path}{fileToCopy.Name}", _client);
+            await Client.DoCommandAsync("files/cp", cancellationToken, arg: $"/ipfs/{fileToCopy.Id}", $"arg={Path}");
+            return new MfsFile($"{Path}{fileToCopy.Name}", Client);
         }
 
         /// <inheritdoc/>
@@ -43,10 +43,10 @@ namespace OwlCore.Kubo
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var cid = await fileToCopy.ResolveCidAsync(cancellationToken);
-            await _client.DoCommandAsync("files/cp", cancellationToken, arg: $"/ipfs/{cid}", $"arg={Path}");
+            var cid = await fileToCopy.GetCidAsync(cancellationToken);
+            await Client.DoCommandAsync("files/cp", cancellationToken, arg: $"/ipfs/{cid}", $"arg={Path}");
 
-            return new MfsFile($"{Path}{fileToCopy.Name}", _client);
+            return new MfsFile($"{Path}{fileToCopy.Name}", Client);
         }
 
         /// <inheritdoc/>
@@ -54,8 +54,8 @@ namespace OwlCore.Kubo
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            await _client.DoCommandAsync("files/mv", cancellationToken, arg: fileToMove.Path, $"arg={Path}{fileToMove.Name}");
-            return new MfsFile($"{Path}{fileToMove.Name}", _client);
+            await Client.DoCommandAsync("files/mv", cancellationToken, arg: fileToMove.Path, $"arg={Path}{fileToMove.Name}");
+            return new MfsFile($"{Path}{fileToMove.Name}", Client);
         }
 
         /// <inheritdoc/>
@@ -63,33 +63,33 @@ namespace OwlCore.Kubo
         {
             if (overwrite)
             {
-                await _client.DoCommandAsync("files/rm", cancellationToken, $"{Path}{name}", "recursive=true");
+                await Client.DoCommandAsync("files/rm", cancellationToken, $"{Path}{name}", "recursive=true");
             }
 
             try
             {
-                await _client.DoCommandAsync("files/mkdir", cancellationToken, arg: $"{Path}{name}");
+                await Client.DoCommandAsync("files/mkdir", cancellationToken, arg: $"{Path}{name}");
             }
             catch (Exception ex) when (ex.Message.ToLower().Contains("file already exists"))
             {
                 // Ignored, return existing path if exists
             }
 
-            return new MfsFolder($"{Path}{name}", _client);
+            return new MfsFolder($"{Path}{name}", Client);
         }
 
         /// <inheritdoc/>
         public async Task<IChildFile> CreateFileAsync(string name, bool overwrite = false, CancellationToken cancellationToken = default)
         {
-            await _client.UploadAsync("files/write", CancellationToken.None, new MemoryStream(), null, $"arg={Path}{name}", $"create=true", overwrite ? $"truncate=true" : string.Empty);
+            await Client.UploadAsync("files/write", CancellationToken.None, new MemoryStream(), null, $"arg={Path}{name}", $"create=true", overwrite ? $"truncate=true" : string.Empty);
 
-            return new MfsFile($"{Path}{name}", _client);
+            return new MfsFile($"{Path}{name}", Client);
         }
 
         /// <inheritdoc/>
         public Task<IFolderWatcher> GetFolderWatcherAsync(CancellationToken cancellationToken = default)
         {
-            return Task.FromResult<IFolderWatcher>(new TimerBasedMfsWatcher(_client, this, UpdateCheckInterval));
+            return Task.FromResult<IFolderWatcher>(new TimerBasedMfsWatcher(Client, this, UpdateCheckInterval));
         }
     }
 }

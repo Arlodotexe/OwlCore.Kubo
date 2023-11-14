@@ -7,7 +7,7 @@ namespace OwlCore.Kubo;
 /// <summary>
 /// Wraps an existing <see cref="IPubSubApi"/> and filters out any messages that aren't allowed by the provided filter.
 /// </summary>
-public class PubSubPeerFilter : IDelegatable<IPubSubApi>, IPubSubApi
+public class PubSubPeerFilter : IDelegable<IPubSubApi>, IPubSubApi
 {
     private readonly Func<Peer, bool> _shouldFilterPeer;
 

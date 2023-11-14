@@ -9,9 +9,8 @@ namespace OwlCore.Kubo
     /// <summary>
     /// A folder that resides on IPFS.
     /// </summary>
-    public class IpfsFolder : IFolder, IChildFolder
+    public class IpfsFolder : IFolder, IChildFolder, IGetCid
     {
-        private readonly IpfsClient _client;
 
         /// <summary>
         /// Creates a new instance of <see cref="IpfsFolder"/>.
@@ -22,7 +21,7 @@ namespace OwlCore.Kubo
         {
             Id = cid;
             Name = cid;
-            _client = client;
+            Client = client;
         }
 
         /// <summary>
@@ -35,8 +34,14 @@ namespace OwlCore.Kubo
         {
             Id = cid;
             Name = !string.IsNullOrWhiteSpace(name) ? name : cid;
-            _client = client;
+            Client = client;
         }
+
+
+        /// <summary>
+        /// The IPFS Client to use for retrieving the content.
+        /// </summary>
+        public IpfsClient Client { get; }
 
         /// <inheritdoc/>
         public string Id { get; }
@@ -55,7 +60,7 @@ namespace OwlCore.Kubo
         /// <inheritdoc/>
         public virtual async IAsyncEnumerable<IStorableChild> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            var itemInfo = await _client.FileSystem.ListFileAsync(Id, cancellationToken);
+            var itemInfo = await Client.FileSystem.ListFileAsync(Id, cancellationToken);
             Guard.IsTrue(itemInfo.IsDirectory);
 
             foreach (var link in itemInfo.Links)
@@ -63,23 +68,26 @@ namespace OwlCore.Kubo
                 Guard.IsNotNullOrWhiteSpace(link.Id);
                 Guard.IsNotNull(link.Name);
 
-                var linkedItemInfo = await _client.FileSystem.ListFileAsync(link.Id, cancellationToken);
+                var linkedItemInfo = await Client.FileSystem.ListFileAsync(link.Id, cancellationToken);
 
                 if (linkedItemInfo.IsDirectory && type.HasFlag(StorableType.Folder))
                 {
-                    yield return new IpfsFolder(linkedItemInfo.Id, link.Name, _client)
+                    yield return new IpfsFolder(linkedItemInfo.Id, link.Name, Client)
                     {
                         Parent = this,
                     };
                 }
                 else if (type.HasFlag(StorableType.File))
                 {
-                    yield return new IpfsFile(linkedItemInfo.Id, link.Name, _client)
+                    yield return new IpfsFile(linkedItemInfo.Id, link.Name, Client)
                     {
                         Parent = this,
                     };
                 }
             }
         }
+
+        /// <inheritdoc/>
+        public Task<Cid> GetCidAsync(CancellationToken cancellationToken) => Task.FromResult<Cid>(Id);
     }
 }

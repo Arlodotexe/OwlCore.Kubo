@@ -2,17 +2,14 @@
 using Ipfs;
 using Ipfs.Http;
 using OwlCore.Storage;
-using System.Threading;
 
 namespace OwlCore.Kubo;
 
 /// <summary>
 /// A file that resides on IPFS behind an IPNS Address.
 /// </summary>
-public class IpnsFile : IFile, IChildFile
+public class IpnsFile : IFile, IChildFile, IGetCid
 {
-    private readonly IpfsClient _client;
-
     /// <summary>
     /// Creates a new instance of <see cref="IpnsFolder"/>.
     /// </summary>
@@ -21,8 +18,8 @@ public class IpnsFile : IFile, IChildFile
     public IpnsFile(string ipnsAddress, IpfsClient client)
     {
         Id = ipnsAddress;
-        Name = MfsFolder.GetFolderItemName(ipnsAddress);
-        _client = client;
+        Name = PathHelpers.GetFolderItemName(ipnsAddress);
+        Client = client;
     }
 
     /// <inheritdoc />
@@ -32,18 +29,9 @@ public class IpnsFile : IFile, IChildFile
     public string Name { get; protected set; }
 
     /// <summary>
-    /// Retrieves the current CID of this item from IPNS.
+    /// The IPFS Client to use for retrieving the content.
     /// </summary>
-    /// <param name="cancellationToken">Used to cancel the ongoing operation.</param>
-    /// <returns>The resolved CID.</returns>
-    public async Task<Cid> ResolveCidAsync(CancellationToken cancellationToken)
-    {
-        var resolvedIpns = await _client.ResolveAsync(Id, recursive: true, cancel: cancellationToken);
-        Guard.IsNotNull(resolvedIpns);
-
-        Cid cid = resolvedIpns.Split(new[] { "/ipfs/" }, StringSplitOptions.None)[1];
-        return cid;
-    }
+    public IpfsClient Client { get; }
 
     /// <summary>
     /// The parent directory, if any.
@@ -54,11 +42,25 @@ public class IpnsFile : IFile, IChildFile
     public Task<IFolder?> GetParentAsync(CancellationToken cancellationToken = default) => Task.FromResult<IFolder?>(Parent);
 
     /// <inheritdoc />
-    public async Task<Stream> OpenStreamAsync(FileAccess accessMode = FileAccess.Read, CancellationToken cancellationToken = default)
+    public virtual async Task<Stream> OpenStreamAsync(FileAccess accessMode = FileAccess.Read, CancellationToken cancellationToken = default)
     {
-        var cid = await ResolveCidAsync(cancellationToken);
-        var file = new IpfsFile(cid, _client);
+        var cid = await GetCidAsync(cancellationToken);
+        var file = new IpfsFile(cid, Client);
 
         return await file.OpenStreamAsync(accessMode, cancellationToken);
+    }
+
+    /// <summary>
+    /// Retrieves the current CID of this item from IPNS.
+    /// </summary>
+    /// <param name="cancellationToken">Used to cancel the ongoing operation.</param>
+    /// <returns>The resolved CID.</returns>
+    public async Task<Cid> GetCidAsync(CancellationToken cancellationToken)
+    {
+        var resolvedIpns = await Client.ResolveAsync(Id, recursive: true, cancel: cancellationToken);
+        Guard.IsNotNull(resolvedIpns);
+
+        Cid cid = resolvedIpns.Split(new[] { "/ipfs/" }, StringSplitOptions.None)[1];
+        return cid;
     }
 }
