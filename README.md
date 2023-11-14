@@ -26,9 +26,7 @@ See the [documentation](/docs/) for usage examples.
 
 ## Financing
 
-We accept donations, and we do not have any active bug bounties.
-
-If you’re looking to contract a new project, new features, improvements or bug fixes, please contact me. 
+We accept donations [here](https://github.com/sponsors/Arlodotexe) and [here](https://www.patreon.com/arlodotexe), and we do not have any active bug bounties.
 
 ## Versioning
 
@@ -36,8 +34,4 @@ Version numbering follows the Semantic versioning approach. However, if the majo
 
 ## License
 
-We’re using the MIT license for 3 reasons:
-1. We're here to share useful code. You may use any part of it freely, as the MIT license allows. 
-2. A library is no place for viral licensing.
-3. Easy code transition to larger community-based projects, such as the .NET Community Toolkit.
-
+All OwlCore code is licensed under the MIT License. OwlCore is licensed under the MIT License. See the [LICENSE](./src/LICENSE.txt) file for more details.
