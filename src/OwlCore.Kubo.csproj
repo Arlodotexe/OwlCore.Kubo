@@ -14,13 +14,35 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.13.2</Version>
+    <Version>0.14.0</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.14.0 ---
+[Fixed]
+In KuboBootstrapper, calling Stop now gracefully shuts down the Kubo node by invoking the `ipfs shutdown` command and stopping the process, instead of killing it outright.
+
+[Improvements]
+In KuboDownloader, GetBinaryVersionAsync and GetLatestBinaryAsync now have overloads for both HttpClient and IpfsClient.
+In KuboDownloader, GetBinaryVersionAsync and GetLatestBinaryAsync now crawls compressed archives directly from Http/Ipfs, returning an IFile of the Kubo binary without downloading and extracting to disk.
+The streams opened by IpfsFile and IpnsFile are now seekable.
+The streams opened by IpfsFile and IpnsFile now supply an accurate stream Length based on the Size given by Kubo.
+
+[Breaking]
+The KuboDownloader class is now static.
+In KuboDownloader, the DownloadLatestBinaryAsync method has been replaced with GetLatestBinaryAsync.
+In KuboDownloader, the DownloadBinaryAsync method has been replaced with GetBinaryVersionAsync.
+In KuboDownloader, the return type on GetLatestKuboVersionAsync was changed. This method now returns a Version, without the tuple and RawVersion.
+In KuboDownloader, the method parameters of GetLatestKuboVersionAsync were changed. This method now takes any `IFile` pointing to a versions file, rather than a url pointing to the default versions file on http.
+In KuboBootstrapper, the constructor now takes the repoPath first for all constructors.
+In KuboBootstrapper, the IFile previous provided in the constructor has been replaced with an optional file delegate.
+In KuboBootstrapper, if the binary isn't in the BinaryWorkingFolder, it will be retrieved using the file delegate provided in the constructor. If no delegate is provided, the latest version will be retrieved via Http.
+In KuboBootstrapper, ApplySettingsAsync is now ApplySettings, and is no longer async.
+In KuboBootstrapper, the Kubo binary is now copied directly to the given BinaryWorkingFolder, instead of making a subfolder. The default location is still the system temp folder.
+
 --- 0.13.2 ---
 [Fixed]
 Fixed an issue with KuboBootstrapper not starting on Linux (caused by warning-based stderr used by newer versions of Kubo).
@@ -303,12 +325,13 @@ Added unit tests.
     <PackageReference Include="CommunityToolkit.Common" Version="8.2.2" />
     <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.2.2" />
     <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.0.7" />
-    <PackageReference Include="OwlCore" Version="0.4.0" />
-    <PackageReference Include="OwlCore.ComponentModel" Version="0.4.0" />
-    <PackageReference Include="OwlCore.Storage" Version="0.8.7" />
+    <PackageReference Include="OwlCore" Version="0.4.1" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
-    <PackageReference Include="SharpCompress" Version="0.34.1" />
+    <PackageReference Include="OwlCore.ComponentModel" Version="0.6.0" />
+    <PackageReference Include="OwlCore.Storage" Version="0.9.2" />
+    <PackageReference Include="OwlCore.Storage.SharpCompress" Version="0.0.0" />
+    <PackageReference Include="SharpCompress" Version="0.34.2" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
     <PackageReference Include="System.Text.Json" Version="8.0.0" />
   </ItemGroup>

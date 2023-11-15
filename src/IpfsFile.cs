@@ -1,5 +1,6 @@
 ﻿using Ipfs;
 using Ipfs.Http;
+using OwlCore.ComponentModel;
 using OwlCore.Storage;
 
 namespace OwlCore.Kubo;
@@ -54,12 +55,17 @@ public class IpfsFile : IFile, IChildFile, IGetCid
     public Task<IFolder?> GetParentAsync(CancellationToken cancellationToken = default) => Task.FromResult<IFolder?>(Parent);
 
     /// <inheritdoc/>
-    public Task<Stream> OpenStreamAsync(FileAccess accessMode = FileAccess.Read, CancellationToken cancellationToken = default)
+    public async Task<Stream> OpenStreamAsync(FileAccess accessMode = FileAccess.Read, CancellationToken cancellationToken = default)
     {
         if (accessMode.HasFlag(FileAccess.Write))
             throw new NotSupportedException("Attempted to write data to an immutable file on IPFS.");
 
-        return Client.FileSystem.ReadFileAsync(Id, cancellationToken);
+        var fileData = await Client.FileSystem.ListFileAsync(Id, cancellationToken);
+
+        var stream = new LengthOverrideStream(fileData.DataStream, fileData.Size);
+
+        // Return in lazy seek-able wrapper.
+        return new LazySeekStream(stream);
     }
 
     /// <inheritdoc/>

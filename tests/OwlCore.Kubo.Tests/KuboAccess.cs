@@ -9,7 +9,7 @@ namespace OwlCore.Kubo.Tests
 
         public static KuboBootstrapper? Bootstrapper { get; private set; }
 
-        public static IpfsClient Ipfs { get; private set; }
+        public static IpfsClient? Ipfs { get; private set; }
 
         public static bool IsInitialized { get; private set; }
 
@@ -23,31 +23,18 @@ namespace OwlCore.Kubo.Tests
                 if (IsInitialized)
                     return;
 
-                try
+                var kuboBinary = await KuboDownloader.GetLatestBinaryAsync();
+
+                Bootstrapper = new KuboBootstrapper(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}"))
                 {
-                    Ipfs = new IpfsClient();
-                    var stats = await Ipfs.Stats.RepositoryAsync();
+                    ApiUri = new Uri("http://127.0.0.1:5577"),
+                    GatewayUri = new Uri("http://127.0.0.1:8077"),
+                };
 
-                    Assert.IsTrue(stats.NumObjects > 0);
-                }
-                catch
-                {
-                    var downloader = new KuboDownloader();
-                    var kuboBinary = await downloader.DownloadLatestBinaryAsync();
+                await Bootstrapper.StartAsync();
 
-                    Bootstrapper = new KuboBootstrapper(kuboBinary, repoPath: Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}"))
-                    {
-                        ApiUri = new Uri("http://127.0.0.1:5577"),
-                    };
-
-                    await Bootstrapper.StartAsync();
-
-                    Ipfs = new IpfsClient(Bootstrapper.ApiUri.OriginalString);
-                }
-                finally
-                {
-                    IsInitialized = true;
-                }
+                Ipfs = new IpfsClient(Bootstrapper.ApiUri.OriginalString);
+                IsInitialized = true;
             }
         }
     }

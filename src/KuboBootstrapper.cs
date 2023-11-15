@@ -11,18 +11,37 @@ namespace OwlCore.Kubo;
 /// </summary>
 public class KuboBootstrapper : IDisposable
 {
-    private readonly IFile _kuboBinary;
+    private readonly Func<CancellationToken, Task<IFile>> _getKuboBinaryFile;
     private SystemFile? _executableBinary;
 
     /// <summary>
     /// Create a new instance of <see cref="KuboBootstrapper"/>.
     /// </summary>
-    /// <param name="kuboBinary">A kubo binary that is compatible with the currently running OS and Architecture.</param>
+    /// <param name="getKuboBinaryFile">A kubo binary that is compatible with the currently running OS and Architecture.</param>
     /// <param name="repoPath">The path to the kubo repository folder. Provided to Kubo.</param>
-    public KuboBootstrapper(IFile kuboBinary, string repoPath)
+    public KuboBootstrapper(string repoPath, Func<CancellationToken, Task<IFile>> getKuboBinaryFile)
     {
         RepoPath = repoPath;
-        _kuboBinary = kuboBinary;
+        _getKuboBinaryFile = getKuboBinaryFile;
+    }
+
+    /// <summary>
+    /// Create a new instance of <see cref="KuboBootstrapper"/>.
+    /// </summary>
+    /// <param name="repoPath">The path to the kubo repository folder. Provided to Kubo.</param>
+    /// <param name="kuboVersion">The version of Kubo to download to <see cref="BinaryWorkingFolder"/>.</param>
+    public KuboBootstrapper(string repoPath, Version kuboVersion)
+        : this(repoPath, canceltok => KuboDownloader.GetBinaryVersionAsync(kuboVersion, canceltok))
+    {
+    }
+
+    /// <summary>
+    /// Create a new instance of <see cref="KuboBootstrapper"/>.
+    /// </summary>
+    /// <param name="repoPath">The path to the kubo repository folder. Provided to Kubo.</param>
+    public KuboBootstrapper(string repoPath)
+        : this(repoPath, canceltok => KuboDownloader.GetLatestBinaryAsync(canceltok))
+    {
     }
 
     /// <summary>
@@ -56,8 +75,11 @@ public class KuboBootstrapper : IDisposable
     public List<string> StartupProfiles { get; } = new();
 
     /// <summary>
-    /// The folder where Kubo will be copied to and run from via a new <see cref="Process"/>.
+    /// Gets or sets the folder where the Kubo binary will be copied to and run from via a new <see cref="System.Diagnostics.Process"/>.
     /// </summary>
+    /// <remarks>
+    /// This location must be one where the current environment can execute a binary. For both Linux and Windows, one common location for this is the Temp folder.
+    /// </remarks>
     public SystemFolder BinaryWorkingFolder { get; set; } = new(Path.GetTempPath());
 
     /// <summary>
@@ -67,13 +89,19 @@ public class KuboBootstrapper : IDisposable
     /// <returns></returns>
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
-        var bootstrapperBinaryFolder = (SystemFolder)await BinaryWorkingFolder.CreateFolderAsync(name: nameof(KuboBootstrapper), overwrite: false, cancellationToken);
-        _executableBinary = (SystemFile)await bootstrapperBinaryFolder.CreateCopyOfAsync(_kuboBinary, overwrite: false, cancellationToken);
+        IFile? kuboBinary = await BinaryWorkingFolder
+            .GetFilesAsync(cancellationToken)
+            .FirstOrDefaultAsync(x => x.Name.StartsWith("ipfs") || x.Name.StartsWith("kubo"));
+
+        // Retrieve the kubo binary if we don't have it
+        kuboBinary ??= await _getKuboBinaryFile(cancellationToken);
+
+        _executableBinary ??= (SystemFile)await BinaryWorkingFolder.CreateCopyOfAsync(kuboBinary, overwrite: false, cancellationToken);
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            await SetExecutablePermissionsForBinary(_executableBinary);
+            SetExecutablePermissionsForBinary(_executableBinary);
 
-        await ApplySettingsAsync(cancellationToken);
+        ApplySettings();
 
         var processStartInfo = new ProcessStartInfo(_executableBinary.Path, $"daemon --routing={RoutingMode.ToString().ToLowerInvariant()} --enable-pubsub-experiment --enable-namesys-pubsub --repo-dir {RepoPath}")
         {
@@ -136,8 +164,14 @@ public class KuboBootstrapper : IDisposable
     /// </summary>
     public void Stop()
     {
+        Guard.IsNotNullOrWhiteSpace(_executableBinary?.Path);
+
         if (Process is not null && !Process.HasExited)
-            Process.Kill();
+        {
+            // Gracefully shutdown the running Kubo Daemon
+            RunExecutable(_executableBinary, $"shutdown --repo-dir {RepoPath}", throwOnError: false);
+            Process.Close();
+        }
 
         Process = null;
     }
@@ -145,39 +179,38 @@ public class KuboBootstrapper : IDisposable
     /// <summary>
     /// Initializes the local node with the provided settings.
     /// </summary>
-    /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
     /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
-    public async Task ApplySettingsAsync(CancellationToken cancellationToken = default)
+    public void ApplySettings()
     {
         Guard.IsNotNullOrWhiteSpace(_executableBinary?.Path);
 
         try
         {
-            await RunAsync(_executableBinary, $"init --repo-dir {RepoPath} --empty-repo", throwOnError: false, cancellationToken);
+            RunExecutable(_executableBinary, $"init --repo-dir {RepoPath}", throwOnError: false);
         }
         catch
         {
             // ignored
         }
 
-        await RunAsync(_executableBinary, $"config --repo-dir {RepoPath} Routing.Type {RoutingMode.ToString().ToLowerInvariant()}", throwOnError: true, cancellationToken);
-        await RunAsync(_executableBinary, $"config --repo-dir {RepoPath} Addresses.API /ip4/{ApiUri.Host}/tcp/{ApiUri.Port}", throwOnError: true, cancellationToken);
-        await RunAsync(_executableBinary, $"config --repo-dir {RepoPath} Addresses.Gateway /ip4/{GatewayUri.Host}/tcp/{GatewayUri.Port}", throwOnError: true, cancellationToken);
+        RunExecutable(_executableBinary, $"config --repo-dir {RepoPath} Routing.Type {RoutingMode.ToString().ToLowerInvariant()}", throwOnError: true);
+        RunExecutable(_executableBinary, $"config --repo-dir {RepoPath} Addresses.API /ip4/{ApiUri.Host}/tcp/{ApiUri.Port}", throwOnError: true);
+        RunExecutable(_executableBinary, $"config --repo-dir {RepoPath} Addresses.Gateway /ip4/{GatewayUri.Host}/tcp/{GatewayUri.Port}", throwOnError: true);
 
         foreach (var profile in StartupProfiles)
-            await RunAsync(_executableBinary, $"config --repo-dir {RepoPath} profile apply {profile}", throwOnError: true, cancellationToken);
+            RunExecutable(_executableBinary, $"config --repo-dir {RepoPath} profile apply {profile}", throwOnError: true);
     }
 
-    private Task SetExecutablePermissionsForBinary(SystemFile file)
+    private void SetExecutablePermissionsForBinary(SystemFile file)
     {
         // This should only be used on linux.
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            return Task.CompletedTask;
+            return;
 
-        return RunAsync(new SystemFile("/bin/bash"), $"-c \"chmod 777 {file.Path}\"", throwOnError: true);
+        RunExecutable(new SystemFile("/bin/bash"), $"-c \"chmod 777 {file.Path}\"", throwOnError: true);
     }
 
-    private async Task RunAsync(SystemFile file, string arguments, bool throwOnError, CancellationToken cancellationToken = default)
+    private void RunExecutable(SystemFile file, string arguments, bool throwOnError)
     {
         var processStartInfo = new ProcessStartInfo(file.Path, arguments)
         {
@@ -197,22 +230,14 @@ public class KuboBootstrapper : IDisposable
 
         proc.Start();
 
-        using var cancellationCleanup = cancellationToken.Register(() => proc.Dispose());
-
         proc.BeginOutputReadLine();
         proc.BeginErrorReadLine();
 
         proc.OutputDataReceived += Process_OutputDataReceived;
         proc.ErrorDataReceived += ProcOnErrorDataReceived;
-        cancellationToken.ThrowIfCancellationRequested();
 
-#if NET5_0_OR_GREATER
-        await proc.WaitForExitAsync();
-#elif NETSTANDARD2_0_OR_GREATER
         proc.WaitForExit();
-#endif
 
-        cancellationToken.ThrowIfCancellationRequested();
         proc.OutputDataReceived -= Process_OutputDataReceived;
         proc.ErrorDataReceived -= ProcOnErrorDataReceived;
 
@@ -234,9 +259,7 @@ public class KuboBootstrapper : IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
-        if (Process is not null && !Process.HasExited)
-            Process.Kill();
-
+        Stop();
         Process?.Dispose();
     }
 }

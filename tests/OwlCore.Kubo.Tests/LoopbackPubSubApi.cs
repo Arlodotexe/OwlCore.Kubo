@@ -27,7 +27,7 @@ public class LoopbackPubSubApi : IPubSubApi
         throw new NotImplementedException();
     }
 
-    public Task<IEnumerable<Peer>> PeersAsync(string topic = null, CancellationToken cancel = new())
+    public Task<IEnumerable<Peer>> PeersAsync(string? topic = null, CancellationToken cancel = new())
     {
         throw new NotImplementedException();
     }

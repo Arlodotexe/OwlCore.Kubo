@@ -11,10 +11,7 @@ namespace OwlCore.Kubo.Tests
             if (KuboAccess.Bootstrapper is not null)
                 return;
 
-            var downloader = new KuboDownloader();
-            var kuboBinary = await downloader.DownloadLatestBinaryAsync();
-
-            using var bootstrapper = new KuboBootstrapper(kuboBinary, Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()))
+            using var bootstrapper = new KuboBootstrapper(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()))
             {
                 ApiUri = new Uri("http://127.0.0.1:7700"),
             };

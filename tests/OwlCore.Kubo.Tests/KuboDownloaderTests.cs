@@ -6,27 +6,21 @@ namespace OwlCore.Kubo.Tests
         [TestMethod]
         public async Task DownloadLatestAsync()
         {
-            var downloader = new KuboDownloader();
-
-            _ = await downloader.DownloadLatestBinaryAsync();
+            await KuboDownloader.GetLatestBinaryAsync();
         }
 
         [TestMethod]
         [DataRow("0.15.0")]
         public async Task DownloadVersionAsync(string version)
         {
-            var downloader = new KuboDownloader();
-
-            _ = await downloader.DownloadBinaryAsync(Version.Parse(version));
+            await KuboDownloader.GetBinaryVersionAsync(Version.Parse(version));
         }
 
         [TestMethod]
         [DataRow("0.0")]
         public async Task DownloadInvalidVersionAsync(string version)
         {
-            var downloader = new KuboDownloader();
-
-            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => downloader.DownloadBinaryAsync(Version.Parse(version)));
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => KuboDownloader.GetBinaryVersionAsync(Version.Parse(version)));
         }
     }
 }
