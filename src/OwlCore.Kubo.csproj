@@ -14,13 +14,23 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.14.0</Version>
+    <Version>0.14.1</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.14.1 ---
+[Fixed]
+Replaced usage of thread-problematic (obsolete) DataStream property in IpfsFile.
+Fix KuboBootstrapper on linux, updated OwlCore.Storage.SharpCompress.
+Bump IpfsShipyard.Ipfs.Http.Client, fixes to KeyApi
+
+[Improvements]
+Expose SearchArchiveForKuboBinaryAsync as public in KuboDownloader.
+In the OwlCore.Storage implementation for Ipfs, Ipns and Mfs, members that return or yield storage instances are now virtual. Allows for creating custom implementations that return custom implementations.
+
 --- 0.14.0 ---
 [Fixed]
 In KuboBootstrapper, calling Stop now gracefully shuts down the Kubo node by invoking the `ipfs shutdown` command and stopping the process, instead of killing it outright.
