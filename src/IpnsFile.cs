@@ -39,7 +39,7 @@ public class IpnsFile : IFile, IChildFile, IGetCid
     internal IpnsFolder? Parent { get; init; } = null;
 
     /// <inheritdoc/>
-    public Task<IFolder?> GetParentAsync(CancellationToken cancellationToken = default) => Task.FromResult<IFolder?>(Parent);
+    public virtual Task<IFolder?> GetParentAsync(CancellationToken cancellationToken = default) => Task.FromResult<IFolder?>(Parent);
 
     /// <inheritdoc />
     public virtual async Task<Stream> OpenStreamAsync(FileAccess accessMode = FileAccess.Read, CancellationToken cancellationToken = default)

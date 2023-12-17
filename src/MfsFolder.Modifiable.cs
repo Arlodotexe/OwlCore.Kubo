@@ -12,7 +12,7 @@ namespace OwlCore.Kubo
         public TimeSpan UpdateCheckInterval { get; } = TimeSpan.FromSeconds(10);
 
         /// <inheritdoc/>
-        public async Task DeleteAsync(IStorableChild item, CancellationToken cancellationToken = default)
+        public virtual async Task DeleteAsync(IStorableChild item, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             Guard.IsNotNullOrWhiteSpace(item.Name);
@@ -21,7 +21,7 @@ namespace OwlCore.Kubo
         }
 
         /// <inheritdoc/>
-        public async Task<IChildFile> CreateCopyOfAsync(MfsFile fileToCopy, bool overwrite = false, CancellationToken cancellationToken = default)
+        public virtual async Task<IChildFile> CreateCopyOfAsync(MfsFile fileToCopy, bool overwrite = false, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -30,7 +30,7 @@ namespace OwlCore.Kubo
         }
 
         /// <inheritdoc/>
-        public async Task<IChildFile> CreateCopyOfAsync(IpfsFile fileToCopy, bool overwrite = false, CancellationToken cancellationToken = default)
+        public virtual async Task<IChildFile> CreateCopyOfAsync(IpfsFile fileToCopy, bool overwrite = false, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -39,7 +39,7 @@ namespace OwlCore.Kubo
         }
 
         /// <inheritdoc/>
-        public async Task<IChildFile> CreateCopyOfAsync(IpnsFile fileToCopy, bool overwrite = false, CancellationToken cancellationToken = default)
+        public virtual async Task<IChildFile> CreateCopyOfAsync(IpnsFile fileToCopy, bool overwrite = false, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -50,7 +50,7 @@ namespace OwlCore.Kubo
         }
 
         /// <inheritdoc/>
-        public async Task<IChildFile> MoveFromAsync(MfsFile fileToMove, IModifiableFolder source, bool overwrite = false, CancellationToken cancellationToken = default)
+        public virtual async Task<IChildFile> MoveFromAsync(MfsFile fileToMove, IModifiableFolder source, bool overwrite = false, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -59,7 +59,7 @@ namespace OwlCore.Kubo
         }
 
         /// <inheritdoc/>
-        public async Task<IChildFolder> CreateFolderAsync(string name, bool overwrite = false, CancellationToken cancellationToken = default)
+        public virtual async Task<IChildFolder> CreateFolderAsync(string name, bool overwrite = false, CancellationToken cancellationToken = default)
         {
             if (overwrite)
             {
@@ -79,7 +79,7 @@ namespace OwlCore.Kubo
         }
 
         /// <inheritdoc/>
-        public async Task<IChildFile> CreateFileAsync(string name, bool overwrite = false, CancellationToken cancellationToken = default)
+        public virtual async Task<IChildFile> CreateFileAsync(string name, bool overwrite = false, CancellationToken cancellationToken = default)
         {
             await Client.UploadAsync("files/write", CancellationToken.None, new MemoryStream(), null, $"arg={Path}{name}", $"create=true", overwrite ? $"truncate=true" : string.Empty);
 
@@ -87,7 +87,7 @@ namespace OwlCore.Kubo
         }
 
         /// <inheritdoc/>
-        public Task<IFolderWatcher> GetFolderWatcherAsync(CancellationToken cancellationToken = default)
+        public virtual Task<IFolderWatcher> GetFolderWatcherAsync(CancellationToken cancellationToken = default)
         {
             return Task.FromResult<IFolderWatcher>(new TimerBasedMfsWatcher(Client, this, UpdateCheckInterval));
         }

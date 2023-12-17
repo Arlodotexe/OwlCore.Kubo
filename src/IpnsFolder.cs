@@ -35,7 +35,7 @@ public class IpnsFolder : IMutableFolder, IChildFolder, IFastGetRoot, IFastGetIt
     /// <summary>
     /// The parent directory, if any.
     /// </summary>
-    internal IpnsFolder? Parent { get; init; } = null;
+    protected internal virtual IpnsFolder? Parent { get; init; } = null;
 
     /// <summary>
     /// The IPFS Client to use for retrieving the content.
@@ -43,7 +43,7 @@ public class IpnsFolder : IMutableFolder, IChildFolder, IFastGetRoot, IFastGetIt
     protected IpfsClient Client { get; }
 
     /// <inheritdoc/>
-    public Task<IFolder?> GetParentAsync(CancellationToken cancellationToken = default)
+    public virtual Task<IFolder?> GetParentAsync(CancellationToken cancellationToken = default)
     {
         if (Parent is not null)
             return Task.FromResult<IFolder?>(Parent);
@@ -52,7 +52,7 @@ public class IpnsFolder : IMutableFolder, IChildFolder, IFastGetRoot, IFastGetIt
     }
 
     /// <inheritdoc />
-    public Task<IFolder?> GetRootAsync()
+    public virtual Task<IFolder?> GetRootAsync()
     {
         if (Id == "/")
             return Task.FromResult<IFolder?>(null);
@@ -69,7 +69,7 @@ public class IpnsFolder : IMutableFolder, IChildFolder, IFastGetRoot, IFastGetIt
     public TimeSpan UpdateCheckInterval { get; } = TimeSpan.FromMinutes(1);
 
     /// <inheritdoc />
-    public async IAsyncEnumerable<IStorableChild> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public virtual async IAsyncEnumerable<IStorableChild> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var itemInfo = await Client.FileSystem.ListFileAsync(Id, cancellationToken);
         Guard.IsTrue(itemInfo.IsDirectory);
@@ -88,13 +88,13 @@ public class IpnsFolder : IMutableFolder, IChildFolder, IFastGetRoot, IFastGetIt
     }
 
     /// <inheritdoc />
-    public Task<IStorableChild> GetItemAsync(string id, CancellationToken cancellationToken = default) => GetFileOrFolderFromId(id, cancellationToken);
+    public virtual Task<IStorableChild> GetItemAsync(string id, CancellationToken cancellationToken = default) => GetFileOrFolderFromId(id, cancellationToken);
 
     /// <inheritdoc />
-    public Task<IStorableChild> GetItemRecursiveAsync(string id, CancellationToken cancellationToken = default) => GetFileOrFolderFromId(id, cancellationToken);
+    public virtual Task<IStorableChild> GetItemRecursiveAsync(string id, CancellationToken cancellationToken = default) => GetFileOrFolderFromId(id, cancellationToken);
 
     /// <inheritdoc/>
-    public Task<IFolderWatcher> GetFolderWatcherAsync(CancellationToken cancellationToken = default)
+    public virtual Task<IFolderWatcher> GetFolderWatcherAsync(CancellationToken cancellationToken = default)
     {
         return Task.FromResult<IFolderWatcher>(new TimerBasedIpnsWatcher(Client, this, UpdateCheckInterval));
     }
