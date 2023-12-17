@@ -61,11 +61,12 @@ public class IpfsFile : IFile, IChildFile, IGetCid
             throw new NotSupportedException("Attempted to write data to an immutable file on IPFS.");
 
         var fileData = await Client.FileSystem.ListFileAsync(Id, cancellationToken);
+        var stream = await Client.FileSystem.ReadFileAsync(Id, cancellationToken);
 
-        var stream = new LengthOverrideStream(fileData.DataStream, fileData.Size);
+        var streamWithLength = new LengthOverrideStream(stream, fileData.Size);
 
         // Return in lazy seek-able wrapper.
-        return new LazySeekStream(stream);
+        return new LazySeekStream(streamWithLength);
     }
 
     /// <inheritdoc/>
