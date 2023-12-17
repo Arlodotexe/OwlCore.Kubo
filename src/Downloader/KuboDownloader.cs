@@ -50,7 +50,7 @@ public static class KuboDownloader
 
         // Set up the archive file and use ArchiveFolder to crawl the contents of the archive for the Kubo binary.
         var binaryArchive = new HttpFile($"{httpKuboSourcePath}/{rawVersion}/{binaryArchiveRelativeDownloadLink}", client);
-        var kuboBinary = await SearchArchiveForKuboBinary(binaryArchive, cancellationToken);
+        var kuboBinary = await SearchArchiveForKuboBinaryAsync(binaryArchive, cancellationToken);
 
         Guard.IsNotNull(kuboBinary);
 
@@ -81,7 +81,7 @@ public static class KuboDownloader
 
         // Set up the archive file and use ArchiveFolder to crawl the contents of the archive for the Kubo binary.
         var binaryArchive = new IpnsFile($"{ipfsKuboSourcePath}/{rawVersion}/{binaryArchiveRelativeDownloadLink}", client);
-        var kuboBinary = await SearchArchiveForKuboBinary(binaryArchive, cancellationToken);
+        var kuboBinary = await SearchArchiveForKuboBinaryAsync(binaryArchive, cancellationToken);
 
         Guard.IsNotNull(kuboBinary);
 
@@ -122,7 +122,7 @@ public static class KuboDownloader
 
         // Set up the archive file and use ArchiveFolder to crawl the contents of the archive for the Kubo binary.
         var binaryArchive = new HttpFile($"{httpKuboSourcePath}/{rawVersion}/{binaryArchiveRelativeDownloadLink}", client);
-        var kuboBinary = await SearchArchiveForKuboBinary(binaryArchive, cancellationToken);
+        var kuboBinary = await SearchArchiveForKuboBinaryAsync(binaryArchive, cancellationToken);
 
         Guard.IsNotNull(kuboBinary);
 
@@ -152,7 +152,7 @@ public static class KuboDownloader
 
         // Set up the archive file and use ArchiveFolder to crawl the contents of the archive for the Kubo binary.
         var binaryArchive = new IpnsFile($"{ipfsKuboSourcePath}/{rawVersion}/{binaryArchiveRelativeDownloadLink}", client);
-        var kuboBinary = await SearchArchiveForKuboBinary(binaryArchive, cancellationToken);
+        var kuboBinary = await SearchArchiveForKuboBinaryAsync(binaryArchive, cancellationToken);
 
         Guard.IsNotNull(kuboBinary);
 
@@ -160,11 +160,15 @@ public static class KuboDownloader
         return kuboBinary;
     }
 
-    internal static async Task<IFile?> SearchArchiveForKuboBinary(IFile archiveFile, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Recursively crawls the provided <paramref name="archiveFile"/> for a binary named ipfs or kubo.
+    /// </summary>
+    /// <param name="archiveFile"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    public static async Task<IFile?> SearchArchiveForKuboBinaryAsync(IFile archiveFile, CancellationToken cancellationToken = default)
     {
         // Open non-seekable archive file stream from HttpFile/IpnsFile
-        var archiveStream = await archiveFile.OpenStreamAsync();
-
         using var folder = new OwlCore.Storage.SharpCompress.ReadOnlyArchiveFolder(archiveFile);
 
         await foreach (var item in DepthFirstSearch(folder).WithCancellation(cancellationToken))
@@ -175,7 +179,7 @@ public static class KuboDownloader
 
             if (IsArchive(item))
             {
-                var foundBinary = await SearchArchiveForKuboBinary(item, cancellationToken);
+                var foundBinary = await SearchArchiveForKuboBinaryAsync(item, cancellationToken);
                 if (foundBinary is not null)
                     return foundBinary;
             }
@@ -202,7 +206,7 @@ public static class KuboDownloader
     /// <returns>The relative file path where the binary archive can be found.</returns>
     private static async Task<string> GetDownloadLink(IFile kuboVersionDistJson)
     {
-        Guard.IsTrue(kuboVersionDistJson.Name == "dist.json", kuboVersionDistJson.Name);
+        Guard.IsTrue(kuboVersionDistJson.Name == "dist.json", nameof(kuboVersionDistJson.Name), "versions file must be named dist.json");
 
         using var distJsonStream = await kuboVersionDistJson.OpenStreamAsync();
         Guard.IsNotNull(distJsonStream);
