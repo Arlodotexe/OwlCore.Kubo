@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 using CommunityToolkit.Diagnostics;
+using Ipfs.Http;
 using OwlCore.Storage;
 using OwlCore.Storage.SystemIO;
 
@@ -11,6 +12,7 @@ namespace OwlCore.Kubo;
 /// </summary>
 public class KuboBootstrapper : IDisposable
 {
+    private IpfsClient? _client;
     private readonly Func<CancellationToken, Task<IFile>> _getKuboBinaryFile;
     private SystemFile? _executableBinary;
 
@@ -63,6 +65,11 @@ public class KuboBootstrapper : IDisposable
     /// The address where the gateway should be hosted.
     /// </summary>
     public Uri GatewayUri { get; set; } = new("http://127.0.0.1:8080");
+
+    /// <summary>
+    /// Gets or creates an <see cref="IpfsClient"/> to interact with the given <see cref="ApiUri"/>.
+    /// </summary>
+    public IpfsClient Client => _client ??= new IpfsClient { ApiUri = ApiUri };
 
     /// <summary>
     /// The routing mode that should be used.
