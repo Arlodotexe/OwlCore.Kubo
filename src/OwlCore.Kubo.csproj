@@ -14,14 +14,19 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.14.2</Version>
+    <Version>0.14.3</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.14.3 ---
+[Fixed]
+Fixed KuboBootstrapper failing to start when the repo path contains a space.
+
 --- 0.14.2 ---
+[Improvements]
 Added Client property to KuboBootstrapper.
 
 --- 0.14.1 ---

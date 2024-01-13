@@ -110,7 +110,7 @@ public class KuboBootstrapper : IDisposable
 
         ApplySettings();
 
-        var processStartInfo = new ProcessStartInfo(_executableBinary.Path, $"daemon --routing={RoutingMode.ToString().ToLowerInvariant()} --enable-pubsub-experiment --enable-namesys-pubsub --repo-dir {RepoPath}")
+        var processStartInfo = new ProcessStartInfo(_executableBinary.Path, $"daemon --routing={RoutingMode.ToString().ToLowerInvariant()} --enable-pubsub-experiment --enable-namesys-pubsub --repo-dir \"{RepoPath}\"")
         {
             CreateNoWindow = true
         };
@@ -176,7 +176,7 @@ public class KuboBootstrapper : IDisposable
         if (Process is not null && !Process.HasExited)
         {
             // Gracefully shutdown the running Kubo Daemon
-            RunExecutable(_executableBinary, $"shutdown --repo-dir {RepoPath}", throwOnError: false);
+            RunExecutable(_executableBinary, $"shutdown --repo-dir \"{RepoPath}\"", throwOnError: false);
             Process.Close();
         }
 
@@ -193,16 +193,16 @@ public class KuboBootstrapper : IDisposable
 
         try
         {
-            RunExecutable(_executableBinary, $"init --repo-dir {RepoPath}", throwOnError: false);
+            RunExecutable(_executableBinary, $"init --repo-dir \"{RepoPath}\"", throwOnError: false);
         }
         catch
         {
             // ignored
         }
 
-        RunExecutable(_executableBinary, $"config --repo-dir {RepoPath} Routing.Type {RoutingMode.ToString().ToLowerInvariant()}", throwOnError: true);
-        RunExecutable(_executableBinary, $"config --repo-dir {RepoPath} Addresses.API /ip4/{ApiUri.Host}/tcp/{ApiUri.Port}", throwOnError: true);
-        RunExecutable(_executableBinary, $"config --repo-dir {RepoPath} Addresses.Gateway /ip4/{GatewayUri.Host}/tcp/{GatewayUri.Port}", throwOnError: true);
+        RunExecutable(_executableBinary, $"config --repo-dir \"{RepoPath}\" Routing.Type {RoutingMode.ToString().ToLowerInvariant()}", throwOnError: true);
+        RunExecutable(_executableBinary, $"config --repo-dir \"{RepoPath}\" Addresses.API /ip4/{ApiUri.Host}/tcp/{ApiUri.Port}", throwOnError: true);
+        RunExecutable(_executableBinary, $"config --repo-dir \"{RepoPath}\" Addresses.Gateway /ip4/{GatewayUri.Host}/tcp/{GatewayUri.Port}", throwOnError: true);
 
         foreach (var profile in StartupProfiles)
             RunExecutable(_executableBinary, $"config --repo-dir {RepoPath} profile apply {profile}", throwOnError: true);
