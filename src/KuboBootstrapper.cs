@@ -214,7 +214,7 @@ public class KuboBootstrapper : IDisposable
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             return;
 
-        RunExecutable(new SystemFile("/bin/bash"), $"-c \"chmod 777 {file.Path}\"", throwOnError: true);
+        RunExecutable(new SystemFile("/bin/bash"), $"-c \"chmod 777 '{file.Path}'\"", throwOnError: true);
     }
 
     private void RunExecutable(SystemFile file, string arguments, bool throwOnError)

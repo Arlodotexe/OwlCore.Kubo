@@ -9,9 +9,7 @@ namespace OwlCore.Kubo.Tests
         [TestMethod]
         public async Task GetFilesAsync()
         {
-            await KuboAccess.TryInitAsync();
-
-            var folder = new IpfsFolder("QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D", KuboAccess.Ipfs);
+            var folder = new IpfsFolder("QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D", TestFixture.Client);
             var files = await folder.GetFilesAsync().ToListAsync();
             
             foreach(var item in files)
@@ -24,9 +22,7 @@ namespace OwlCore.Kubo.Tests
         [TestMethod]
         public async Task GetFoldersAsync()
         {
-            await KuboAccess.TryInitAsync();
-
-            var folder = new IpfsFolder("QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D", KuboAccess.Ipfs);
+            var folder = new IpfsFolder("QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D", TestFixture.Client);
             var folders = await folder.GetFoldersAsync().ToListAsync();
             
             foreach(var item in folders)

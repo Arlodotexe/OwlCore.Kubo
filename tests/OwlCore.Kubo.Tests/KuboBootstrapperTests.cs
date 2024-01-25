@@ -8,7 +8,7 @@ namespace OwlCore.Kubo.Tests
         [TestMethod, Timeout(45_000)]
         public async Task DownloadAndBootstrapAsync()
         {
-            if (KuboAccess.Bootstrapper is not null)
+            if (TestFixture.Bootstrapper is not null)
                 return;
 
             using var bootstrapper = new KuboBootstrapper(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()))

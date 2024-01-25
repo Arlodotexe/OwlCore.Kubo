@@ -6,14 +6,12 @@
         [TestMethod]
         public async Task WriteRandomData()
         {
-            await KuboAccess.TryInitAsync();
-
             // Create test file
-            var rootFolder = new MfsFolder("/", KuboAccess.Ipfs);
+            var rootFolder = new MfsFolder("/", TestFixture.Client);
             await rootFolder.CreateFileAsync("test.bin", overwrite: true);
 
             // Write random data
-            using var stream = new MfsStream("/test.bin", 0, KuboAccess.Ipfs);
+            using var stream = new MfsStream("/test.bin", 0, TestFixture.Client);
             var randomData = GenerateRandomData(256);
             stream.Write(randomData, 0, 256);
         }
@@ -21,15 +19,13 @@
         [TestMethod]
         public async Task WriteAndReadRandomData()
         {
-            await KuboAccess.TryInitAsync();
-
             // Create test file
-            var rootFolder = new MfsFolder("/", KuboAccess.Ipfs);
+            var rootFolder = new MfsFolder("/", TestFixture.Client);
             var file = await rootFolder.CreateFileAsync("test.bin", overwrite: true);
 
             // Write random data, manually testing MfsStream (instead of opening MfsStream from file)
             var randomData = GenerateRandomData(256);
-            using (var stream = new MfsStream("/test.bin", 0, KuboAccess.Ipfs))
+            using (var stream = new MfsStream("/test.bin", 0, TestFixture.Client))
             {
                 stream.Write(randomData, 0, 256);
             }
@@ -48,14 +44,12 @@
         [TestMethod]
         public async Task WriteRandomDataAsync()
         {
-            await KuboAccess.TryInitAsync();
-
             // Create test file
-            var rootFolder = new MfsFolder("/", KuboAccess.Ipfs);
+            var rootFolder = new MfsFolder("/", TestFixture.Client);
             await rootFolder.CreateFileAsync("test.bin", overwrite: true);
 
             // Write random data
-            using var stream = new MfsStream("/test.bin", 0, KuboAccess.Ipfs);
+            using var stream = new MfsStream("/test.bin", 0, TestFixture.Client);
             var randomData = GenerateRandomData(256);
             await stream.WriteAsync(randomData, 0, 256);
         }
@@ -63,14 +57,12 @@
         [TestMethod]
         public async Task WriteAndReadRandomDataAsync()
         {
-            await KuboAccess.TryInitAsync();
-
             // Create test file
-            var rootFolder = new MfsFolder("/", KuboAccess.Ipfs);
+            var rootFolder = new MfsFolder("/", TestFixture.Client);
             var file = await rootFolder.CreateFileAsync("test.bin", overwrite: true);
 
             // Write random data
-            using var stream = new MfsStream("/test.bin", 0, KuboAccess.Ipfs);
+            using var stream = new MfsStream("/test.bin", 0, TestFixture.Client);
             var randomData = GenerateRandomData(256);
             await stream.WriteAsync(randomData, 0, 256);
 
@@ -88,14 +80,12 @@
         [TestMethod]
         public async Task Flush()
         {
-            await KuboAccess.TryInitAsync();
-
             // Create test file
-            var rootFolder = new MfsFolder("/", KuboAccess.Ipfs);
+            var rootFolder = new MfsFolder("/", TestFixture.Client);
             var file = await rootFolder.CreateFileAsync("test.bin", overwrite: true);
 
             // Write random data
-            using var stream = new MfsStream("/test.bin", 0, KuboAccess.Ipfs);
+            using var stream = new MfsStream("/test.bin", 0, TestFixture.Client);
             var randomData = GenerateRandomData(256);
             stream.Write(randomData, 0, 256);
 
@@ -105,14 +95,12 @@
         [TestMethod]
         public async Task FlushAsync()
         {
-            await KuboAccess.TryInitAsync();
-
             // Create test file
-            var rootFolder = new MfsFolder("/", KuboAccess.Ipfs);
+            var rootFolder = new MfsFolder("/", TestFixture.Client);
             await rootFolder.CreateFileAsync("test.bin", overwrite: true);
 
             // Write random data
-            using var stream = new MfsStream("/test.bin", 0, KuboAccess.Ipfs);
+            using var stream = new MfsStream("/test.bin", 0, TestFixture.Client);
             var randomData = GenerateRandomData(256);
             stream.Write(randomData, 0, 256);
 
@@ -122,14 +110,12 @@
         [TestMethod]
         public async Task Seek()
         {
-            await KuboAccess.TryInitAsync();
-
             // Create test file
-            var rootFolder = new MfsFolder("/", KuboAccess.Ipfs);
+            var rootFolder = new MfsFolder("/", TestFixture.Client);
             await rootFolder.CreateFileAsync("test.bin", overwrite: true);
 
             // Write random data
-            using var stream = new MfsStream("/test.bin", 0, KuboAccess.Ipfs);
+            using var stream = new MfsStream("/test.bin", 0, TestFixture.Client);
             var randomData = GenerateRandomData(256);
             stream.Write(randomData, 0, 256);
 
