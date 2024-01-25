@@ -14,13 +14,17 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.15.0</Version>
+    <Version>0.15.1</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.15.1 ---
+[Fixes]
+Fixed an issue where MfsFolder would throw StackOverflowException when calling GetParentAsync on a folder two or more subdirectories in. Added tests.
+
 --- 0.15.0 ---
 [Fixes][Breaking]
 Inherited Key Api fixes and breaking changes from IpfsShipyard.Ipfs.Core and IpfsShipyard.Ipfs.Http.Client 0.1.0.

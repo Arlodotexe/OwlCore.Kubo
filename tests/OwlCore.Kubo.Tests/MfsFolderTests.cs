@@ -11,8 +11,6 @@ namespace OwlCore.Kubo.Tests
         {
             var mfs = new MfsFolder("/", TestFixture.Client);
 
-            var mfs = new MfsFolder("/", KuboAccess.Ipfs);
-
             await mfs.GetItemsAsync().ToListAsync();
         }
 
@@ -20,8 +18,6 @@ namespace OwlCore.Kubo.Tests
         public async Task CreateAndDeleteFolderAsync()
         {
             var mfs = new MfsFolder("/", TestFixture.Client);
-
-            var mfs = new MfsFolder("/", KuboAccess.Ipfs);
             var folder = await mfs.CreateFolderAsync("test", overwrite: true);
 
             await mfs.DeleteAsync(folder);
@@ -33,8 +29,6 @@ namespace OwlCore.Kubo.Tests
         public async Task CreateAndDeleteFolderAsync_Overwrite()
         {
             var mfs = new MfsFolder("/", TestFixture.Client);
-
-            var mfs = new MfsFolder("/", KuboAccess.Ipfs);
             var folder = await mfs.CreateFolderAsync("test", overwrite: true);
 
             await ((IModifiableFolder)folder).CreateFileAsync("random", overwrite: true);
@@ -58,8 +52,6 @@ namespace OwlCore.Kubo.Tests
         public async Task CreateAndDeleteFileAsync()
         {
             var mfs = new MfsFolder("/", TestFixture.Client);
-
-            var mfs = new MfsFolder("/", KuboAccess.Ipfs);
             var file = await mfs.CreateFileAsync("test.bin");
             await mfs.DeleteAsync(file);
 
@@ -70,8 +62,6 @@ namespace OwlCore.Kubo.Tests
         public async Task CreateAndDeleteFileAsync_Overwrite()
         {
             var mfs = new MfsFolder("/", TestFixture.Client);
-
-            var mfs = new MfsFolder("/", KuboAccess.Ipfs);
             var file = await mfs.CreateFileAsync("test.bin", overwrite: true);
 
             // Write random data
@@ -93,8 +83,6 @@ namespace OwlCore.Kubo.Tests
         {
             var mfs = new MfsFolder("/", TestFixture.Client);
 
-            var mfs = new MfsFolder("/", KuboAccess.Ipfs);
-
             var folder = await mfs.CreateFolderAsync("test", overwrite: true);
 
             var parent = await folder.GetParentAsync();
@@ -104,14 +92,29 @@ namespace OwlCore.Kubo.Tests
             await mfs.DeleteAsync(folder);
         }
 
+        [TestMethod]
+        public async Task GetPathFromRootAsync()
+        {            var mfs = new MfsFolder("/", TestFixture.Client);
+            var folder = (MfsFolder)await mfs.CreateFolderAsync("test", overwrite: true);
+            var subfolder = (MfsFolder)await folder.CreateFolderAsync("subfolder", overwrite: true);
 
+            try
+            {
+                var root = await subfolder.GetRootAsync();
+                var path = await root.GetRelativePathToAsync(subfolder);
+
+                Assert.AreEqual(path, subfolder.Path);
+            }
+            finally
+            {
+                await mfs.DeleteAsync(folder);
+            }
+        }
 
         [TestMethod]
         public async Task CreateAndRunFolderWatcher()
         {
             var mfs = new MfsFolder("/", TestFixture.Client);
-
-            var mfs = new MfsFolder("/", KuboAccess.Ipfs);
 
             var watcher = await mfs.GetFolderWatcherAsync();
 
