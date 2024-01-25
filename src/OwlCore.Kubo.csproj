@@ -24,6 +24,7 @@
 --- 0.15.1 ---
 [Fixes]
 Fixed an issue where MfsFolder would throw StackOverflowException when calling GetParentAsync on a folder two or more subdirectories in. Added tests.
+Fixed an issue where KuboBootstrapper would fail to set binary permissions on Linux when BinaryWorkingFolder had a space in it.
 
 --- 0.15.0 ---
 [Fixes][Breaking]
