@@ -12,9 +12,7 @@ namespace OwlCore.Kubo.Tests
         [TestMethod]
         public async Task GetFilesAsync()
         {
-            await KuboAccess.TryInitAsync();
-
-            var folder = new IpnsFolder("/ipns/ipfs.tech", KuboAccess.Ipfs);
+            var folder = new IpnsFolder("/ipns/ipfs.tech", TestFixture.Client);
             var files = await folder.GetFilesAsync().ToListAsync();
 
             foreach (var item in files)
@@ -32,9 +30,7 @@ namespace OwlCore.Kubo.Tests
         [TestMethod]
         public async Task GetFoldersAsync()
         {
-            await KuboAccess.TryInitAsync();
-
-            var folder = new IpnsFolder("/ipns/ipfs.tech", KuboAccess.Ipfs);
+            var folder = new IpnsFolder("/ipns/ipfs.tech", TestFixture.Client);
             var folders = await folder.GetFoldersAsync().ToListAsync();
 
             foreach (var item in folders)

@@ -6,9 +6,7 @@
         [TestMethod]
         public async Task BasicFileReadTest()
         {
-            await KuboAccess.TryInitAsync();
-
-            var file = new IpnsFile("/ipns/ipfs.tech/index.html", KuboAccess.Ipfs);
+            var file = new IpnsFile("/ipns/ipfs.tech/index.html", TestFixture.Client);
             using var stream = await file.OpenStreamAsync();
 
             using StreamReader text = new StreamReader(stream);
