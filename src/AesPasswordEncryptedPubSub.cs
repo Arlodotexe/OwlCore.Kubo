@@ -4,6 +4,7 @@ using OwlCore.ComponentModel;
 using OwlCore.Extensions;
 using System.Security.Cryptography;
 using System.Text;
+using MemoryStream = System.IO.MemoryStream;
 using PublishedMessage = OwlCore.Kubo.Models.PublishedMessage;
 
 namespace OwlCore.Kubo;
@@ -48,7 +49,7 @@ public class AesPasswordEncryptedPubSub : IPubSubApi, IDelegable<IPubSubApi>
             message.Seek(0, SeekOrigin.Begin);
 
         var aes = Aes.Create();
-        var passBytes = new Rfc2898DeriveBytes(password: _password, salt: Encoding.UTF8.GetBytes(_salt ?? string.Empty));
+        var passBytes = new Rfc2898DeriveBytes(password: _password, salt: Encoding.UTF8.GetBytes(_salt ?? string.Empty), iterations: 2000);
 
         aes.Key = passBytes.GetBytes(aes.KeySize / 8);
         aes.IV = passBytes.GetBytes(aes.BlockSize / 8);
@@ -56,8 +57,8 @@ public class AesPasswordEncryptedPubSub : IPubSubApi, IDelegable<IPubSubApi>
         using var encryptedOutputStream = new MemoryStream();
         using var streamEncryptor = new CryptoStream(encryptedOutputStream, aes.CreateEncryptor(), CryptoStreamMode.Write);
 
-        var unencryptedBytes = await message.ToBytesAsync();
-        streamEncryptor.Write(unencryptedBytes, 0, unencryptedBytes.Length);
+        var unencryptedBytes = await message.ToBytesAsync(cancellationToken: cancel);
+        await streamEncryptor.WriteAsync(unencryptedBytes, 0, unencryptedBytes.Length, cancel);
         streamEncryptor.FlushFinalBlock();
 
         encryptedOutputStream.Position = 0;
@@ -70,7 +71,7 @@ public class AesPasswordEncryptedPubSub : IPubSubApi, IDelegable<IPubSubApi>
     {
         return Inner.SubscribeAsync(topic, msg =>
         {
-            if (TryTransformPublishedMessage(msg) is IPublishedMessage transformedMsg)
+            if (TryTransformPublishedMessage(msg) is { } transformedMsg)
             {
                 handler(transformedMsg);
             }
@@ -94,7 +95,8 @@ public class AesPasswordEncryptedPubSub : IPubSubApi, IDelegable<IPubSubApi>
         try
         {
             using var outputStream = new MemoryStream();
-            using var streamDecryptor = new CryptoStream(publishedMessage.DataStream, aes.CreateDecryptor(), CryptoStreamMode.Read);
+            using var inputStream = new MemoryStream(publishedMessage.DataBytes);
+            using var streamDecryptor = new CryptoStream(inputStream, aes.CreateDecryptor(), CryptoStreamMode.Read);
             streamDecryptor.CopyTo(outputStream);
 
             var outputBytes = outputStream.ToBytes();

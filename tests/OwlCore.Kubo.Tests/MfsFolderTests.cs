@@ -55,6 +55,8 @@ namespace OwlCore.Kubo.Tests
             var file = await mfs.CreateFileAsync("test.bin");
             await mfs.DeleteAsync(file);
 
+            var items = await mfs.GetItemsAsync(StorableType.File).ToListAsync();
+
             await Assert.ThrowsExceptionAsync<FileNotFoundException>(async () => await mfs.GetItemAsync("/test.bin"));
         }
 
@@ -94,15 +96,17 @@ namespace OwlCore.Kubo.Tests
 
         [TestMethod]
         public async Task GetPathFromRootAsync()
-        {            var mfs = new MfsFolder("/", TestFixture.Client);
+        {
+            var mfs = new MfsFolder("/", TestFixture.Client);
             var folder = (MfsFolder)await mfs.CreateFolderAsync("test", overwrite: true);
             var subfolder = (MfsFolder)await folder.CreateFolderAsync("subfolder", overwrite: true);
 
             try
             {
                 var root = await subfolder.GetRootAsync();
-                var path = await root.GetRelativePathToAsync(subfolder);
+                Assert.IsNotNull(root);
 
+                var path = await root.GetRelativePathToAsync(subfolder);
                 Assert.AreEqual(path, subfolder.Path);
             }
             finally

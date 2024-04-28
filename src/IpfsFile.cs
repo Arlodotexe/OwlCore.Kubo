@@ -1,5 +1,5 @@
 ﻿using Ipfs;
-using Ipfs.Http;
+using Ipfs.CoreApi;
 using OwlCore.ComponentModel;
 using OwlCore.Storage;
 
@@ -15,7 +15,7 @@ public class IpfsFile : IFile, IChildFile, IGetCid
     /// </summary>
     /// <param name="cid">The CID of the file, such as "QmXg9Pp2ytZ14xgmQjYEiHjVjMFXzCVVEcRTWJBmLgR39V".</param>
     /// <param name="client">The IPFS Client to use for retrieving the content.</param>
-    public IpfsFile(Cid cid, IpfsClient client)
+    public IpfsFile(Cid cid, ICoreApi client)
     {
         Name = cid;
         Id = cid;
@@ -28,7 +28,7 @@ public class IpfsFile : IFile, IChildFile, IGetCid
     /// <param name="cid">The CID of the file, such as "QmXg9Pp2ytZ14xgmQjYEiHjVjMFXzCVVEcRTWJBmLgR39V".</param>
     /// <param name="name">The name of the file.</param>
     /// <param name="client">The IPFS Client to use for retrieving the content.</param>
-    public IpfsFile(Cid cid, string name, IpfsClient client)
+    public IpfsFile(Cid cid, string name, ICoreApi client)
     {
         Name = !string.IsNullOrWhiteSpace(name) ? name : cid;
         Id = cid;
@@ -38,29 +38,29 @@ public class IpfsFile : IFile, IChildFile, IGetCid
     /// <summary>
     /// The IPFS Client to use for retrieving the content.
     /// </summary>
-    public IpfsClient Client { get; }
+    public ICoreApi Client { get; }
 
     /// <inheritdoc/>
-    public string Id { get; }
+    public virtual string Id { get; }
 
     /// <inheritdoc/>
-    public string Name { get; }
+    public virtual string Name { get; }
 
     /// <summary>
     /// The parent directory, if any.
     /// </summary>
-    internal IpfsFolder? Parent { get; init; } = null;
+    public virtual IpfsFolder? Parent { get; init; } = null;
 
     /// <inheritdoc/>
     public Task<IFolder?> GetParentAsync(CancellationToken cancellationToken = default) => Task.FromResult<IFolder?>(Parent);
 
     /// <inheritdoc/>
-    public async Task<Stream> OpenStreamAsync(FileAccess accessMode = FileAccess.Read, CancellationToken cancellationToken = default)
+    public virtual async Task<Stream> OpenStreamAsync(FileAccess accessMode = FileAccess.Read, CancellationToken cancellationToken = default)
     {
         if (accessMode.HasFlag(FileAccess.Write))
             throw new NotSupportedException("Attempted to write data to an immutable file on IPFS.");
 
-        var fileData = await Client.FileSystem.ListFileAsync(Id, cancellationToken);
+        var fileData = await Client.Mfs.StatAsync($"/ipfs/{Id}", cancellationToken);
         var stream = await Client.FileSystem.ReadFileAsync(Id, cancellationToken);
 
         var streamWithLength = new LengthOverrideStream(stream, fileData.Size);

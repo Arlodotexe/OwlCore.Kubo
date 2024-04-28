@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Diagnostics;
 using Ipfs;
-using Ipfs.Http;
+using Ipfs.CoreApi;
 using OwlCore.Storage;
 
 namespace OwlCore.Kubo;
@@ -15,7 +15,7 @@ public class IpnsFile : IFile, IChildFile, IGetCid
     /// </summary>
     /// <param name="ipnsAddress">A resolvable IPNS address, such as "ipfs.tech" or "k51qzi5uqu5dip7dqovvkldk0lz03wjkc2cndoskxpyh742gvcd5fw4mudsorj".</param>
     /// <param name="client">The IPFS Client to use for retrieving the content.</param>
-    public IpnsFile(string ipnsAddress, IpfsClient client)
+    public IpnsFile(string ipnsAddress, ICoreApi client)
     {
         Id = ipnsAddress;
         Name = PathHelpers.GetFolderItemName(ipnsAddress);
@@ -31,7 +31,7 @@ public class IpnsFile : IFile, IChildFile, IGetCid
     /// <summary>
     /// The IPFS Client to use for retrieving the content.
     /// </summary>
-    public IpfsClient Client { get; }
+    public ICoreApi Client { get; }
 
     /// <summary>
     /// The parent directory, if any.
@@ -57,10 +57,12 @@ public class IpnsFile : IFile, IChildFile, IGetCid
     /// <returns>The resolved CID.</returns>
     public async Task<Cid> GetCidAsync(CancellationToken cancellationToken)
     {
-        var resolvedIpns = await Client.ResolveAsync(Id, recursive: true, cancel: cancellationToken);
+        var resolvedIpns = await Client.Name.ResolveAsync(Id, recursive: true, cancel: cancellationToken);
         Guard.IsNotNull(resolvedIpns);
 
-        Cid cid = resolvedIpns.Split(new[] { "/ipfs/" }, StringSplitOptions.None)[1];
-        return cid;
+        var cidOfResolvedIpfsPath = await Client.Mfs.StatAsync(resolvedIpns, cancel: cancellationToken);
+
+        Guard.IsNotNull(cidOfResolvedIpfsPath.Hash);
+        return cidOfResolvedIpfsPath.Hash;
     }
 }

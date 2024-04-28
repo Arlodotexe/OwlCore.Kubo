@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Diagnostics;
 using Ipfs;
-using Ipfs.Http;
+using Ipfs.CoreApi;
 using OwlCore.Kubo.FolderWatchers;
 using OwlCore.Storage;
 using System.Runtime.CompilerServices;
@@ -10,14 +10,14 @@ namespace OwlCore.Kubo;
 /// <summary>
 /// A folder that resides on IPFS behind an IPNS Address.
 /// </summary>
-public class IpnsFolder : IMutableFolder, IChildFolder, IFastGetRoot, IFastGetItem, IFastGetItemRecursive, IGetCid
+public class IpnsFolder : IMutableFolder, IChildFolder, IGetRoot, IGetItem, IGetItemRecursive, IGetCid
 {
     /// <summary>
     /// Creates a new instance of <see cref="IpnsFolder"/>.
     /// </summary>
     /// <param name="ipnsAddress">A resolvable IPNS address, such as "/ipns/ipfs.tech" or "/ipns/k51qzi5uqu5dip7dqovvkldk0lz03wjkc2cndoskxpyh742gvcd5fw4mudsorj".</param>
     /// <param name="client">The IPFS Client to use for retrieving the content.</param>
-    public IpnsFolder(string ipnsAddress, IpfsClient client)
+    public IpnsFolder(string ipnsAddress, ICoreApi client)
     {
         Guard.IsTrue(ipnsAddress.StartsWith("/ipns/"), nameof(ipnsAddress), "Value must start with /ipns/");
 
@@ -40,7 +40,7 @@ public class IpnsFolder : IMutableFolder, IChildFolder, IFastGetRoot, IFastGetIt
     /// <summary>
     /// The IPFS Client to use for retrieving the content.
     /// </summary>
-    protected IpfsClient Client { get; }
+    protected ICoreApi Client { get; }
 
     /// <inheritdoc/>
     public virtual Task<IFolder?> GetParentAsync(CancellationToken cancellationToken = default)
@@ -52,7 +52,7 @@ public class IpnsFolder : IMutableFolder, IChildFolder, IFastGetRoot, IFastGetIt
     }
 
     /// <inheritdoc />
-    public virtual Task<IFolder?> GetRootAsync()
+    public virtual Task<IFolder?> GetRootAsync(CancellationToken cancellationToken = default)
     {
         if (Id == "/")
             return Task.FromResult<IFolder?>(null);
@@ -71,13 +71,15 @@ public class IpnsFolder : IMutableFolder, IChildFolder, IFastGetRoot, IFastGetIt
     /// <inheritdoc />
     public virtual async IAsyncEnumerable<IStorableChild> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var itemInfo = await Client.FileSystem.ListFileAsync(Id, cancellationToken);
+        var cid = await GetCidAsync(cancellationToken);
+        var itemInfo = await Client.FileSystem.ListAsync(cid, cancellationToken);
         Guard.IsTrue(itemInfo.IsDirectory);
 
         foreach (var link in itemInfo.Links)
         {
             Guard.IsNotNullOrWhiteSpace(link.Id);
-            var item = await GetFileOrFolderFromId($"{Id}/{link.Name}", cancellationToken);
+            var path = $"{Id}/{link.Name}";
+            var item = await GetFileOrFolderFromId(path, cancellationToken);
 
             if (item is IFolder && type.HasFlag(StorableType.Folder))
                 yield return item;
@@ -101,7 +103,8 @@ public class IpnsFolder : IMutableFolder, IChildFolder, IFastGetRoot, IFastGetIt
 
     private async Task<IStorableChild> GetFileOrFolderFromId(string path, CancellationToken cancellationToken = default)
     {
-        var linkedItemInfo = await Client.FileSystem.ListFileAsync(path, cancellationToken);
+        var cid = await GetCidAsync(path, cancellationToken);
+        var linkedItemInfo = await Client.Mfs.StatAsync($"/ipfs/{cid}", cancellationToken);
 
         if (linkedItemInfo.IsDirectory)
             return new IpnsFolder(path, Client) { Parent = this, };
@@ -114,12 +117,20 @@ public class IpnsFolder : IMutableFolder, IChildFolder, IFastGetRoot, IFastGetIt
     /// </summary>
     /// <param name="cancellationToken">Used to cancel the ongoing operation.</param>
     /// <returns>The resolved CID.</returns>
-    public async Task<Cid> GetCidAsync(CancellationToken cancellationToken)
-    {
-        var resolvedIpns = await Client.ResolveAsync(Id, recursive: true, cancel: cancellationToken);
-        Guard.IsNotNull(resolvedIpns);
+    public Task<Cid> GetCidAsync(CancellationToken cancellationToken) => GetCidAsync(Id, cancellationToken);
 
-        Cid cid = resolvedIpns.Split(new[] { "/ipfs/" }, StringSplitOptions.None)[1];
-        return cid;
+    /// <summary>
+    /// Retrieves the current CID of this item from IPNS.
+    /// </summary>
+    /// <param name="id">The ID to resolve.</param>
+    /// <param name="cancellationToken">Used to cancel the ongoing operation.</param>
+    /// <returns>The resolved CID.</returns>
+    private async Task<Cid> GetCidAsync(string id, CancellationToken cancellationToken)
+    {
+        var resolvedIpns = await Client.Name.ResolveAsync(id, recursive: true, cancel: cancellationToken);
+        var cidOfResolvedPath = await Client.Mfs.StatAsync(resolvedIpns, cancel: cancellationToken);
+
+        Guard.IsNotNull(cidOfResolvedPath.Hash);
+        return cidOfResolvedPath.Hash;
     }
 }

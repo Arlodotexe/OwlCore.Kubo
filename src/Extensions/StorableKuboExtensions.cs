@@ -1,8 +1,9 @@
 ﻿using CommunityToolkit.Diagnostics;
 using Ipfs;
+using Ipfs.CoreApi;
 using Ipfs.Http;
 using OwlCore.Storage;
-using OwlCore.Storage.SystemIO;
+using OwlCore.Storage.System.IO;
 
 namespace OwlCore.Kubo;
 
@@ -12,7 +13,7 @@ namespace OwlCore.Kubo;
 public static partial class StorableKuboExtensions
 {
     /// <inheritdoc cref="IGetCid.GetCidAsync(CancellationToken)"/>
-    public static async Task<Cid> GetCidAsync(this IStorable item, IpfsClient client, CancellationToken cancellationToken)
+    public static async Task<Cid> GetCidAsync(this IStorable item, ICoreApi client, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -43,7 +44,7 @@ public static partial class StorableKuboExtensions
             var res = await client.FileSystem.AddAsync(stream, file.Name, new()
             {
                 OnlyHash = true,
-                Pin = false
+                Pin = false,
             }, cancellationToken);
 
             Guard.IsFalse(res.IsDirectory);

@@ -1,6 +1,6 @@
-﻿using System.Collections.Specialized;
-using OwlCore.Extensions;
+﻿using OwlCore.Extensions;
 using OwlCore.Storage;
+using System.Collections.Specialized;
 
 namespace OwlCore.Kubo.FolderWatchers;
 
@@ -14,11 +14,11 @@ public abstract class TimerBasedFolderWatcher : IFolderWatcher
     /// <summary>
     /// Creates a new instance of <see cref="TimerBasedIpnsWatcher"/>.
     /// </summary>
-    /// <param name="folder">The folder being watched for changes.</param>
+    /// <param name="kuboNomadFolder">The folder being watched for changes.</param>
     /// <param name="interval">How often checks for updates should be made.</param>
-    public TimerBasedFolderWatcher(IMutableFolder folder, TimeSpan interval)
+    public TimerBasedFolderWatcher(IMutableFolder kuboNomadFolder, TimeSpan interval)
     {
-        Folder = folder;
+        Folder = kuboNomadFolder;
 
         _timer = new Timer(_ => ExecuteAsync().Forget());
         _timer.Change(TimeSpan.Zero, interval);

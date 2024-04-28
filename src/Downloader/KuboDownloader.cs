@@ -3,9 +3,9 @@ using Ipfs.Http;
 using OwlCore.Storage;
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using OwlCore.Storage.System.Net.Http;
 
 namespace OwlCore.Kubo;
-
 
 /// <summary>
 /// Automatically downloads and extracts the correct Kubo binary for the running operating system and architecture.
@@ -41,12 +41,12 @@ public static class KuboDownloader
         var versionsFile = new HttpFile($"{httpKuboSourcePath}/versions", client);
 
         // Scan the versions file and return the latest
-        var latestVersion = await GetLatestKuboVersionAsync(versionsFile);
+        var latestVersion = await GetLatestKuboVersionAsync(versionsFile, cancellationToken);
         var rawVersion = $"v{latestVersion.Major}.{latestVersion.Minor}.{latestVersion.Build}";
 
         // Scan the latest dist.json and get the relative path to the binary archive.
         var distJson = new HttpFile($"{httpKuboSourcePath}/{rawVersion}/dist.json", client);
-        var binaryArchiveRelativeDownloadLink = await GetDownloadLink(distJson);
+        var binaryArchiveRelativeDownloadLink = await GetDownloadLink(distJson, cancellationToken);
 
         // Set up the archive file and use ArchiveFolder to crawl the contents of the archive for the Kubo binary.
         var binaryArchive = new HttpFile($"{httpKuboSourcePath}/{rawVersion}/{binaryArchiveRelativeDownloadLink}", client);
@@ -72,12 +72,12 @@ public static class KuboDownloader
         var versionsFile = new IpnsFile($"{ipfsKuboSourcePath}/versions", client);
 
         // Scan the versions file and return the latest
-        var latestVersion = await GetLatestKuboVersionAsync(versionsFile);
+        var latestVersion = await GetLatestKuboVersionAsync(versionsFile, cancellationToken);
         var rawVersion = $"v{latestVersion.Major}.{latestVersion.Minor}.{latestVersion.Build}";
 
         // Scan the latest dist.json and get the relative path to the binary archive.
         var distJson = new IpnsFile($"{ipfsKuboSourcePath}/{rawVersion}/dist.json", client);
-        var binaryArchiveRelativeDownloadLink = await GetDownloadLink(distJson);
+        var binaryArchiveRelativeDownloadLink = await GetDownloadLink(distJson, cancellationToken);
 
         // Set up the archive file and use ArchiveFolder to crawl the contents of the archive for the Kubo binary.
         var binaryArchive = new IpnsFile($"{ipfsKuboSourcePath}/{rawVersion}/{binaryArchiveRelativeDownloadLink}", client);
@@ -118,7 +118,7 @@ public static class KuboDownloader
 
         // Scan the dist.json for this version and get the relative path to the binary archive.
         var distJson = new HttpFile($"{httpKuboSourcePath}/{rawVersion}/dist.json", client);
-        var binaryArchiveRelativeDownloadLink = await GetDownloadLink(distJson);
+        var binaryArchiveRelativeDownloadLink = await GetDownloadLink(distJson, cancellationToken);
 
         // Set up the archive file and use ArchiveFolder to crawl the contents of the archive for the Kubo binary.
         var binaryArchive = new HttpFile($"{httpKuboSourcePath}/{rawVersion}/{binaryArchiveRelativeDownloadLink}", client);
@@ -148,7 +148,7 @@ public static class KuboDownloader
 
         // Scan the dist.json for this version and get the relative path to the binary archive.
         var distJson = new IpnsFile($"{ipfsKuboSourcePath}/{rawVersion}/dist.json", client);
-        var binaryArchiveRelativeDownloadLink = await GetDownloadLink(distJson);
+        var binaryArchiveRelativeDownloadLink = await GetDownloadLink(distJson, cancellationToken);
 
         // Set up the archive file and use ArchiveFolder to crawl the contents of the archive for the Kubo binary.
         var binaryArchive = new IpnsFile($"{ipfsKuboSourcePath}/{rawVersion}/{binaryArchiveRelativeDownloadLink}", client);
@@ -203,15 +203,16 @@ public static class KuboDownloader
     /// Reads the provided dist.json for a specific Kubo version and returns the appropriate download link for your current architecture and platform.
     /// </summary>
     /// <param name="kuboVersionDistJson">The dist.json file to scan.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
     /// <returns>The relative file path where the binary archive can be found.</returns>
-    private static async Task<string> GetDownloadLink(IFile kuboVersionDistJson)
+    private static async Task<string> GetDownloadLink(IFile kuboVersionDistJson, CancellationToken cancellationToken)
     {
         Guard.IsTrue(kuboVersionDistJson.Name == "dist.json", nameof(kuboVersionDistJson.Name), "versions file must be named dist.json");
 
-        using var distJsonStream = await kuboVersionDistJson.OpenStreamAsync();
+        using var distJsonStream = await kuboVersionDistJson.OpenReadAsync(cancellationToken: cancellationToken);
         Guard.IsNotNull(distJsonStream);
 
-        var distData = await JsonSerializer.DeserializeAsync(distJsonStream, KuboDistributionJsonContext.Default.KuboDistributionData);
+        var distData = await JsonSerializer.DeserializeAsync(distJsonStream, KuboDistributionJsonContext.Default.KuboDistributionData, cancellationToken);
         Guard.IsNotNull(distData);
         Guard.IsNotNull(distData.Platforms);
 
@@ -229,16 +230,21 @@ public static class KuboDownloader
     }
 
     /// <summary>
-    /// Retrieves and parses the the latest version of Kubo from the provided url.
+    /// Retrieves and parses the latest version of Kubo from the provided url.
     /// </summary>
     /// <param name="versionsFile"></param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
     public static async Task<Version> GetLatestKuboVersionAsync(IFile versionsFile, CancellationToken cancellationToken = default)
     {
-        using var versionsFileStream = await versionsFile.OpenStreamAsync(FileAccess.Read, cancellationToken);
+        using var versionsFileStream = await versionsFile.OpenReadAsync(cancellationToken);
 
         using var reader = new StreamReader(versionsFileStream);
-        var versionInformationFromServer = reader.ReadToEnd();
+
+#if NET7_0_OR_GREATER
+        var versionInformationFromServer = await reader.ReadToEndAsync(cancellationToken);
+#else
+        var versionInformationFromServer = await reader.ReadToEndAsync();
+#endif
 
         Guard.IsNotNullOrWhiteSpace(versionInformationFromServer);
 

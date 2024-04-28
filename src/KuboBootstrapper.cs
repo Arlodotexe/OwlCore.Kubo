@@ -1,9 +1,14 @@
-﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
-using CommunityToolkit.Diagnostics;
+﻿using CommunityToolkit.Diagnostics;
+using Ipfs;
 using Ipfs.Http;
+using Newtonsoft.Json.Linq;
+using OwlCore.Extensions;
 using OwlCore.Storage;
-using OwlCore.Storage.SystemIO;
+using OwlCore.Storage.System.IO;
+using System.Diagnostics;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
 
 namespace OwlCore.Kubo;
 
@@ -14,7 +19,8 @@ public class KuboBootstrapper : IDisposable
 {
     private IpfsClient? _client;
     private readonly Func<CancellationToken, Task<IFile>> _getKuboBinaryFile;
-    private SystemFile? _executableBinary;
+    private SystemFile? _kuboBinaryFile;
+    private SystemFolder? _repoFolder;
 
     /// <summary>
     /// Create a new instance of <see cref="KuboBootstrapper"/>.
@@ -42,7 +48,7 @@ public class KuboBootstrapper : IDisposable
     /// </summary>
     /// <param name="repoPath">The path to the kubo repository folder. Provided to Kubo.</param>
     public KuboBootstrapper(string repoPath)
-        : this(repoPath, canceltok => KuboDownloader.GetLatestBinaryAsync(canceltok))
+        : this(repoPath, KuboDownloader.GetLatestBinaryAsync)
     {
     }
 
@@ -52,9 +58,32 @@ public class KuboBootstrapper : IDisposable
     public Process? Process { get; private set; }
 
     /// <summary>
+    /// The environment variables to set for the Kubo process.
+    /// </summary>
+    public Dictionary<string, string> EnvironmentVariables { get; set; } = [];
+
+    /// <summary>
     /// The path to the kubo repository folder. Provided to Kubo.
     /// </summary>
     public string RepoPath { get; set; }
+
+    /// <summary>
+    /// The folder containing the kubo repository.
+    /// </summary>
+    public SystemFolder RepoFolder => _repoFolder ??= new SystemFolder(RepoPath);
+
+    /// <summary>
+    /// The Kubo binary being bootstrapped, compatible with the currently running OS and Architecture.
+    /// </summary>
+    public SystemFile? KuboBinaryFile => _kuboBinaryFile;
+
+    /// <summary>
+    /// Gets or sets the folder where the Kubo binary will be copied to and run from via a new <see cref="System.Diagnostics.Process"/>.
+    /// </summary>
+    /// <remarks>
+    /// This location must be one where the current environment can execute a binary. For both Linux and Windows, one common location for this is the Temp folder.
+    /// </remarks>
+    public SystemFolder BinaryWorkingFolder { get; set; } = new(Path.GetTempPath());
 
     /// <summary>
     /// The address where the API should be hosted.
@@ -67,6 +96,21 @@ public class KuboBootstrapper : IDisposable
     public Uri GatewayUri { get; set; } = new("http://127.0.0.1:8080");
 
     /// <summary>
+    /// Gets or sets an enum that determines how to use the supplied <see cref="ApiUri"/>.
+    /// </summary>
+    public ConfigMode ApiUriMode { get; set; } = ConfigMode.OverwriteExisting;
+
+    /// <summary>
+    /// Gets or sets an enum that determines how to use the supplied <see cref="ApiUri"/>.
+    /// </summary>
+    public ConfigMode GatewayUriMode { get; set; } = ConfigMode.OverwriteExisting;
+
+    /// <summary>
+    /// The behavior when a node is already running (when the repo is locked).
+    /// </summary>
+    public BootstrapLaunchConflictMode LaunchConflictMode { get; set; } = BootstrapLaunchConflictMode.Throw;
+
+    /// <summary>
     /// Gets or creates an <see cref="IpfsClient"/> to interact with the given <see cref="ApiUri"/>.
     /// </summary>
     public IpfsClient Client => _client ??= new IpfsClient { ApiUri = ApiUri };
@@ -74,7 +118,38 @@ public class KuboBootstrapper : IDisposable
     /// <summary>
     /// The routing mode that should be used.
     /// </summary>
-    public DhtRoutingMode RoutingMode { get; init; }
+    public DhtRoutingMode RoutingMode { get; init; } = DhtRoutingMode.Auto;
+
+    /// <summary>
+    /// <para>
+    /// This alternative Amino DHT client with a Full-Routing-Table strategy will do a complete scan of the DHT every hour and record all nodes found. Then when a lookup is tried instead of having to go through multiple Kad hops it is able to find the 20 final nodes by looking up the in-memory recorded network table.
+    /// </para>
+    /// 
+    /// <para>
+    /// This means sustained higher memory to store the routing table and extra CPU and network bandwidth for each network scan. However the latency of individual read/write operations should be ~10x faster and the provide throughput up to 6 million times faster on larger datasets!
+    /// </para>
+    /// </summary>
+    /// <remarks>
+    /// When it is enabled:
+    /// <list type="bullet">Client DHT operations (reads and writes) should complete much faster.</list>
+    /// <list type="bullet">The provider will now use a keyspace sweeping mode allowing to keep alive CID sets that are multiple orders of magnitude larger.
+    /// <list type="bullet">The standard Bucket-Routing-Table DHT will still run for the DHT server (if the DHT server is enabled). This means the classical routing table will still be used to answer other nodes. This is critical to maintain to not harm the network.</list>
+    /// </list>
+    /// <list type="bullet">The operations 'ipfs stats dht' will default to showing information about the accelerated DHT client.</list>
+    ///
+    /// Caveats:
+    /// <list type="bullet">
+    /// Running the accelerated client likely will result in more resource consumption (connections, RAM, CPU, bandwidth)
+    ///     <list type="bullet">Users that are limited in the number of parallel connections their machines/networks can perform will likely suffer.</list>
+    ///     <list type="bullet">The resource usage is not smooth as the client crawls the network in rounds and reproviding is similarly done in rounds.</list>
+    ///     <list type="bullet">Users who previously had a lot of content but were unable to advertise it on the network will see an increase in egress bandwidth as their nodes start to advertise all of their CIDs into the network. If you have lots of data entering your node that you don't want to advertise, then consider using Reprovider Strategies to reduce the number of CIDs that you are reproviding. Similarly, if you are running a node that deals mostly with short-lived temporary data (e.g. you use a separate node for ingesting data then for storing and serving it) then you may benefit from using Strategic Providing to prevent advertising of data that you ultimately will not have.</list>
+    /// </list>
+    /// <list type="bullet">Currently, the DHT is not usable for queries for the first 5-10 minutes of operation as the routing table is being prepared. This means operations like searching the DHT for particular peers or content will not work initially.</list>
+    /// <list type="bullet">You can see if the DHT has been initially populated by running 'ipfs stats dht'.</list>
+    /// <list type="bullet">Currently, the accelerated DHT client is not compatible with LAN-based DHTs and will not perform operations against them.</list>
+    /// 
+    /// </remarks>
+    public bool UseAcceleratedDHTClient { get; set; }
 
     /// <summary>
     /// The Kubo profiles that will be applied before starting the daemon.
@@ -82,69 +157,118 @@ public class KuboBootstrapper : IDisposable
     public List<string> StartupProfiles { get; } = new();
 
     /// <summary>
-    /// Gets or sets the folder where the Kubo binary will be copied to and run from via a new <see cref="System.Diagnostics.Process"/>.
-    /// </summary>
-    /// <remarks>
-    /// This location must be one where the current environment can execute a binary. For both Linux and Windows, one common location for this is the Temp folder.
-    /// </remarks>
-    public SystemFolder BinaryWorkingFolder { get; set; } = new(Path.GetTempPath());
-
-    /// <summary>
     /// Loads the binary and starts it in a new process.
     /// </summary>
     /// <param name="cancellationToken">Cancels the startup process.</param>
     /// <returns></returns>
-    public async Task StartAsync(CancellationToken cancellationToken = default)
+    public virtual async Task StartAsync(CancellationToken cancellationToken = default)
     {
-        IFile? kuboBinary = await BinaryWorkingFolder
-            .GetFilesAsync(cancellationToken)
-            .FirstOrDefaultAsync(x => x.Name.StartsWith("ipfs") || x.Name.StartsWith("kubo"));
-
-        // Retrieve the kubo binary if we don't have it
-        kuboBinary ??= await _getKuboBinaryFile(cancellationToken);
-
-        _executableBinary ??= (SystemFile)await BinaryWorkingFolder.CreateCopyOfAsync(kuboBinary, overwrite: false, cancellationToken);
+        // Get or download the Kubo binary, if needed.
+        _kuboBinaryFile ??= await GetOrDownloadExecutableKuboBinary(cancellationToken);
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            SetExecutablePermissionsForBinary(_executableBinary);
+            SetExecutablePermissionsForBinary(_kuboBinaryFile);
 
-        ApplySettings();
+        var repoLocked = await IsRepoLockedAsync(new SystemFolder(RepoPath), cancellationToken);
 
-        var processStartInfo = new ProcessStartInfo(_executableBinary.Path, $"daemon --routing={RoutingMode.ToString().ToLowerInvariant()} --enable-pubsub-experiment --enable-namesys-pubsub --repo-dir \"{RepoPath}\"")
+        // If the repo is locked, check the launch conflict mode
+        if (repoLocked)
         {
-            CreateNoWindow = true
+            switch (LaunchConflictMode)
+            {
+                case BootstrapLaunchConflictMode.Throw:
+                    throw new InvalidOperationException("The repository is locked and the launch conflict mode is set to throw.");
+
+                case BootstrapLaunchConflictMode.Relaunch:
+                    // Attach to the existing node and shut it down
+                    var apiMultiAddr = await GetApiAsync(cancellationToken);
+                    Guard.IsNotNull(apiMultiAddr);
+                    await new IpfsClient { ApiUri = TcpIpv4MultiAddressToUri(apiMultiAddr) }.Generic.ShutdownAsync();
+                    break;
+
+                case BootstrapLaunchConflictMode.Attach:
+                    ApiUriMode = ConfigMode.UseExisting;
+                    GatewayUriMode = ConfigMode.UseExisting;
+                    break;
+            }
+        }
+
+        if (ApiUriMode == ConfigMode.UseExisting)
+        {
+            var apiMultiAddr = await GetApiAsync(cancellationToken);
+            if (apiMultiAddr is not null)
+                ApiUri = TcpIpv4MultiAddressToUri(apiMultiAddr);
+        }
+
+        if (GatewayUriMode == ConfigMode.UseExisting)
+        {
+            var gatewayMultiAddr = await GetGatewayAsync(cancellationToken);
+            if (gatewayMultiAddr is not null)
+                GatewayUri = TcpIpv4MultiAddressToUri(gatewayMultiAddr);
+        }
+
+        if (LaunchConflictMode == BootstrapLaunchConflictMode.Attach && repoLocked)
+        {
+            // In attach mode, we don't bootstrap the process. 
+            // Accessing the Client property will connect to the running Daemon using the Kubo RPC API port we have set.
+            return;
+        }
+
+        // Settings must be applied before bootstrapping.
+        await ApplySettingsAsync(cancellationToken);
+
+        // Setup process info
+        var processStartInfo = new ProcessStartInfo(_kuboBinaryFile.Path, $"daemon --routing={RoutingMode.ToString().ToLowerInvariant()} --enable-pubsub-experiment --enable-namesys-pubsub --repo-dir \"{RepoPath}\"")
+        {
+            CreateNoWindow = true,
         };
 
+        // Setup environment variables
+        foreach (var item in EnvironmentVariables)
+            processStartInfo.EnvironmentVariables.Add(item.Key, item.Value);
+
+        await StartAsync(processStartInfo, cancellationToken);
+    }
+
+    private async Task StartAsync(ProcessStartInfo processStartInfo, CancellationToken cancellationToken)
+    {
+        // Setup process
         Process = new Process
         {
             StartInfo = processStartInfo,
-            EnableRaisingEvents = true
+            EnableRaisingEvents = true,
         };
 
-        Process.StartInfo.RedirectStandardOutput = true;
-        Process.StartInfo.RedirectStandardInput = true;
-        Process.StartInfo.RedirectStandardError = true;
-        Process.StartInfo.UseShellExecute = false;
+        var process = Process;
 
-        Process.Start();
+        process.StartInfo.RedirectStandardOutput = true;
+        process.StartInfo.RedirectStandardInput = true;
+        process.StartInfo.RedirectStandardError = true;
+        process.StartInfo.UseShellExecute = false;
 
-        var cancellationCleanup = cancellationToken.Register(() => Process.Dispose());
+        // Start
+        process.Start();
 
-        Process.BeginOutputReadLine();
-        Process.BeginErrorReadLine();
+        // Close the process if cancellation is called early.
+        var cancellationCleanup = cancellationToken.Register(() => process.Dispose());
 
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
+
+        // Create a task completion source to wait for the daemon to be ready.
         var startupCompletion = new TaskCompletionSource<object?>();
-        Process.OutputDataReceived += Process_OutputDataReceived;
-        Process.ErrorDataReceived += ProcessOnErrorDataReceived;
+        process.OutputDataReceived += Process_OutputDataReceived;
+        process.ErrorDataReceived += ProcessOnErrorDataReceived;
 
         cancellationToken.ThrowIfCancellationRequested();
 
+        // Wait for daemon to be ready
         await startupCompletion.Task;
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        Process.OutputDataReceived -= Process_OutputDataReceived;
-        Process.ErrorDataReceived -= ProcessOnErrorDataReceived;
+        process.OutputDataReceived -= Process_OutputDataReceived;
+        process.ErrorDataReceived -= ProcessOnErrorDataReceived;
 
         cancellationCleanup.Dispose();
 
@@ -157,10 +281,23 @@ public class KuboBootstrapper : IDisposable
                 startupCompletion.SetResult(null);
         }
 
-        void ProcessOnErrorDataReceived(object sender, DataReceivedEventArgs e)
+        async void ProcessOnErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
             if (!string.IsNullOrWhiteSpace(e.Data) && e.Data.Contains("Error: "))
             {
+                if (e.Data.Contains($"/ip4/{ApiUri.Host}/tcp/{ApiUri.Port}") && e.Data.Contains("bind"))
+                {
+                    process.OutputDataReceived -= Process_OutputDataReceived;
+                    process.ErrorDataReceived -= ProcessOnErrorDataReceived;
+
+                    // Failed to bind to port, process may be orphaned.
+                    // Connect and shutdown via api instead.
+                    await new IpfsClient { ApiUri = ApiUri }.Generic.ShutdownAsync();
+                    await StartAsync(processStartInfo, cancellationToken);
+                    startupCompletion.SetResult(null);
+                    return;
+                }
+
                 throw new InvalidOperationException($"Error received while starting daemon: {e.Data}");
             }
         }
@@ -169,14 +306,12 @@ public class KuboBootstrapper : IDisposable
     /// <summary>
     /// Stops the bootstrapped process.
     /// </summary>
-    public void Stop()
+    public virtual void Stop()
     {
-        Guard.IsNotNullOrWhiteSpace(_executableBinary?.Path);
-
-        if (Process is not null && !Process.HasExited)
+        if (_kuboBinaryFile is not null && Process is not null && !Process.HasExited)
         {
             // Gracefully shutdown the running Kubo Daemon
-            RunExecutable(_executableBinary, $"shutdown --repo-dir \"{RepoPath}\"", throwOnError: false);
+            RunExecutable(_kuboBinaryFile, $"shutdown --repo-dir \"{RepoPath}\"", throwOnError: false);
             Process.Close();
         }
 
@@ -184,31 +319,227 @@ public class KuboBootstrapper : IDisposable
     }
 
     /// <summary>
+    /// Gets or downloads the Kubo binary and sets it up in the <see cref="BinaryWorkingFolder"/>.
+    /// </summary>
+    /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
+    protected virtual async Task<SystemFile> GetOrDownloadExecutableKuboBinary(CancellationToken cancellationToken)
+    {
+        IFile? existingBinary = await BinaryWorkingFolder
+            .GetFilesAsync(cancellationToken)
+            .FirstOrDefaultAsync(x => x.Name.StartsWith("ipfs") || x.Name.StartsWith("kubo"), cancellationToken: cancellationToken);
+
+        if (existingBinary is null)
+        {
+            // Retrieve the kubo binary if we don't have it
+            existingBinary ??= await _getKuboBinaryFile(cancellationToken);
+
+            // Copy it into the binary working folder, store the new file for use.
+            return (SystemFile)await BinaryWorkingFolder.CreateCopyOfAsync(existingBinary, overwrite: false, cancellationToken);
+        }
+
+        return (SystemFile)existingBinary;
+    }
+
+    /// <summary>
+    /// Checks if the Kubo repository at the provided <see cref="RepoPath"/> has an active repo.lock.
+    /// </summary>
+    /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
+    /// <returns>A Task containing a boolean value. If true, the repo is locked, otherwise false.</returns>
+    public Task<bool> IsRepoLockedAsync(CancellationToken cancellationToken) => IsRepoLockedAsync(new SystemFolder(RepoPath), cancellationToken);
+
+    /// <summary>
+    /// Gets the gateway address from the provided <see cref="RepoPath"/>.
+    /// </summary>
+    /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
+    /// <returns>The <see cref="MultiAddress"/> formatted gateway address, if found.</returns>
+    public Task<MultiAddress?> GetGatewayAsync(CancellationToken cancellationToken) => GetGatewayAsync(new SystemFolder(RepoPath), cancellationToken);
+
+    /// <summary>
+    /// Gets the gateway address from the provided <see cref="RepoPath"/>.
+    /// </summary>
+    /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
+    /// <returns>The <see cref="MultiAddress"/> formatted api address, if found.</returns>
+    public Task<MultiAddress?> GetApiAsync(CancellationToken cancellationToken) => GetApiAsync(new SystemFolder(RepoPath), cancellationToken);
+
+    /// <summary>
+    /// Checks of the Kubo repository at the provided <paramref name="kuboRepo"/> has an active repo.lock.
+    /// </summary>
+    /// <param name="kuboRepo">The Kubo repository to check.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
+    /// <returns></returns>
+    public static async Task<bool> IsRepoLockedAsync(IFolder kuboRepo, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var target = await kuboRepo.GetFirstByNameAsync("repo.lock", cancellationToken);
+            return true;
+        }
+        catch (FileNotFoundException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Converts a TcpIpv4 <see cref="MultiAddress"/> to a <see cref="Uri"/> with the location and port.
+    /// </summary>
+    /// <param name="multiAddress">The <see cref="MultiAddress"/> to transform.</param>
+    /// <returns>A standard uri containing the location and port provided from the <paramref name="multiAddress"/>.</returns>
+    public static Uri TcpIpv4MultiAddressToUri(MultiAddress multiAddress)
+    {
+        return new Uri($"http://{multiAddress.Protocols[0].Value}:{multiAddress.Protocols[1].Value}");
+    }
+
+    /// <summary>
+    /// Gets the gateway address from the provided <paramref name="kuboRepo"/>.
+    /// </summary>
+    /// <param name="kuboRepo">The Kubo repository to check.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
+    /// <returns>The <see cref="MultiAddress"/> formatted gateway address, if found.</returns>
+    public static async Task<MultiAddress?> GetGatewayAsync(IFolder kuboRepo, CancellationToken cancellationToken)
+    {
+        IFile? file = null;
+        try
+        {
+            file = (IFile)await kuboRepo.GetFirstByNameAsync("config", cancellationToken);
+        }
+        catch (FileNotFoundException)
+        {
+            return null;
+        }
+
+        using var stream = await file.OpenStreamAsync(FileAccess.Read, cancellationToken);
+        var bytes = await stream.ToBytesAsync(cancellationToken: cancellationToken);
+
+        var strng = Encoding.UTF8.GetString(bytes).Trim();
+        var config = JObject.Parse(strng);
+
+        var addresses = config["Addresses"];
+        Guard.IsNotNull(addresses);
+
+        var gateway = addresses["Gateway"]?.Value<string>();
+        Guard.IsNotNullOrWhiteSpace(gateway);
+
+        return new MultiAddress(gateway);
+    }
+
+    /// <summary>
+    /// Gets the API address from the provided <paramref name="kuboRepo"/>.
+    /// </summary>
+    /// <param name="kuboRepo">The Kubo repository to check.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
+    /// <returns>The <see cref="MultiAddress"/> formatted api address, if found.</returns>
+    public static async Task<MultiAddress?> GetApiAsync(IFolder kuboRepo, CancellationToken cancellationToken)
+    {
+        IFile? file = null;
+        try
+        {
+            file = (IFile)await kuboRepo.GetFirstByNameAsync("config", cancellationToken);
+        }
+        catch (FileNotFoundException)
+        {
+            return null;
+        }
+
+        using var stream = await file.OpenStreamAsync(FileAccess.Read, cancellationToken);
+        var bytes = await stream.ToBytesAsync(cancellationToken: cancellationToken);
+
+        var strng = Encoding.UTF8.GetString(bytes).Trim();
+        var config = JObject.Parse(strng);
+
+        var addresses = config["Addresses"];
+        Guard.IsNotNull(addresses);
+
+        var api = addresses["API"]?.Value<string>();
+        Guard.IsNotNullOrWhiteSpace(api);
+
+        return new MultiAddress(api);
+    }
+
+    /// <summary>
     /// Initializes the local node with the provided settings.
     /// </summary>
     /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
-    public void ApplySettings()
+    public virtual async Task ApplySettingsAsync(CancellationToken cancellationToken)
     {
-        Guard.IsNotNullOrWhiteSpace(_executableBinary?.Path);
+        Guard.IsNotNullOrWhiteSpace(_kuboBinaryFile?.Path);
 
+        // Init if needed
         try
         {
-            RunExecutable(_executableBinary, $"init --repo-dir \"{RepoPath}\"", throwOnError: false);
+            RunExecutable(_kuboBinaryFile, $"init --repo-dir \"{RepoPath}\"", throwOnError: false);
         }
         catch
         {
             // ignored
         }
 
-        RunExecutable(_executableBinary, $"config --repo-dir \"{RepoPath}\" Routing.Type {RoutingMode.ToString().ToLowerInvariant()}", throwOnError: true);
-        RunExecutable(_executableBinary, $"config --repo-dir \"{RepoPath}\" Addresses.API /ip4/{ApiUri.Host}/tcp/{ApiUri.Port}", throwOnError: true);
-        RunExecutable(_executableBinary, $"config --repo-dir \"{RepoPath}\" Addresses.Gateway /ip4/{GatewayUri.Host}/tcp/{GatewayUri.Port}", throwOnError: true);
-
-        foreach (var profile in StartupProfiles)
-            RunExecutable(_executableBinary, $"config --repo-dir {RepoPath} profile apply {profile}", throwOnError: true);
+        await ApplyRoutingSettingsAsync(cancellationToken);
+        await ApplyPortSettingsAsync(cancellationToken);
+        await ApplyStartupProfileSettingsAsync(cancellationToken);
     }
 
-    private void SetExecutablePermissionsForBinary(SystemFile file)
+    /// <summary>
+    /// Initializes the local node with the provided startup profile settings.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
+    protected virtual async Task ApplyStartupProfileSettingsAsync(CancellationToken cancellationToken)
+    {
+        Guard.IsNotNullOrWhiteSpace(_kuboBinaryFile?.Path);
+
+        // Startup profiles
+        foreach (var profile in StartupProfiles)
+            RunExecutable(_kuboBinaryFile, $"config --repo-dir {RepoPath} profile apply {profile}", throwOnError: true);
+    }
+
+    /// <summary>
+    /// Initializes the local node with the provided port settings.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
+    protected virtual async Task ApplyPortSettingsAsync(CancellationToken cancellationToken)
+    {
+        Guard.IsNotNullOrWhiteSpace(_kuboBinaryFile?.Path);
+
+        // Port options
+        if (ApiUriMode == ConfigMode.OverwriteExisting)
+            RunExecutable(_kuboBinaryFile, $"config --repo-dir \"{RepoPath}\" Addresses.API /ip4/{ApiUri.Host}/tcp/{ApiUri.Port}", throwOnError: true);
+
+        if (GatewayUriMode == ConfigMode.OverwriteExisting)
+            RunExecutable(_kuboBinaryFile, $"config --repo-dir \"{RepoPath}\" Addresses.Gateway /ip4/{GatewayUri.Host}/tcp/{GatewayUri.Port}", throwOnError: true);
+
+        if (GatewayUriMode == ConfigMode.UseExisting)
+        {
+            var existingGatewayUri = await GetGatewayAsync(cancellationToken);
+            if (existingGatewayUri is null)
+                RunExecutable(_kuboBinaryFile, $"config --repo-dir \"{RepoPath}\" Addresses.Gateway /ip4/{GatewayUri.Host}/tcp/{GatewayUri.Port}", throwOnError: true);
+        }
+
+        if (ApiUriMode == ConfigMode.UseExisting)
+        {
+            var existingApiUri = await GetApiAsync(cancellationToken);
+            if (existingApiUri is null)
+                RunExecutable(_kuboBinaryFile, $"config --repo-dir \"{RepoPath}\" Addresses.API /ip4/{ApiUri.Host}/tcp/{ApiUri.Port}", throwOnError: true);
+        }
+    }
+
+    /// <summary>
+    /// Initializes the local node with the provided routing settings.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
+    protected virtual async Task ApplyRoutingSettingsAsync(CancellationToken cancellationToken)
+    {
+        Guard.IsNotNullOrWhiteSpace(_kuboBinaryFile?.Path);
+
+        RunExecutable(_kuboBinaryFile, $"config --repo-dir \"{RepoPath}\" Routing.Type {RoutingMode.ToString().ToLowerInvariant()}", throwOnError: true);
+
+        RunExecutable(_kuboBinaryFile, $"config --repo-dir \"{RepoPath}\" Routing.AcceleratedDHTClient \"{UseAcceleratedDHTClient.ToString().ToLower()}\" --json", throwOnError: true);
+    }
+
+    /// <summary>
+    /// Sets executable permissions for the given file.
+    /// </summary>
+    /// <param name="file">The file to adjust execute permissions for.</param>
+    protected virtual void SetExecutablePermissionsForBinary(SystemFile file)
     {
         // This should only be used on linux.
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -217,7 +548,14 @@ public class KuboBootstrapper : IDisposable
         RunExecutable(new SystemFile("/bin/bash"), $"-c \"chmod 777 '{file.Path}'\"", throwOnError: true);
     }
 
-    private void RunExecutable(SystemFile file, string arguments, bool throwOnError)
+    /// <summary>
+    /// Runs the provided executable with the given arguments.
+    /// </summary>
+    /// <param name="file">The binary file to execute.</param>
+    /// <param name="arguments">The execution arguments to provide.</param>
+    /// <param name="throwOnError">Whether to throw when stderr is emitted.</param>
+    /// <exception cref="InvalidOperationException"></exception>
+    protected void RunExecutable(SystemFile file, string arguments, bool throwOnError)
     {
         var processStartInfo = new ProcessStartInfo(file.Path, arguments)
         {
