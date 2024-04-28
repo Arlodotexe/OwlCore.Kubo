@@ -1,4 +1,6 @@
-﻿namespace OwlCore.Kubo.Tests
+﻿using OwlCore.Storage;
+
+namespace OwlCore.Kubo.Tests
 {
     [TestClass]
     public class MfsStreamTests
@@ -31,7 +33,7 @@
             }
 
             // Open MfsStream from file, as standard stream.
-            using var fileStream = await file.OpenStreamAsync();
+            using var fileStream = await file.OpenReadAsync();
 
             var buffer = new byte[256];
             var bytesRead = fileStream.Read(buffer, 0, 256);
@@ -67,7 +69,7 @@
             await stream.WriteAsync(randomData, 0, 256);
 
             // Read data back via file.
-            using var fileStream = await file.OpenStreamAsync();
+            using var fileStream = await file.OpenReadAsync();
 
             var buffer = new byte[256];
             var bytesRead = await fileStream.ReadAsync(buffer, 0, 256);

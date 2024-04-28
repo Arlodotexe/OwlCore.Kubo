@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace OwlCore.Kubo.Tests
+﻿namespace OwlCore.Kubo.Tests
 {
     [TestClass]
     public class KuboBootstrapperTests

@@ -1,10 +1,7 @@
 ﻿using CommunityToolkit.Diagnostics;
 using Ipfs;
-using Ipfs.Http;
-using OwlCore.Kubo.Models;
+using Ipfs.CoreApi;
 using OwlCore.Storage;
-using System.Text;
-using System.Text.Json;
 
 namespace OwlCore.Kubo;
 
@@ -17,8 +14,8 @@ public class MfsFile : IFile, IChildFile, IGetCid
     /// Creates a new instance of <see cref="MfsFile"/>.
     /// </summary>
     /// <param name="path"></param>
-    /// <param name="client">The IPFS Client to use for retrieving the content.</param>
-    public MfsFile(string path, IpfsClient client)
+    /// <param name="client">The client to use for interacting with ipfs.</param>
+    public MfsFile(string path, ICoreApi client)
     {
         Guard.IsNotNullOrWhiteSpace(path);
         Path = path;
@@ -28,7 +25,7 @@ public class MfsFile : IFile, IChildFile, IGetCid
         static string GetFolderItemName(string path)
         {
             var parts = path.Trim('/').Split('/').ToArray();
-            return parts[parts.Length - 1];
+            return parts[^1];
         }
     }
 
@@ -52,18 +49,15 @@ public class MfsFile : IFile, IChildFile, IGetCid
     /// <summary>
     /// The IPFS Client to use for retrieving the content.
     /// </summary>
-    protected IpfsClient Client { get; }
+    protected ICoreApi Client { get; }
 
     /// <inheritdoc/>
     public async Task<Stream> OpenStreamAsync(FileAccess accessMode = FileAccess.Read, CancellationToken cancellationToken = default)
     {
-        var serialized = await Client.DoCommandAsync("files/stat", cancellationToken, Path, "long=true");
-        var result = await JsonSerializer.DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(serialized)), typeof(MfsFileStatData), ModelSerializer.Default, cancellationToken);
+        var data = await Client.Mfs.StatAsync(Path, cancellationToken);
 
-        Guard.IsNotNull(result);
-
-        var data = (MfsFileStatData)result;
-        Guard.IsNotNullOrWhiteSpace(data.Hash);
+        Guard.IsNotNull(data);
+        Guard.IsNotNullOrWhiteSpace(data.Hash?.ToString());
         Guard.IsNotNull(data.Size);
 
         return new MfsStream(Path, (long)data.Size, Client) { InternalCanWrite = accessMode.HasFlag(FileAccess.Write) };
@@ -75,15 +69,10 @@ public class MfsFile : IFile, IChildFile, IGetCid
     /// <returns>A Task that represents the asynchronous operation. Value is the CID of the file that was flushed to disk.</returns>
     public async Task<Cid> FlushAsync(CancellationToken cancellationToken = default)
     {
-        var serialized = await Client.DoCommandAsync("files/flush", cancellationToken, Path);
-        Guard.IsNotNullOrWhiteSpace(serialized);
+        var cid = await Client.Mfs.FlushAsync(Path, cancellationToken);
+        Guard.IsNotNullOrWhiteSpace(cid);
 
-        var result = (FilesFlushResponse?)await JsonSerializer.DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(serialized)), typeof(FilesFlushResponse), ModelSerializer.Default, cancellationToken);
-
-        // This field is always present if the operation was successful.
-        Guard.IsNotNullOrWhiteSpace(result?.Cid);
-
-        return result.Cid;
+        return cid;
     }
 
     /// <inheritdoc/>

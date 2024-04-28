@@ -1,6 +1,6 @@
 ﻿using Ipfs.Http;
 using OwlCore.Storage;
-using OwlCore.Storage.SystemIO;
+using OwlCore.Storage.System.IO;
 using System.Diagnostics;
 
 namespace OwlCore.Kubo.Tests;
@@ -59,7 +59,8 @@ public class TestFixture
             ApiUri = new Uri($"http://127.0.0.1:{apiPort}"),
             GatewayUri = new Uri($"http://127.0.0.1:{gatewayPort}"),
             BinaryWorkingFolder = workingDirectory,
-            RoutingMode = DhtRoutingMode.DhtClient,
+            RoutingMode = DhtRoutingMode.AutoClient,
+            LaunchConflictMode = BootstrapLaunchConflictMode.Relaunch,
         };
 
         OwlCore.Diagnostics.Logger.LogInformation($"Starting node {nodeRepoName}\n");

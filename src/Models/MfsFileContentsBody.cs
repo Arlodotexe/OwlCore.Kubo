@@ -1,7 +1,6 @@
-﻿namespace OwlCore.Kubo.Models
+﻿namespace OwlCore.Kubo.Models;
+
+internal class MfsFileContentsBody
 {
-    internal class MfsFileContentsBody
-    {
-        public List<MfsFileData>? Entries { get; set; }
-    }
+    public List<MfsFileData>? Entries { get; set; }
 }

@@ -1,11 +1,12 @@
 ﻿using CommunityToolkit.Diagnostics;
 using Ipfs;
+using Ipfs.CoreApi;
 using Ipfs.Http;
+using OwlCore.Kubo.Models;
 using OwlCore.Storage;
 using System.Collections.Specialized;
 using System.Text;
 using System.Text.Json;
-using OwlCore.Kubo.Models;
 
 namespace OwlCore.Kubo.FolderWatchers;
 
@@ -14,7 +15,7 @@ namespace OwlCore.Kubo.FolderWatchers;
 /// </summary>
 public class TimerBasedMfsWatcher : TimerBasedFolderWatcher
 {
-    private readonly IpfsClient _client;
+    private readonly ICoreApi _client;
 
     private bool _running;
     private Cid? _lastKnownRootCid;
@@ -26,7 +27,7 @@ public class TimerBasedMfsWatcher : TimerBasedFolderWatcher
     /// <param name="folder">The folder to watch for changes.</param>
     /// <param name="client">The client used to make requests to Kubo.</param>
     /// <param name="interval">How often checks for updates should be made.</param>
-    public TimerBasedMfsWatcher(IpfsClient client, MfsFolder folder, TimeSpan interval)
+    public TimerBasedMfsWatcher(ICoreApi client, MfsFolder folder, TimeSpan interval)
         : base(folder, interval)
     {
         _client = client;
@@ -46,13 +47,7 @@ public class TimerBasedMfsWatcher : TimerBasedFolderWatcher
         var folder = (MfsFolder)Folder;
 
         // This can be a long running operation, so reruns should be prevented for the duration to avoid concurrent requests.
-        var serialized = await _client.DoCommandAsync("files/stat", CancellationToken.None, folder.Path, "long=true");
-        var result = await JsonSerializer.DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(serialized)), typeof(MfsFileStatData), ModelSerializer.Default);
-
-        Guard.IsNotNull(result);
-
-        var data = (MfsFileStatData)result;
-
+        var data = await _client.Mfs.StatAsync(folder.Path);
         if (data.Hash is not null && _lastKnownRootCid != data.Hash)
         {
             var items = await folder.GetItemsAsync().ToListAsync();

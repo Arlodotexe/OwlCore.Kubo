@@ -1,7 +1,6 @@
-﻿namespace OwlCore.Kubo.Models
+﻿namespace OwlCore.Kubo.Models;
+
+internal class FilesFlushResponse
 {
-    internal class FilesFlushResponse
-    {
-        public string? Cid { get; set; }
-    }
+    public string? Cid { get; set; }
 }

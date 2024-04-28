@@ -81,11 +81,17 @@ public class PeerRoom : IDisposable
     public Peer ThisPeer { get; }
 
     /// <summary>
-    /// The topic being used for communication.
+    /// The name of the topic being used for communication.
     /// </summary>
     public string TopicName { get; }
 
-    internal bool HeartbeatEnabled { get; set; } = true;
+    /// <summary>
+    /// Gets or sets a boolean that indicates whether the heartbeat for this peer is enabled.
+    /// </summary>
+    /// <remarks>
+    /// If disabled, other peers will not see this peer in the peer room because the heartbeat will not be broadcast. This can be useful when building specialized peer rooms.
+    /// </remarks>
+    public bool HeartbeatEnabled { get; set; } = true;
 
     /// <summary>
     /// Broadcasts a heartbeat to listeners on the topic.

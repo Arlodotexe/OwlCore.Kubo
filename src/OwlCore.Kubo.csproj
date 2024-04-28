@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net6.0;net7.0</TargetFrameworks>
     <Nullable>enable</Nullable>
-    <LangVersion>10.0</LangVersion>
+    <LangVersion>12.0</LangVersion>
     <WarningsAsErrors>nullable</WarningsAsErrors>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
@@ -14,13 +14,44 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.15.1</Version>
+    <Version>0.16.0</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.16.0 ---
+[Breaking]
+Inherited breaking changes from IpfsShipyard.Net.Http.Client 0.2.0.
+Inherited breaking changes from OwlCore.Storage 0.10.0 and 0.11.0.
+Inherited breaking changes from OwlCore.ComponentModel 0.7.0 and 0.8.0.
+Inherited breaking changes from OwlCore.Extensions 0.8.0.
+
+[Fixes]
+The changes in OwlCore.Storage 0.10.0 allowed the CommonTests to uncover previously unknown issues with the Kubo-based storage implementation. These issues are now fixed and the storage implementations are compliant with the latest CommonTests.
+
+[New]
+Added static SwarmKeyGen extension methods, which allow you to generate and write a private Kubo swarm key to a file for immediate use.
+Added a new PrivateKuboBootstrapper. This custom bootstrapper allows you to start a Kubo node with a private swarm key, automatically removing the default bootstrap nodes, applying LIBP2P_FORCE_PNET as needed, and setting up the provided BootstrapPeerMultiAddresses as your bootstrap peers.
+Added a new OwlCore.Kubo.Cache namespace. This is a limited set of API wrappers for the Ipfs core interfaces that enable caching functionality throughout your entire application domain, currently covering IKeyApi and INameApi. Note that you'll need to use ICoreApi instead of IpfsClient, and likewise for other Core interfaces (and their implementations) throughout your codebase to use this cache layer.
+
+Added TransformIpnsDagAsync extension method, which allows you to mutate and update a DAG object published to IPNS all in one go, with progress reporting.
+Added ResolveDagCidAsync extension method to Cid and IEnumerable{Cid}. Resolves the provided cid if it is an Ipns address and retrieves the content from the DAG.
+Added CreateKeyWithNameOfIdAsync extension method to IKeyApi. Creates an ipns key using a temp name, then renames it to the name of the key. Enables pushing to ipns without additional API calls to convert between ipns cid and name.
+Added GetOrCreateKeyAsync extension method to IKeyApi. Gets a key by name, or creates it if it does not exist.
+
+Added various helper methods to KuboBootstrapper for getting repo lock state, gateway and api uri, and converting between MultiAddress and Uri.
+Added all missing DhtRoutingMode values that have been added to Kubo as of 0.26.0. 
+Added a LaunchConfigMode to KuboBootstrapper. Defines the behavior when a node is already running (when the repo is locked): Throw, Attach, or Relaunch.
+Added an ApiUriMode to KuboBootstrapper. Gets or sets an enum that determines how to use the supplied ApiUri: UseExisting, or OverwriteExisting.
+Added a GatewayUriMode to KuboBootstrapper. Gets or sets an enum that determines how to use the supplied GatewayUri: UseExisting, or OverwriteExisting.
+Added a UseAcceleratedDHTClient property to KuboBootstrapper. If set to true, the client DHT will be used on startup.
+
+[Improvements]
+As part of the move to ICoreApi, all internal calls to DoCommandAsync have been removed wherever IMfsApi is used, thanks to the implementation contributed in https://github.com/ipfs-shipyard/net-ipfs-core/pull/13/.
+Updated dependencies.
+
 --- 0.15.1 ---
 [Fixes]
 Fixed an issue where MfsFolder would throw StackOverflowException when calling GetParentAsync on a folder two or more subdirectories in. Added tests.
@@ -351,14 +382,20 @@ Added unit tests.
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Common" Version="8.2.2" />
     <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.2.2" />
-    <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.1.0" />
-    <PackageReference Include="OwlCore" Version="0.4.1" />
+    <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.5.0" />
+    <PackageReference Include="OwlCore" Version="0.5.0" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
-    <PackageReference Include="OwlCore.ComponentModel" Version="0.6.0" />
-    <PackageReference Include="OwlCore.Storage" Version="0.9.3" />
-    <PackageReference Include="OwlCore.Storage.SharpCompress" Version="0.0.1" />
+    <PackageReference Include="OwlCore.ComponentModel" Version="0.8.0" />
+    <PackageReference Include="OwlCore.ComponentModel.Settings" Version="0.0.0" />
+    <PackageReference Include="OwlCore.Extensions" Version="0.8.0" />
+    <PackageReference Include="OwlCore.Storage" Version="0.11.0" />
+    <PackageReference Include="OwlCore.Storage.SharpCompress" Version="0.1.0" />
+    <PackageReference Include="PolySharp" Version="1.14.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
-    <PackageReference Include="System.Text.Json" Version="8.0.1" />
+    <PackageReference Include="System.Text.Json" Version="8.0.3" />
   </ItemGroup>
 </Project>

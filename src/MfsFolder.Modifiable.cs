@@ -2,94 +2,120 @@
 using OwlCore.Kubo.FolderWatchers;
 using OwlCore.Storage;
 
-namespace OwlCore.Kubo
+namespace OwlCore.Kubo;
+
+public partial class MfsFolder : IModifiableFolder, IMoveFrom, ICreateCopyOf
 {
-    public partial class MfsFolder : IModifiableFolder, IFastFileMove<MfsFile>, IFastFileCopy<MfsFile>, IFastFileCopy<IpfsFile>, IFastFileCopy<IpnsFile>
+    /// <summary>
+    /// The interval that MFS should be checked for updates.
+    /// </summary>
+    public TimeSpan UpdateCheckInterval { get; } = TimeSpan.FromSeconds(10);
+
+    /// <inheritdoc/>
+    public virtual async Task DeleteAsync(IStorableChild item, CancellationToken cancellationToken = default)
     {
-        /// <summary>
-        /// The interval that MFS should be checked for updates.
-        /// </summary>
-        public TimeSpan UpdateCheckInterval { get; } = TimeSpan.FromSeconds(10);
+        cancellationToken.ThrowIfCancellationRequested();
+        Guard.IsNotNullOrWhiteSpace(item.Name);
 
-        /// <inheritdoc/>
-        public virtual async Task DeleteAsync(IStorableChild item, CancellationToken cancellationToken = default)
+        await Client.Mfs.RemoveAsync($"{Path}{item.Name}", recursive: true, force: true, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task<IChildFile> CreateCopyOfAsync(IFile fileToCopy, bool overwrite, CancellationToken cancellationToken,
+        CreateCopyOfDelegate fallback)
+    {
+        if (fileToCopy is MfsFile mfsFile)
+            return CreateCopyOfAsync(mfsFile, overwrite, cancellationToken);
+
+        if (fileToCopy is IpfsFile ipfsFile)
+            return CreateCopyOfAsync(ipfsFile, overwrite, cancellationToken);
+
+        if (fileToCopy is IpnsFile ipnsFile)
+            return CreateCopyOfAsync(ipnsFile, overwrite, cancellationToken);
+
+        return fallback(this, fileToCopy, overwrite, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task<IChildFile> MoveFromAsync(IChildFile fileToMove, IModifiableFolder source, bool overwrite, CancellationToken cancellationToken,
+        MoveFromDelegate fallback)
+    {
+        if (fileToMove is MfsFile mfsFile)
+            return MoveFromAsync(mfsFile, source, overwrite, cancellationToken);
+
+        return fallback(this, fileToMove, source, overwrite, cancellationToken);
+    }
+
+    /// <inheritdoc cref="CreateCopyOfAsync(IFile,bool,CancellationToken,CreateCopyOfDelegate)"/>
+    public virtual async Task<IChildFile> CreateCopyOfAsync(MfsFile fileToCopy, bool overwrite = false, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        await Client.Mfs.CopyAsync(fileToCopy.Path, Path, cancel: cancellationToken);
+        return new MfsFile($"{Path}{fileToCopy.Name}", Client);
+    }
+
+    /// <inheritdoc cref="CreateCopyOfAsync(IFile,bool,CancellationToken,CreateCopyOfDelegate)"/>
+    public virtual async Task<IChildFile> CreateCopyOfAsync(IpfsFile fileToCopy, bool overwrite = false, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        await Client.Mfs.CopyAsync($"/ipfs/{fileToCopy.Id}", Path, cancel: cancellationToken);
+        return new MfsFile($"{Path}{fileToCopy.Name}", Client);
+    }
+
+    /// <inheritdoc cref="CreateCopyOfAsync(IFile,bool,CancellationToken,CreateCopyOfDelegate)"/>
+    public virtual async Task<IChildFile> CreateCopyOfAsync(IpnsFile fileToCopy, bool overwrite = false, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var cid = await fileToCopy.GetCidAsync(cancellationToken);
+        await Client.Mfs.CopyAsync($"/ipfs/{cid}", Path, cancel: cancellationToken);
+
+        return new MfsFile($"{Path}{fileToCopy.Name}", Client);
+    }
+
+    /// <inheritdoc cref="MoveFromAsync(IChildFile,IModifiableFolder,bool,CancellationToken,MoveFromDelegate)"/>
+    public virtual async Task<IChildFile> MoveFromAsync(MfsFile fileToMove, IModifiableFolder source, bool overwrite = false, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        await Client.Mfs.MoveAsync(fileToMove.Path, $"{Path}{fileToMove.Name}", cancellationToken);
+        return new MfsFile($"{Path}{fileToMove.Name}", Client);
+    }
+
+    /// <inheritdoc cref="MoveFromAsync(IChildFile,IModifiableFolder,bool,CancellationToken,MoveFromDelegate)"/>
+    public virtual async Task<IChildFolder> CreateFolderAsync(string name, bool overwrite = false, CancellationToken cancellationToken = default)
+    {
+        if (overwrite)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            Guard.IsNotNullOrWhiteSpace(item.Name);
-
-            await Client.DoCommandAsync("files/rm", cancellationToken, $"{Path}{item.Name}", "recursive=true", "force=true");
+            await Client.Mfs.RemoveAsync($"{Path}{name}", recursive: true, force: true, cancellationToken);
         }
 
-        /// <inheritdoc/>
-        public virtual async Task<IChildFile> CreateCopyOfAsync(MfsFile fileToCopy, bool overwrite = false, CancellationToken cancellationToken = default)
+        try
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            await Client.DoCommandAsync("files/cp", cancellationToken, arg: fileToCopy.Path, $"arg={Path}");
-            return new MfsFile($"{Path}{fileToCopy.Name}", Client);
+            await Client.Mfs.MakeDirectoryAsync($"{Path}{name}", cancel: cancellationToken);
+        }
+        catch (Exception ex) when (ex.Message.ToLower().Contains("file already exists"))
+        {
+            // Ignored, return existing path if exists
         }
 
-        /// <inheritdoc/>
-        public virtual async Task<IChildFile> CreateCopyOfAsync(IpfsFile fileToCopy, bool overwrite = false, CancellationToken cancellationToken = default)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
+        return new MfsFolder($"{Path}{name}", Client);
+    }
 
-            await Client.DoCommandAsync("files/cp", cancellationToken, arg: $"/ipfs/{fileToCopy.Id}", $"arg={Path}");
-            return new MfsFile($"{Path}{fileToCopy.Name}", Client);
-        }
+    /// <inheritdoc/>
+    public virtual async Task<IChildFile> CreateFileAsync(string name, bool overwrite = false, CancellationToken cancellationToken = default)
+    {
+        await Client.Mfs.WriteAsync($"{Path}{name}", new MemoryStream(), new() { Create = true, Truncate = overwrite });
 
-        /// <inheritdoc/>
-        public virtual async Task<IChildFile> CreateCopyOfAsync(IpnsFile fileToCopy, bool overwrite = false, CancellationToken cancellationToken = default)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
+        return new MfsFile($"{Path}{name}", Client);
+    }
 
-            var cid = await fileToCopy.GetCidAsync(cancellationToken);
-            await Client.DoCommandAsync("files/cp", cancellationToken, arg: $"/ipfs/{cid}", $"arg={Path}");
 
-            return new MfsFile($"{Path}{fileToCopy.Name}", Client);
-        }
-
-        /// <inheritdoc/>
-        public virtual async Task<IChildFile> MoveFromAsync(MfsFile fileToMove, IModifiableFolder source, bool overwrite = false, CancellationToken cancellationToken = default)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            await Client.DoCommandAsync("files/mv", cancellationToken, arg: fileToMove.Path, $"arg={Path}{fileToMove.Name}");
-            return new MfsFile($"{Path}{fileToMove.Name}", Client);
-        }
-
-        /// <inheritdoc/>
-        public virtual async Task<IChildFolder> CreateFolderAsync(string name, bool overwrite = false, CancellationToken cancellationToken = default)
-        {
-            if (overwrite)
-            {
-                await Client.DoCommandAsync("files/rm", cancellationToken, $"{Path}{name}", "recursive=true");
-            }
-
-            try
-            {
-                await Client.DoCommandAsync("files/mkdir", cancellationToken, arg: $"{Path}{name}");
-            }
-            catch (Exception ex) when (ex.Message.ToLower().Contains("file already exists"))
-            {
-                // Ignored, return existing path if exists
-            }
-
-            return new MfsFolder($"{Path}{name}", Client);
-        }
-
-        /// <inheritdoc/>
-        public virtual async Task<IChildFile> CreateFileAsync(string name, bool overwrite = false, CancellationToken cancellationToken = default)
-        {
-            await Client.UploadAsync("files/write", CancellationToken.None, new MemoryStream(), null, $"arg={Path}{name}", $"create=true", overwrite ? $"truncate=true" : string.Empty);
-
-            return new MfsFile($"{Path}{name}", Client);
-        }
-
-        /// <inheritdoc/>
-        public virtual Task<IFolderWatcher> GetFolderWatcherAsync(CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult<IFolderWatcher>(new TimerBasedMfsWatcher(Client, this, UpdateCheckInterval));
-        }
+    /// <inheritdoc/>
+    public virtual Task<IFolderWatcher> GetFolderWatcherAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult<IFolderWatcher>(new TimerBasedMfsWatcher(Client, this, UpdateCheckInterval));
     }
 }

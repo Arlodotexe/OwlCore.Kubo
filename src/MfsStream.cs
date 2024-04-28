@@ -1,6 +1,8 @@
 ﻿using CommunityToolkit.Common;
 using CommunityToolkit.Diagnostics;
-using Ipfs.Http;
+using Ipfs.CoreApi;
+using System.Text;
+using OwlCore.Extensions;
 
 namespace OwlCore.Kubo;
 
@@ -18,7 +20,7 @@ public class MfsStream : Stream
     /// <param name="path">The MFS path of the file.</param>
     /// <param name="length">The known length of the stream.</param>
     /// <param name="client">The client to use for interacting with IPFS.</param>
-    public MfsStream(string path, long length, IpfsClient client)
+    public MfsStream(string path, long length, ICoreApi client)
     {
         _path = path;
         _length = length;
@@ -28,7 +30,7 @@ public class MfsStream : Stream
     /// <summary>
     /// The IPFS Client to use for retrieving the content.
     /// </summary>
-    public IpfsClient Client { get; }
+    public ICoreApi Client { get; }
 
     /// <inheritdoc/>
     public override bool CanRead => true;
@@ -51,13 +53,13 @@ public class MfsStream : Stream
     /// <inheritdoc/>
     public override void Flush()
     {
-        _ = Client.DoCommandAsync("files/flush", CancellationToken.None, _path).Result;
+        _ = Client.Mfs.FlushAsync(_path).Result;
     }
 
     /// <inheritdoc/>
     public override Task FlushAsync(CancellationToken cancellationToken)
     {
-        return Client.DoCommandAsync("files/flush", cancellationToken, _path);
+        return Client.Mfs.FlushAsync(_path, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -72,11 +74,8 @@ public class MfsStream : Stream
         Guard.IsLessThanOrEqualTo(offset + count, Length);
         Guard.IsGreaterThanOrEqualTo(offset, 0);
 
-        var result = await Client.PostDownloadAsync("files/read", cancellationToken, _path, $"offset={Position + offset}", $"count={count}");
-
-        using var memStream = new MemoryStream();
-        await result.CopyToAsync(memStream);
-        var bytes = memStream.ToArray();
+        var result = await Client.Mfs.ReadFileStreamAsync(_path, offset: Position + offset, count: count, cancellationToken);
+        var bytes = await result.ToBytesAsync(cancellationToken);
 
         for (var i = 0; i < bytes.Length; i++)
             buffer[i] = bytes[i];
@@ -151,7 +150,7 @@ public class MfsStream : Stream
             SetLength(Position + count);
         }
 
-        await Client.Upload2Async("files/write", cancellationToken, new MemoryStream(buffer, offset, count), GetFileName(_path), $"arg={_path}", $"offset={Position}", $"count={count}", $"create=true");
+        await Client.Mfs.WriteAsync(_path, buffer, new() { Offset = Position, Count = count, Create = true }, cancellationToken);
         Position += count;
     }
 

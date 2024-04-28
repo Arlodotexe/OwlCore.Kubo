@@ -1,10 +1,8 @@
-﻿using System.Text;
-using System.Threading.Channels;
-using Ipfs;
+﻿using Ipfs;
 using Ipfs.CoreApi;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using OwlCore.Extensions;
 using OwlCore.Kubo.Models;
+using System.Text;
 
 namespace OwlCore.Kubo.Tests;
 
@@ -32,28 +30,32 @@ public class LoopbackPubSubApi : IPubSubApi
         throw new NotImplementedException();
     }
 
-    public Task PublishAsync(string topic, string message, CancellationToken cancel = new()) => PublishAsync(topic, Encoding.UTF8.GetBytes(message), cancel);
+    public Task PublishAsync(string topic, string message, CancellationToken cancel = default) => PublishAsync(topic, Encoding.UTF8.GetBytes(message), cancel);
 
-    public Task PublishAsync(string topic, byte[] message, CancellationToken cancel = new()) => PublishAsync(topic, new MemoryStream(message), cancel);
+    public Task PublishAsync(string topic, byte[] message, CancellationToken cancel = default) => PublishAsync(topic, new MemoryStream(message), cancel);
 
-    public Task PublishAsync(string topic, Stream message, CancellationToken cancel = new())
+    public async Task PublishAsync(string topic, Stream message, CancellationToken cancel = default)
     {
         if (_handlers.TryGetValue(topic, out var handlers))
         {
-            foreach (var handler in handlers)
+            foreach (var handler in handlers.ToArray())
             {
-                handler(new PublishedMessage(_senderPeer, topic.IntoList(), Array.Empty<byte>(), message.ToBytes(),
-                    message, message.Length));
+                var bytes = await message.ToBytesAsync(cancel);
+                message.Seek(0, SeekOrigin.Begin);
+                handler(new PublishedMessage(_senderPeer, topic.IntoList(), Array.Empty<byte>(), bytes, new MemoryStream(bytes), bytes.Length));
             }
         }
 
-        return _loopbackApis.InParallel(x =>
+        await _loopbackApis.InParallel(x =>
         {
             if (cancel.IsCancellationRequested)
                 return Task.CompletedTask;
 
-            if (_emittedMessageHashCodes.Add(message.GetHashCode()))
-                return x.PublishAsync(topic, message, cancel);
+            lock (_emittedMessageHashCodes)
+            {
+                if (_emittedMessageHashCodes.Add(message.GetHashCode()))
+                    return x.PublishAsync(topic, message, cancel);
+            }
 
             return Task.CompletedTask;
         });
@@ -72,8 +74,11 @@ public class LoopbackPubSubApi : IPubSubApi
             if (cancellationToken.IsCancellationRequested)
                 return Task.CompletedTask;
 
-            if (_subscribedHandlersHashCodes.Add(handler.GetHashCode()))
-                return x.SubscribeAsync(topic, handler, cancellationToken);
+            lock (_subscribedHandlersHashCodes)
+            {
+                if (_subscribedHandlersHashCodes.Add(handler.GetHashCode()))
+                    return x.SubscribeAsync(topic, handler, cancellationToken);
+            }
 
             return Task.CompletedTask;
         });

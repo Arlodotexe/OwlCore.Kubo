@@ -1,9 +1,9 @@
-﻿using System.Collections.Specialized;
-using CommunityToolkit.Diagnostics;
+﻿using CommunityToolkit.Diagnostics;
 using Ipfs;
+using Ipfs.CoreApi;
 using Ipfs.Http;
-using OwlCore.Extensions;
 using OwlCore.Storage;
+using System.Collections.Specialized;
 
 namespace OwlCore.Kubo.FolderWatchers;
 
@@ -12,7 +12,7 @@ namespace OwlCore.Kubo.FolderWatchers;
 /// </summary>
 public class TimerBasedIpnsWatcher : TimerBasedFolderWatcher
 {
-    private readonly IpfsClient _ipfsClient;
+    private readonly ICoreApi _ipfsClient;
 
     private Cid? _lastKnownRootCid;
     private List<IStorableChild> _knownItems = new();
@@ -23,7 +23,7 @@ public class TimerBasedIpnsWatcher : TimerBasedFolderWatcher
     /// <param name="ipfsClient">The IpfsClient used to check for changes to the IPNS address.</param>
     /// <param name="folder">The folder being watched for changes.</param>
     /// <param name="interval">The interval that IPNS should be checked for updates.</param>
-    public TimerBasedIpnsWatcher(IpfsClient ipfsClient, IpnsFolder folder, TimeSpan interval)
+    public TimerBasedIpnsWatcher(ICoreApi ipfsClient, IpnsFolder folder, TimeSpan interval)
         : base(folder, interval)
     {
         _ipfsClient = ipfsClient;
@@ -40,7 +40,7 @@ public class TimerBasedIpnsWatcher : TimerBasedFolderWatcher
     {
         var ipnsPath = Folder.Id;
 
-        var resolvedIpnsValue = await _ipfsClient.ResolveAsync(ipnsPath, recursive: true);
+        var resolvedIpnsValue = await _ipfsClient.Name.ResolveAsync(ipnsPath, recursive: true);
         Guard.IsNotNullOrWhiteSpace(resolvedIpnsValue);
 
         var cid = resolvedIpnsValue.Split(new[] { "/ipfs/" }, StringSplitOptions.None)[1];
