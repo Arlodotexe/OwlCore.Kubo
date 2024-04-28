@@ -46,7 +46,7 @@ Added all missing DhtRoutingMode values that have been added to Kubo as of 0.26.
 Added a LaunchConfigMode to KuboBootstrapper. Defines the behavior when a node is already running (when the repo is locked): Throw, Attach, or Relaunch.
 Added an ApiUriMode to KuboBootstrapper. Gets or sets an enum that determines how to use the supplied ApiUri: UseExisting, or OverwriteExisting.
 Added a GatewayUriMode to KuboBootstrapper. Gets or sets an enum that determines how to use the supplied GatewayUri: UseExisting, or OverwriteExisting.
-Added a UseAcceleratedDHTClient property to KuboBootstrapper. If set to true, the client DHT will be used on startup.
+Added a UseAcceleratedDHTClient property to KuboBootstrapper. If set to true, the accelerated DHT client will be used on startup. Extensive documentation has been added to aid in deciding whether you should use this. Note that enabling this will increase resource consumption.
 
 [Improvements]
 As part of the move to ICoreApi, all internal calls to DoCommandAsync have been removed wherever IMfsApi is used, thanks to the implementation contributed in https://github.com/ipfs-shipyard/net-ipfs-core/pull/13/.
