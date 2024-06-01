@@ -14,13 +14,17 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.16.0</Version>
+    <Version>0.16.1</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.16.1 ---
+[Fixes]
+Added an internal semaphore to CachedNameApi to synchronize access across threads.
+
 --- 0.16.0 ---
 [Breaking]
 Inherited breaking changes from IpfsShipyard.Net.Http.Client 0.2.0.
