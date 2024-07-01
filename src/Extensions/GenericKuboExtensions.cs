@@ -64,7 +64,6 @@ public static partial class GenericKuboExtensions
 
         var res = await client.Dag.GetAsync<TResult>(cid, cancellationToken);
 
-        Guard.IsNotNull(res);
         return (res, cid);
     }
 
