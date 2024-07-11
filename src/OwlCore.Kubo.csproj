@@ -14,13 +14,17 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.16.2</Version>
+    <Version>0.16.3</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.16.3 ---
+[Fises]
+Fixed an issue where flushing the CachedNameApi would throw multiple enumeration with a non-empty cache.
+
 --- 0.16.2 ---
 [Improvements]
 Removed null guard in ResolveDagCidAsync extension method. This reflects the behavior of the underlying Kubo API.

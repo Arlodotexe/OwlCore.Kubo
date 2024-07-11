@@ -85,7 +85,7 @@ public class CachedNameApi : SettingsBase, INameApi, IDelegable<INameApi>, IFlus
     {
         using (await _cacheUpdateMutex.DisposableWaitAsync(cancellationToken))
         {
-            foreach (var item in PublishedCidNamedContent)
+            foreach (var item in PublishedCidNamedContent.ToArray())
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -103,7 +103,7 @@ public class CachedNameApi : SettingsBase, INameApi, IDelegable<INameApi>, IFlus
                 PublishedCidNamedContent.Add(item with { returnValue = result });
             }
 
-            foreach (var item in PublishedStringNamedContent)
+            foreach (var item in PublishedStringNamedContent.ToArray())
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
