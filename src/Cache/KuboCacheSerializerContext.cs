@@ -10,7 +10,7 @@ namespace OwlCore.Kubo.Cache;
 [JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(int))]
 [JsonSerializable(typeof(List<string>))]
-[JsonSerializable(typeof(List<string>))]
+[JsonSerializable(typeof(List<CachedKeyApi.CachedKeyInfo>))]
 public partial class KuboCacheSerializerContext : JsonSerializerContext
 {
 }

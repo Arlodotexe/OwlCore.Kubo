@@ -49,7 +49,11 @@ public class AesPasswordEncryptedPubSub : IPubSubApi, IDelegable<IPubSubApi>
             message.Seek(0, SeekOrigin.Begin);
 
         var aes = Aes.Create();
+#if NETSTANDARD2_0
         var passBytes = new Rfc2898DeriveBytes(password: _password, salt: Encoding.UTF8.GetBytes(_salt ?? string.Empty), iterations: 2000);
+#elif NET5_0_OR_GREATER
+        var passBytes = new Rfc2898DeriveBytes(password: _password, salt: Encoding.UTF8.GetBytes(_salt ?? string.Empty), iterations: 2000, HashAlgorithmName.SHA1);
+#endif
 
         aes.Key = passBytes.GetBytes(aes.KeySize / 8);
         aes.IV = passBytes.GetBytes(aes.BlockSize / 8);
@@ -87,7 +91,11 @@ public class AesPasswordEncryptedPubSub : IPubSubApi, IDelegable<IPubSubApi>
     internal IPublishedMessage? TryTransformPublishedMessage(IPublishedMessage publishedMessage)
     {
         var aes = Aes.Create();
-        var passBytes = new Rfc2898DeriveBytes(password: _password, salt: Encoding.UTF8.GetBytes(_salt ?? string.Empty));
+#if NETSTANDARD2_0
+        var passBytes = new Rfc2898DeriveBytes(password: _password, salt: Encoding.UTF8.GetBytes(_salt ?? string.Empty), iterations: 2000);
+#elif NET5_0_OR_GREATER
+        var passBytes = new Rfc2898DeriveBytes(password: _password, salt: Encoding.UTF8.GetBytes(_salt ?? string.Empty), iterations: 2000, HashAlgorithmName.SHA1);
+#endif
 
         aes.Key = passBytes.GetBytes(aes.KeySize / 8);
         aes.IV = passBytes.GetBytes(aes.BlockSize / 8);
@@ -99,8 +107,10 @@ public class AesPasswordEncryptedPubSub : IPubSubApi, IDelegable<IPubSubApi>
             using var streamDecryptor = new CryptoStream(inputStream, aes.CreateDecryptor(), CryptoStreamMode.Read);
             streamDecryptor.CopyTo(outputStream);
 
+            outputStream.Seek(0, SeekOrigin.Begin);
             var outputBytes = outputStream.ToBytes();
 
+            outputStream.Seek(0, SeekOrigin.Begin);
             return new PublishedMessage(publishedMessage.Sender, publishedMessage.Topics, publishedMessage.SequenceNumber, outputBytes, outputStream, publishedMessage.Size);
         }
         catch

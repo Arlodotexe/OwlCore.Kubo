@@ -13,7 +13,9 @@ public class CachedKeyApi : SettingsBase, IKeyApi, IDelegable<IKeyApi>, IAsyncIn
     /// <summary>
     /// The cached record type for created or resolved <see cref="IKey"/>s.
     /// </summary>
-    public record KeyInfo(string Name, Cid Id) : IKey;
+    public record CachedKeyInfo(string Name, string Id);
+    
+    private record ApiKeyInfo(string Name, Cid Id) : IKey;
 
     /// <summary>
     /// Creates a new instance of <see cref="CachedKeyApi"/>.
@@ -28,9 +30,9 @@ public class CachedKeyApi : SettingsBase, IKeyApi, IDelegable<IKeyApi>, IAsyncIn
     /// <summary>
     /// The resolved ipns keys.
     /// </summary>
-    public List<KeyInfo> Keys
+    public List<CachedKeyInfo> Keys
     {
-        get => GetSetting(() => new List<KeyInfo>());
+        get => GetSetting(() => new List<CachedKeyInfo>());
         set => SetSetting(value);
     }
 
@@ -46,12 +48,12 @@ public class CachedKeyApi : SettingsBase, IKeyApi, IDelegable<IKeyApi>, IAsyncIn
         if (existing is not null)
             Keys.Remove(existing);
 
-        Keys.Add(new KeyInfo(Name: res.Name, Id: res.Id));
+        Keys.Add(new CachedKeyInfo(Name: res.Name, Id: res.Id));
         return res;
     }
 
     /// <inheritdoc />
-    public Task<IEnumerable<IKey>> ListAsync(CancellationToken cancel = default) => Task.FromResult<IEnumerable<IKey>>(Keys);
+    public Task<IEnumerable<IKey>> ListAsync(CancellationToken cancel = default) => Task.FromResult<IEnumerable<IKey>>(Keys.Select(x=> new ApiKeyInfo(x.Name, x.Id)));
 
     /// <inheritdoc />
     public Task<IKey?> RemoveAsync(string name, CancellationToken cancel = default) => Inner.RemoveAsync(name, cancel);
@@ -72,7 +74,7 @@ public class CachedKeyApi : SettingsBase, IKeyApi, IDelegable<IKeyApi>, IAsyncIn
     public async Task InitAsync(CancellationToken cancellationToken = default)
     {
         var res = await Inner.ListAsync(cancellationToken);
-        Keys = res.Select(x => new KeyInfo(x.Name, x.Id)).ToList();
+        Keys = res.Select(x => new CachedKeyInfo(x.Name, x.Id)).ToList();
 
         await SaveAsync(cancellationToken);
 
