@@ -14,15 +14,23 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.16.3</Version>
+    <Version>0.16.4</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.16.4 ---
+[Fixes]
+Fixed decryption on AesPasswordEncryptedPubSub, addressed usage of deprecated Rfc2898DeriveBytes constructor.
+Fixed an issue where cached KeyInfo wasn't being serialized/deserialized.
+
+[Improvements]
+Updated dependencies to latest available stable versions.
+
 --- 0.16.3 ---
-[Fises]
+[Fixes]
 Fixed an issue where flushing the CachedNameApi would throw multiple enumeration with a non-empty cache.
 
 --- 0.16.2 ---
@@ -398,16 +406,16 @@ Added unit tests.
     <PackageReference Include="OwlCore" Version="0.5.0" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
-    <PackageReference Include="OwlCore.ComponentModel" Version="0.8.0" />
+    <PackageReference Include="OwlCore.ComponentModel" Version="0.8.1" />
     <PackageReference Include="OwlCore.ComponentModel.Settings" Version="0.0.0" />
     <PackageReference Include="OwlCore.Extensions" Version="0.8.0" />
-    <PackageReference Include="OwlCore.Storage" Version="0.11.0" />
+    <PackageReference Include="OwlCore.Storage" Version="0.11.3" />
     <PackageReference Include="OwlCore.Storage.SharpCompress" Version="0.1.0" />
     <PackageReference Include="PolySharp" Version="1.14.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
-    <PackageReference Include="System.Text.Json" Version="8.0.3" />
+    <PackageReference Include="System.Text.Json" Version="8.0.4" />
   </ItemGroup>
 </Project>
