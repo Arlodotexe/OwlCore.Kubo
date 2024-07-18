@@ -2,6 +2,7 @@
 using Ipfs;
 using Ipfs.CoreApi;
 using OwlCore.ComponentModel;
+using OwlCore.Diagnostics;
 using OwlCore.Extensions;
 using OwlCore.Storage;
 
@@ -25,7 +26,7 @@ public class CachedNameApi : SettingsBase, INameApi, IDelegable<INameApi>, IFlus
     /// <summary>
     /// The cached record for a published cid name in a <see cref="CachedNameApi"/>.
     /// </summary>
-    public record PublishedCidName(Cid id, string key, TimeSpan? lifetime, NamedContent returnValue);
+    public record PublishedCidName(string cid, string key, TimeSpan? lifetime, NamedContent returnValue);
 
     /// <summary>
     /// The cached record for a resolved name in a <see cref="CachedNameApi"/>.
@@ -89,10 +90,8 @@ public class CachedNameApi : SettingsBase, INameApi, IDelegable<INameApi>, IFlus
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                Console.WriteLine($"Flushing key {item.key} with value {item.id}");
-
                 // Publish to ipfs
-                var result = await Inner.PublishAsync(item.id, item.key, item.lifetime, cancellationToken);
+                var result = await Inner.PublishAsync(item.cid, item.key, item.lifetime, cancellationToken);
 
                 // Verify result matches original returned data
                 _ = Guard.Equals(result.ContentPath, item.returnValue.ContentPath);
@@ -106,8 +105,6 @@ public class CachedNameApi : SettingsBase, INameApi, IDelegable<INameApi>, IFlus
             foreach (var item in PublishedStringNamedContent.ToArray())
             {
                 cancellationToken.ThrowIfCancellationRequested();
-
-                Console.WriteLine($"Flushing key {item.key} with value {item.path}");
 
                 // Publish to ipfs
                 var result = await Inner.PublishAsync(item.path, item.resolve, item.key, item.lifetime, cancellationToken);
@@ -128,8 +125,11 @@ public class CachedNameApi : SettingsBase, INameApi, IDelegable<INameApi>, IFlus
     {
         using (await _cacheUpdateMutex.DisposableWaitAsync(cancel))
         {
-            if (PublishedStringNamedContent.FirstOrDefault(x => x.key == key) is { } existing)
-                PublishedStringNamedContent.Remove(existing);
+            if (PublishedCidNamedContent.FirstOrDefault(x => x.key == key) is { } existingCidNamedContent)
+                PublishedCidNamedContent.Remove(existingCidNamedContent);
+            
+            if (PublishedStringNamedContent.FirstOrDefault(x => x.key == key) is { } existingStringNameContent)
+                PublishedStringNamedContent.Remove(existingStringNameContent);
 
             var keys = await KeyApi.ListAsync(cancel);
             var existingKey = keys.FirstOrDefault(x => x.Name == key);
@@ -147,8 +147,11 @@ public class CachedNameApi : SettingsBase, INameApi, IDelegable<INameApi>, IFlus
     {
         using (await _cacheUpdateMutex.DisposableWaitAsync(cancel))
         {
-            if (PublishedCidNamedContent.FirstOrDefault(x => x.key == key) is { } existing)
-                PublishedCidNamedContent.Remove(existing);
+            if (PublishedCidNamedContent.FirstOrDefault(x => x.key == key) is { } existingCidNamedContent)
+                PublishedCidNamedContent.Remove(existingCidNamedContent);
+            
+            if (PublishedStringNamedContent.FirstOrDefault(x => x.key == key) is { } existingStringNameContent)
+                PublishedStringNamedContent.Remove(existingStringNameContent);
 
             var keys = await KeyApi.ListAsync(cancel);
             var existingKey = keys.FirstOrDefault(x => x.Name == key);

@@ -14,13 +14,18 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.16.4</Version>
+    <Version>0.16.5</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.16.5 ---
+[Fixes]
+Fixed serialization issues with CachedNameApi.
+Fixed multi-publishing in CachedNameApi when flushing after using both Path and Cid overloads. 
+
 --- 0.16.4 ---
 [Fixes]
 Fixed decryption on AesPasswordEncryptedPubSub, addressed usage of deprecated Rfc2898DeriveBytes constructor.
