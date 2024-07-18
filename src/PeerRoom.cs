@@ -86,6 +86,11 @@ public class PeerRoom : IDisposable
     public string TopicName { get; }
 
     /// <summary>
+    /// The string to publish for the heartbeat.
+    /// </summary>
+    public string HeartbeatMessage { get; set; } = "KuboPeerRoomHeartbeat";
+
+    /// <summary>
     /// Gets or sets a boolean that indicates whether the heartbeat for this peer is enabled.
     /// </summary>
     /// <remarks>
@@ -100,7 +105,7 @@ public class PeerRoom : IDisposable
     public async Task BroadcastHeartbeatAsync()
     {
         if (HeartbeatEnabled)
-            await _pubSubApi.PublishAsync(TopicName, "KuboPeerRoomHeartbeat", _disconnectTokenSource.Token);
+            await _pubSubApi.PublishAsync(TopicName, HeartbeatMessage, _disconnectTokenSource.Token);
     }
 
     /// <summary>
@@ -140,7 +145,7 @@ public class PeerRoom : IDisposable
 
         await _receivedMessageMutex.WaitAsync();
 
-        if (System.Text.Encoding.UTF8.GetString(publishedMessage.DataBytes) == "KuboPeerRoomHeartbeat")
+        if (System.Text.Encoding.UTF8.GetString(publishedMessage.DataBytes) == HeartbeatMessage)
         {
             if (!_lastSeenDates.ContainsKey(publishedMessage.Sender.Id))
             {
