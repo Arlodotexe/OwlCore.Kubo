@@ -140,7 +140,7 @@ public class PeerRoom : IDisposable
 
         await _receivedMessageMutex.WaitAsync();
 
-        if (System.Text.Encoding.UTF8.GetString(publishedMessage.DataBytes) == "KuboPeerRoomHeartbeat" && HeartbeatEnabled)
+        if (System.Text.Encoding.UTF8.GetString(publishedMessage.DataBytes) == "KuboPeerRoomHeartbeat")
         {
             if (!_lastSeenDates.ContainsKey(publishedMessage.Sender.Id))
             {
