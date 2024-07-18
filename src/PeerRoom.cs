@@ -20,7 +20,7 @@ public class PeerRoom : IDisposable
     private readonly Timer? _timer;
     private readonly TimeSpan _heartbeatExpirationTime;
     private readonly CancellationTokenSource _disconnectTokenSource = new();
-    private readonly Dictionary<MultiHash, (Peer Peer, DateTime LastSeen)> _lastSeenDates = new();
+    private readonly Dictionary<MultiHash, (Peer Peer, DateTime LastSeen, string HeartbeatMessage)> _lastSeenDates = new();
     private readonly SemaphoreSlim _receivedMessageMutex = new(1, 1);
 
     /// <summary>
@@ -62,7 +62,7 @@ public class PeerRoom : IDisposable
     private async void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
     {
         await BroadcastHeartbeatAsync();
-        await PruneStalePeersAsync();
+        await PruneStalePeersAsync(CancellationToken.None);
     }
 
     /// <summary>
@@ -156,7 +156,7 @@ public class PeerRoom : IDisposable
                 });
             }
 
-            _lastSeenDates[publishedMessage.Sender.Id] = (publishedMessage.Sender, DateTime.Now);
+            _lastSeenDates[publishedMessage.Sender.Id] = (publishedMessage.Sender, DateTime.Now, HeartbeatMessage);
         }
         else if (ConnectedPeers.Any(x => x.Id == publishedMessage.Sender.Id))
         {
@@ -166,17 +166,24 @@ public class PeerRoom : IDisposable
         _receivedMessageMutex.Release();
     }
 
-    internal async Task PruneStalePeersAsync()
+    /// <summary>
+    /// Prunes any stale peers from <see cref="ConnectedPeers"/>, including expired or outdated heartbeats.
+    /// </summary>
+    public async Task PruneStalePeersAsync(CancellationToken cancellationToken)
     {
-        await _receivedMessageMutex.WaitAsync();
+        await _receivedMessageMutex.WaitAsync(cancellationToken);
 
         var now = DateTime.Now;
 
         foreach (var peer in ConnectedPeers.ToArray())
         {
+            cancellationToken.ThrowIfCancellationRequested();
             Guard.IsNotNull(peer.Id);
 
-            if (now - _heartbeatExpirationTime > _lastSeenDates[peer.Id].LastSeen)
+            var heartbeatExpired = now - _heartbeatExpirationTime > _lastSeenDates[peer.Id].LastSeen;
+            var heartbeatOutdated = _lastSeenDates[peer.Id].HeartbeatMessage != HeartbeatMessage;
+            
+            if (heartbeatExpired || heartbeatOutdated)
             {
                 await _syncContext.PostAsync(() => Task.FromResult(ConnectedPeers.Remove(ConnectedPeers.First(x => x.Id == peer.Id))));
                 _lastSeenDates.Remove(_lastSeenDates.First(x => x.Key == peer.Id).Key);
