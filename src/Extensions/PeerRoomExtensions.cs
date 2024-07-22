@@ -1,4 +1,6 @@
-﻿using System.Timers;
+﻿using System.Collections.Specialized;
+using System.Timers;
+using CommunityToolkit.Diagnostics;
 using Ipfs;
 using Timer = System.Timers.Timer;
 
@@ -9,6 +11,71 @@ namespace OwlCore.Kubo.Extensions;
 /// </summary>
 public static class PeerRoomExtensions
 {
+    /// <summary>
+    /// Waits for a specific peer to join the peer room.
+    /// </summary>>
+    /// <param name="peerRoom">The peer room to observe.</param>
+    /// <param name="peer">The peer to wait for.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
+    /// <returns>A task containing the peer that joined the room.</returns>
+    public static async Task WaitForJoinAsync(this PeerRoom peerRoom, Peer peer, CancellationToken cancellationToken)
+    {
+        var enteredPeerTaskCompletionSource = new TaskCompletionSource();
+
+        void OnConnectedPeersOnCollectionChanged(object? _, NotifyCollectionChangedEventArgs args)
+        {
+            if (args.NewItems == null)
+                return;
+
+            if (args.NewItems.Count > 1)
+                throw new InvalidOperationException("Too many nodes joined the room.");
+
+            if (args.NewItems.Cast<Peer>().All(x => x.Id != peer.Id))
+                return;
+            
+            enteredPeerTaskCompletionSource.SetResult();
+        }
+
+        peerRoom.ConnectedPeers.CollectionChanged += OnConnectedPeersOnCollectionChanged;
+        
+        await enteredPeerTaskCompletionSource.Task.WaitAsync(cancellationToken);
+        
+        peerRoom.ConnectedPeers.CollectionChanged -= OnConnectedPeersOnCollectionChanged;
+    }
+    
+    /// <summary>
+    /// Waits for the first peer to enter the room.
+    /// </summary>
+    /// <param name="peerRoom">The peer room to observe.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
+    /// <returns>A task containing the peer that joined the room.</returns>
+    /// <exception cref="InvalidOperationException">Too many peers joined the room at once.</exception>
+    public static async Task<Peer> WaitForJoinAsync(this PeerRoom peerRoom, CancellationToken cancellationToken)
+    {
+        var enteredPeerTaskCompletionSource = new TaskCompletionSource<Peer>();
+
+        void OnConnectedPeersOnCollectionChanged(object? _, NotifyCollectionChangedEventArgs args)
+        {
+            if (args.NewItems == null)
+                return;
+
+            if (args.NewItems.Count > 1)
+                throw new InvalidOperationException("Too many nodes joined the room.");
+
+            var peer = (Peer?)args.NewItems[0];
+            Guard.IsNotNull(peer);
+            enteredPeerTaskCompletionSource.SetResult(peer);
+        }
+
+        peerRoom.ConnectedPeers.CollectionChanged += OnConnectedPeersOnCollectionChanged;
+        
+        var joinedPeer = await enteredPeerTaskCompletionSource.Task.WaitAsync(cancellationToken);
+        
+        peerRoom.ConnectedPeers.CollectionChanged -= OnConnectedPeersOnCollectionChanged;
+        
+        return joinedPeer;
+    }
+    
     /// <summary>
     /// Waits for a specific message to be sent to the provided <paramref name="room"/>.
     /// </summary>
