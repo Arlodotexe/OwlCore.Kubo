@@ -14,13 +14,27 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.16.5</Version>
+    <Version>0.17.0</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.17.0 ---
+[New]
+Added PeerRoomExtensions.WaitForJoinAsync extension method
+Added PeerRoomExtensions.WaitToReceiveMessageAsync extension method
+Added PeerRoomExtensions.PublishUntilMessageReceivedAsync extension methods
+Added PeerRoom.HeartbeatMessage to enable changing the heartbeat for the peer room.
+Prune stale/outdated heartbeat message, made PruneStalePeersAsync public.
+
+[Breaking]
+Allow receiving messages when heartbeat is disabled.
+
+[Fixes]
+Fixed inconsistent passing of --repo-dir parameter during cli invocation
+
 --- 0.16.5 ---
 [Fixes]
 Fixed serialization issues with CachedNameApi.
