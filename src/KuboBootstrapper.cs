@@ -489,7 +489,7 @@ public class KuboBootstrapper : IDisposable
 
         // Startup profiles
         foreach (var profile in StartupProfiles)
-            RunExecutable(_kuboBinaryFile, $"config --repo-dir {RepoPath} profile apply {profile}", throwOnError: true);
+            RunExecutable(_kuboBinaryFile, $"config --repo-dir \"{RepoPath}\" profile apply {profile}", throwOnError: true);
     }
 
     /// <summary>
@@ -502,23 +502,23 @@ public class KuboBootstrapper : IDisposable
 
         // Port options
         if (ApiUriMode == ConfigMode.OverwriteExisting)
-            RunExecutable(_kuboBinaryFile, $"config --repo-dir \"{RepoPath}\" Addresses.API /ip4/{ApiUri.Host}/tcp/{ApiUri.Port}", throwOnError: true);
+            RunExecutable(_kuboBinaryFile, $"config Addresses.API /ip4/{ApiUri.Host}/tcp/{ApiUri.Port} --repo-dir \"{RepoPath}\"", throwOnError: true);
 
         if (GatewayUriMode == ConfigMode.OverwriteExisting)
-            RunExecutable(_kuboBinaryFile, $"config --repo-dir \"{RepoPath}\" Addresses.Gateway /ip4/{GatewayUri.Host}/tcp/{GatewayUri.Port}", throwOnError: true);
+            RunExecutable(_kuboBinaryFile, $"config Addresses.Gateway /ip4/{GatewayUri.Host}/tcp/{GatewayUri.Port} --repo-dir \"{RepoPath}\"", throwOnError: true);
 
         if (GatewayUriMode == ConfigMode.UseExisting)
         {
             var existingGatewayUri = await GetGatewayAsync(cancellationToken);
             if (existingGatewayUri is null)
-                RunExecutable(_kuboBinaryFile, $"config --repo-dir \"{RepoPath}\" Addresses.Gateway /ip4/{GatewayUri.Host}/tcp/{GatewayUri.Port}", throwOnError: true);
+                RunExecutable(_kuboBinaryFile, $"config Addresses.Gateway /ip4/{GatewayUri.Host}/tcp/{GatewayUri.Port} --repo-dir \"{RepoPath}\"", throwOnError: true);
         }
 
         if (ApiUriMode == ConfigMode.UseExisting)
         {
             var existingApiUri = await GetApiAsync(cancellationToken);
             if (existingApiUri is null)
-                RunExecutable(_kuboBinaryFile, $"config --repo-dir \"{RepoPath}\" Addresses.API /ip4/{ApiUri.Host}/tcp/{ApiUri.Port}", throwOnError: true);
+                RunExecutable(_kuboBinaryFile, $"config Addresses.API /ip4/{ApiUri.Host}/tcp/{ApiUri.Port} --repo-dir \"{RepoPath}\"", throwOnError: true);
         }
     }
 
@@ -530,9 +530,9 @@ public class KuboBootstrapper : IDisposable
     {
         Guard.IsNotNullOrWhiteSpace(_kuboBinaryFile?.Path);
 
-        RunExecutable(_kuboBinaryFile, $"config --repo-dir \"{RepoPath}\" Routing.Type {RoutingMode.ToString().ToLowerInvariant()}", throwOnError: true);
+        RunExecutable(_kuboBinaryFile, $"config Routing.Type {RoutingMode.ToString().ToLowerInvariant()} --repo-dir \"{RepoPath}\"", throwOnError: true);
 
-        RunExecutable(_kuboBinaryFile, $"config --repo-dir \"{RepoPath}\" Routing.AcceleratedDHTClient \"{UseAcceleratedDHTClient.ToString().ToLower()}\" --json", throwOnError: true);
+        RunExecutable(_kuboBinaryFile, $"config Routing.AcceleratedDHTClient \"{UseAcceleratedDHTClient.ToString().ToLower()}\" --json --repo-dir \"{RepoPath}\"", throwOnError: true);
     }
 
     /// <summary>
