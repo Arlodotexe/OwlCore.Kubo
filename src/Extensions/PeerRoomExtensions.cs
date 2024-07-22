@@ -20,7 +20,7 @@ public static class PeerRoomExtensions
     /// <returns>A task containing the peer that joined the room.</returns>
     public static async Task WaitForJoinAsync(this PeerRoom peerRoom, Peer peer, CancellationToken cancellationToken)
     {
-        var enteredPeerTaskCompletionSource = new TaskCompletionSource();
+        var enteredPeerTaskCompletionSource = new TaskCompletionSource<object?>();
 
         void OnConnectedPeersOnCollectionChanged(object? _, NotifyCollectionChangedEventArgs args)
         {
@@ -33,12 +33,16 @@ public static class PeerRoomExtensions
             if (args.NewItems.Cast<Peer>().All(x => x.Id != peer.Id))
                 return;
             
-            enteredPeerTaskCompletionSource.SetResult();
+            enteredPeerTaskCompletionSource.SetResult(null);
         }
 
         peerRoom.ConnectedPeers.CollectionChanged += OnConnectedPeersOnCollectionChanged;
         
-        await enteredPeerTaskCompletionSource.Task.WaitAsync(cancellationToken);
+#if NET5_0_OR_GREATER
+        var joinedPeer = await enteredPeerTaskCompletionSource.Task.WaitAsync(cancellationToken);
+#elif NETSTANDARD
+        var joinedPeer = await enteredPeerTaskCompletionSource.Task;
+#endif
         
         peerRoom.ConnectedPeers.CollectionChanged -= OnConnectedPeersOnCollectionChanged;
     }
@@ -69,7 +73,11 @@ public static class PeerRoomExtensions
 
         peerRoom.ConnectedPeers.CollectionChanged += OnConnectedPeersOnCollectionChanged;
         
+#if NET5_0_OR_GREATER
         var joinedPeer = await enteredPeerTaskCompletionSource.Task.WaitAsync(cancellationToken);
+#elif NETSTANDARD
+        var joinedPeer = await enteredPeerTaskCompletionSource.Task;
+#endif
         
         peerRoom.ConnectedPeers.CollectionChanged -= OnConnectedPeersOnCollectionChanged;
         
