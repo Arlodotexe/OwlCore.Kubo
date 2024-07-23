@@ -14,13 +14,17 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.17.0</Version>
+    <Version>0.17.1</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.17.1 ---
+[Improvements]
+Bumped OwlCore to 0.6.0.
+
 --- 0.17.0 ---
 [New]
 Added PeerRoomExtensions.WaitForJoinAsync extension method
@@ -422,7 +426,7 @@ Added unit tests.
     <PackageReference Include="CommunityToolkit.Common" Version="8.2.2" />
     <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.2.2" />
     <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.5.0" />
-    <PackageReference Include="OwlCore" Version="0.5.0" />
+    <PackageReference Include="OwlCore" Version="0.6.0" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
     <PackageReference Include="OwlCore.ComponentModel" Version="0.8.1" />
