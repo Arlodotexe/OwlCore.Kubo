@@ -14,13 +14,18 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.17.1</Version>
+    <Version>0.17.2</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.17.2 ---
+[Fixes]
+Fixed an issue where CachedNameApi was using the 'nocache' parameter to determine whether to use the cache layer, instead of simply delegating to the underlying API. 'nocache' has nothing to do with the caching layer, the parameter is only used by the Kubo API.
+Removed unused syntax sugar GenericKuboExtensions.GetDagCidAsync. Call the Dag API instead. 
+
 --- 0.17.1 ---
 [Improvements]
 Bumped OwlCore to 0.6.0.

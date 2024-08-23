@@ -10,19 +10,6 @@ namespace OwlCore.Kubo;
 public static partial class GenericKuboExtensions
 {
     /// <summary>
-    /// Gets the CID of the provided <paramref name="serializable"/> object.
-    /// </summary>
-    /// <param name="serializable">The object to serialize into the Dag.</param>
-    /// <param name="client">A client that can be used to communicate with Ipfs.</param>
-    /// <param name="pin">Whether to pin the provided data to the node, keeping it retrievable until unpinned. Defaults to false.</param>
-    /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    /// <returns></returns>
-    public static Task<Cid> GetDagCidAsync(this object serializable, ICoreApi client, bool pin = false, CancellationToken cancellationToken = default)
-    {
-        return client.Dag.PutAsync(serializable, cancel: cancellationToken, pin: pin);
-    }
-
-    /// <summary>
     /// Resolves the provided <paramref name="cid"/> if it is an Ipns address and retrieves the content from the DAG.
     /// </summary>
     /// <param name="cid">The cid of the DAG object to retrieve.</param>
@@ -144,7 +131,7 @@ public static partial class GenericKuboExtensions
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing task.</param>
     /// <param name="getDefaultValue">Given the created ipns key, provides the default value to be published to it.</param>
     /// <returns></returns>
-    public static async Task<IKey> GetOrCreateKeyAsync<TResult>(this ICoreApi client, string keyName, Func<IKey, TResult> getDefaultValue, TimeSpan ipnsLifetime, int size = 4096, CancellationToken cancellationToken = default)
+    public static async Task<(IKey Key, TResult Value)> GetOrCreateKeyAsync<TResult>(this ICoreApi client, string keyName, Func<IKey, TResult> getDefaultValue, TimeSpan ipnsLifetime, bool nocache, int size = 4096, CancellationToken cancellationToken = default)
     {
         // Get or create ipns key
         var keys = await client.Key.ListAsync(cancellationToken);
@@ -161,8 +148,14 @@ public static partial class GenericKuboExtensions
             // Publish default value cid
             var cid = await client.Dag.PutAsync(defaultValue, cancel: cancellationToken, pin: true);
             await client.Name.PublishAsync(cid, key.Name, ipnsLifetime, cancellationToken);
-        }
 
-        return key;
+            return (key, defaultValue);
+        }
+        else
+        {
+            var (existingValue, _) = await key.Id.ResolveDagCidAsync<TResult>(client, nocache, cancellationToken);
+            Guard.IsNotNull(existingValue);
+            return (key, existingValue);
+        }
     }
 }

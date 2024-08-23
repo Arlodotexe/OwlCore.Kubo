@@ -166,35 +166,12 @@ public class CachedNameApi : SettingsBase, INameApi, IDelegable<INameApi>, IFlus
 
     /// <inheritdoc />
     /// <remarks>
-    /// Using nocache = true here forces immediate name resolution via API, falling back to cache on failure.
-    /// <para/> 
-    /// Using nocache = false here checks the cache first, and falls back to the API if not found.
+    /// nocache has nothing to do with this caching layer. The parameter is only used by Kubo.
     /// </remarks>
     public async Task<string> ResolveAsync(string name, bool recursive = false, bool nocache = false, CancellationToken cancel = default)
     {
         using (await _cacheUpdateMutex.DisposableWaitAsync(cancel))
         {
-            if (nocache)
-            {
-                try
-                {
-                    // Don't resolve with cache, but still save resolved data to cache.
-                    var resToCache = await Inner.ResolveAsync(name, recursive, nocache, cancel);
-
-                    var existing = ResolvedNames.FirstOrDefault(x => x.name == name);
-                    if (existing is not null)
-                        ResolvedNames.Remove(existing);
-
-                    ResolvedNames.Add(new(name, recursive, resToCache));
-
-                    return resToCache;
-                }
-                catch
-                {
-                    // request failed, continue with cache anyway
-                }
-            }
-
             // Check if name is in published cache
             if (PublishedCidNamedContent.FirstOrDefault(x => x.returnValue.NamePath is not null && (name.Contains(x.returnValue.NamePath) || x.returnValue.NamePath.Contains(name))) is { } publishedCidNamedContent)
             {
