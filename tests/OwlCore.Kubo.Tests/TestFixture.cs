@@ -58,7 +58,6 @@ public class TestFixture
         {
             ApiUri = new Uri($"http://127.0.0.1:{apiPort}"),
             GatewayUri = new Uri($"http://127.0.0.1:{gatewayPort}"),
-            BinaryWorkingFolder = workingDirectory,
             RoutingMode = DhtRoutingMode.AutoClient,
             LaunchConflictMode = BootstrapLaunchConflictMode.Relaunch,
         };

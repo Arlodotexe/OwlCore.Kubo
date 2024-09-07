@@ -11,7 +11,6 @@ namespace OwlCore.Kubo;
 /// </summary>
 public class MfsStream : Stream
 {
-    private readonly string _path;
     private long _length;
 
     /// <summary>
@@ -22,7 +21,7 @@ public class MfsStream : Stream
     /// <param name="client">The client to use for interacting with IPFS.</param>
     public MfsStream(string path, long length, ICoreApi client)
     {
-        _path = path;
+        Path = path;
         _length = length;
         Client = client;
     }
@@ -31,6 +30,11 @@ public class MfsStream : Stream
     /// The IPFS Client to use for retrieving the content.
     /// </summary>
     public ICoreApi Client { get; }
+    
+    /// <summary>
+    /// The MFS path to the file. Relative to the root of MFS.
+    /// </summary>
+    public string Path { get; }
 
     /// <inheritdoc/>
     public override bool CanRead => true;
@@ -53,13 +57,13 @@ public class MfsStream : Stream
     /// <inheritdoc/>
     public override void Flush()
     {
-        _ = Client.Mfs.FlushAsync(_path).Result;
+        _ = Client.Mfs.FlushAsync(Path).Result;
     }
 
     /// <inheritdoc/>
     public override Task FlushAsync(CancellationToken cancellationToken)
     {
-        return Client.Mfs.FlushAsync(_path, cancellationToken);
+        return Client.Mfs.FlushAsync(Path, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -71,10 +75,9 @@ public class MfsStream : Stream
     /// <inheritdoc/>
     public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
-        Guard.IsLessThanOrEqualTo(offset + count, Length);
         Guard.IsGreaterThanOrEqualTo(offset, 0);
 
-        var result = await Client.Mfs.ReadFileStreamAsync(_path, offset: Position + offset, count: count, cancellationToken);
+        var result = await Client.Mfs.ReadFileStreamAsync(Path, offset: Position, count: count, cancellationToken);
         var bytes = await result.ToBytesAsync(cancellationToken);
 
         for (var i = 0; i < bytes.Length; i++)
@@ -150,13 +153,13 @@ public class MfsStream : Stream
             SetLength(Position + count);
         }
 
-        await Client.Mfs.WriteAsync(_path, buffer, new() { Offset = Position, Count = count, Create = true }, cancellationToken);
+        await Client.Mfs.WriteAsync(Path, buffer, new() { Offset = Position, Count = count, Create = true }, cancellationToken);
         Position += count;
     }
 
     static string GetFileName(string path)
     {
-        var dirName = Path.GetDirectoryName(path);
+        var dirName = System.IO.Path.GetDirectoryName(path);
         return path.Replace('/', '\\').Replace(dirName ?? string.Empty, string.Empty).Trim('/').Trim('\\');
     }
 }

@@ -74,7 +74,7 @@ public partial class MfsFolder : IFolder, IChildFolder, IGetItem, IGetItemRecurs
     }
 
     /// <inheritdoc/>
-    public virtual async Task<IStorableChild> GetFirstByNameAsync(string name, CancellationToken cancellationToken = new CancellationToken())
+    public virtual async Task<IStorableChild> GetFirstByNameAsync(string name, CancellationToken cancellationToken = default)
     {
         var mfsPath = $"{Id}{name}";
 

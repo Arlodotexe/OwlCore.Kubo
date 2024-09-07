@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net6.0;net7.0;net8.0;</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net8.0;</TargetFrameworks>
     <Nullable>enable</Nullable>
     <LangVersion>12.0</LangVersion>
     <WarningsAsErrors>nullable</WarningsAsErrors>
@@ -14,13 +14,28 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.17.2</Version>
+    <Version>0.18.0</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.18.0 ---
+[Breaking]
+Inherited breaking changes from OwlCore.Storage 0.12.0 and OwlCore.ComponentModel 0.9.0.
+OwlCore.Kubo is no longer referencing the OwlCore meta-package, and is referencing required transient packages directly. Removes some uneeded transient dependencies that weren't required.
+Removed support for net6.0 and net7.0, as they are out of support. Only netstandard2.0 and net8.0 are supported.
+IpfsFile (and subsequently IpnsFile) no longer wraps the returned Stream in the LazySeekStream from OwlCore.ComponentModel. This can be applied separately if needed, but data larger than 2.1GB requires providing a custom backing stream.
+
+[Fixes]
+Inherited fixes from OwlCore.Storage 0.12.0 and OwlCore.ComponentModel 0.9.0.
+Fixed CancellationToken not being passed to underlying API in MfsFolder.CreateFileAsync.
+
+[Improvements]
+Refactor MfsStream class to use Path property instead of private field.
+Add missing code documentation to KuboDownloader json models.
+
 --- 0.17.2 ---
 [Fixes]
 Fixed an issue where CachedNameApi was using the 'nocache' parameter to determine whether to use the cache layer, instead of simply delegating to the underlying API. 'nocache' has nothing to do with the caching layer, the parameter is only used by the Kubo API.
@@ -428,16 +443,16 @@ Added unit tests.
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Common" Version="8.2.2" />
-    <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.2.2" />
+    <PackageReference Include="CommunityToolkit.Common" Version="8.3.0" />
+    <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.3.0" />
     <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.5.0" />
-    <PackageReference Include="OwlCore" Version="0.6.0" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
-    <PackageReference Include="OwlCore.ComponentModel" Version="0.8.1" />
-    <PackageReference Include="OwlCore.ComponentModel.Settings" Version="0.0.0" />
-    <PackageReference Include="OwlCore.Extensions" Version="0.8.0" />
-    <PackageReference Include="OwlCore.Storage" Version="0.11.3" />
+    <PackageReference Include="OwlCore.ComponentModel.Settings" Version="0.1.0" />
+    <PackageReference Include="OwlCore.Diagnostics" Version="0.0.0" />
+    <PackageReference Include="OwlCore.ComponentModel" Version="0.9.0" />
+    <PackageReference Include="OwlCore.Extensions" Version="0.9.0" />
+    <PackageReference Include="OwlCore.Storage" Version="0.12.0" />
     <PackageReference Include="OwlCore.Storage.SharpCompress" Version="0.1.0" />
     <PackageReference Include="PolySharp" Version="1.14.1">
       <PrivateAssets>all</PrivateAssets>
