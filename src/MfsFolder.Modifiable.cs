@@ -107,7 +107,7 @@ public partial class MfsFolder : IModifiableFolder, IMoveFrom, ICreateCopyOf
     /// <inheritdoc/>
     public virtual async Task<IChildFile> CreateFileAsync(string name, bool overwrite = false, CancellationToken cancellationToken = default)
     {
-        await Client.Mfs.WriteAsync($"{Path}{name}", new MemoryStream(), new() { Create = true, Truncate = overwrite });
+        await Client.Mfs.WriteAsync($"{Path}{name}", new MemoryStream(), new() { Create = true, Truncate = overwrite }, cancellationToken);
 
         return new MfsFile($"{Path}{name}", Client);
     }
