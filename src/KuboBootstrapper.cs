@@ -483,13 +483,14 @@ public class KuboBootstrapper : IDisposable
     /// Initializes the local node with the provided startup profile settings.
     /// </summary>
     /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
-    protected virtual async Task ApplyStartupProfileSettingsAsync(CancellationToken cancellationToken)
+    protected virtual Task ApplyStartupProfileSettingsAsync(CancellationToken cancellationToken)
     {
         Guard.IsNotNullOrWhiteSpace(_kuboBinaryFile?.Path);
 
         // Startup profiles
         foreach (var profile in StartupProfiles)
             RunExecutable(_kuboBinaryFile, $"config --repo-dir \"{RepoPath}\" profile apply {profile}", throwOnError: true);
+        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -526,13 +527,14 @@ public class KuboBootstrapper : IDisposable
     /// Initializes the local node with the provided routing settings.
     /// </summary>
     /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
-    protected virtual async Task ApplyRoutingSettingsAsync(CancellationToken cancellationToken)
+    protected virtual Task ApplyRoutingSettingsAsync(CancellationToken cancellationToken)
     {
         Guard.IsNotNullOrWhiteSpace(_kuboBinaryFile?.Path);
 
         RunExecutable(_kuboBinaryFile, $"config Routing.Type {RoutingMode.ToString().ToLowerInvariant()} --repo-dir \"{RepoPath}\"", throwOnError: true);
 
         RunExecutable(_kuboBinaryFile, $"config Routing.AcceleratedDHTClient \"{UseAcceleratedDHTClient.ToString().ToLower()}\" --json --repo-dir \"{RepoPath}\"", throwOnError: true);
+        return Task.CompletedTask;
     }
 
     /// <summary>
