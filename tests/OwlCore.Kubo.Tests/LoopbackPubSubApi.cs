@@ -46,7 +46,7 @@ public class LoopbackPubSubApi : IPubSubApi
             }
         }
 
-        await _loopbackApis.InParallel(x =>
+        await _loopbackApis.ToArray().InParallel(x =>
         {
             if (cancel.IsCancellationRequested)
                 return Task.CompletedTask;
@@ -69,7 +69,7 @@ public class LoopbackPubSubApi : IPubSubApi
         _handlers.TryAdd(topic, new HashSet<Action<IPublishedMessage>>());
         _handlers[topic].Add(handler);
 
-        return _loopbackApis.InParallel(x =>
+        return _loopbackApis.ToArray().InParallel(x =>
         {
             if (cancellationToken.IsCancellationRequested)
                 return Task.CompletedTask;
