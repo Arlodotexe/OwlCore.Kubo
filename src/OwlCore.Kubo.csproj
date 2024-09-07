@@ -26,9 +26,15 @@
 Inherited breaking changes from OwlCore.Storage 0.12.0 and OwlCore.ComponentModel 0.9.0.
 OwlCore.Kubo is no longer referencing the OwlCore meta-package, and is referencing required transient packages directly. Removes some uneeded transient dependencies that weren't required.
 Removed support for net6.0 and net7.0, as they are out of support. Only netstandard2.0 and net8.0 are supported.
+IpfsFile (and subsequently IpnsFile) no longer wraps the returned Stream in the LazySeekStream from OwlCore.ComponentModel. This can be applied separately if needed, but data larger than 2.1GB requires providing a custom backing stream.
 
 [Fixes]
 Inherited fixes from OwlCore.Storage 0.12.0 and OwlCore.ComponentModel 0.9.0.
+Fixed CancellationToken not being passed to underlying API in MfsFolder.CreateFileAsync.
+
+[Improvements]
+Refactor MfsStream class to use Path property instead of private field.
+Add missing code documentation to KuboDownloader json models.
 
 --- 0.17.2 ---
 [Fixes]
