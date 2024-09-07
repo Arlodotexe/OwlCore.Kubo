@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Text;
+using CommunityToolkit.Diagnostics;
 using Ipfs;
 
 namespace OwlCore.Kubo.Tests;
@@ -88,6 +89,7 @@ public class PeerRoomTests
         secondPeerRoom.MessageReceived += (sender, message) =>
         {
             // Peer room must not emit messages from the sender peer.
+            Guard.IsNotNull(sender);
             var room = (PeerRoom)sender;
             Assert.AreNotEqual(room.ThisPeer.Id, message.Sender.Id);
 
