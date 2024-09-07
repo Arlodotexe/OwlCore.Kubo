@@ -127,10 +127,10 @@ public static partial class GenericKuboExtensions
     /// <param name="client">The client to use for communicating with the ipfs network.</param>
     /// <param name="keyName">The name of the key to get or create.</param>
     /// <param name="ipnsLifetime">The lifetime this ipns key should stay alive before needing to be rebroadcast by this node.</param>
+    /// <param name="nocache">Whether to use Kubo's cache when resolving ipns keys.</param>
     /// <param name="size">The size of the key to create.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing task.</param>
     /// <param name="getDefaultValue">Given the created ipns key, provides the default value to be published to it.</param>
-    /// <returns></returns>
     public static async Task<(IKey Key, TResult Value)> GetOrCreateKeyAsync<TResult>(this ICoreApi client, string keyName, Func<IKey, TResult> getDefaultValue, TimeSpan ipnsLifetime, bool nocache, int size = 4096, CancellationToken cancellationToken = default)
     {
         // Get or create ipns key
