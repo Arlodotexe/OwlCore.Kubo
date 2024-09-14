@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Diagnostics;
+using Ipfs.CoreApi;
 using OwlCore.Kubo.FolderWatchers;
 using OwlCore.Storage;
 
@@ -11,6 +12,11 @@ public partial class MfsFolder : IModifiableFolder, IMoveFrom, ICreateCopyOf
     /// </summary>
     public TimeSpan UpdateCheckInterval { get; } = TimeSpan.FromSeconds(10);
 
+    /// <summary>
+    /// The options to use when adding content to this folder on ipfs.
+    /// </summary>
+    public AddFileOptions AddFileOptions { get; set; } = new();
+
     /// <inheritdoc/>
     public virtual async Task DeleteAsync(IStorableChild item, CancellationToken cancellationToken = default)
     {
@@ -21,24 +27,40 @@ public partial class MfsFolder : IModifiableFolder, IMoveFrom, ICreateCopyOf
     }
 
     /// <inheritdoc/>
-    public Task<IChildFile> CreateCopyOfAsync(IFile fileToCopy, bool overwrite, CancellationToken cancellationToken,
-        CreateCopyOfDelegate fallback)
+    public async Task<IChildFile> CreateCopyOfAsync(IFile fileToCopy, bool overwrite, CancellationToken cancellationToken, CreateCopyOfDelegate fallback)
     {
         if (fileToCopy is MfsFile mfsFile)
-            return CreateCopyOfAsync(mfsFile, overwrite, cancellationToken);
+            return await CreateCopyOfAsync(mfsFile, overwrite, cancellationToken);
 
         if (fileToCopy is IpfsFile ipfsFile)
-            return CreateCopyOfAsync(ipfsFile, overwrite, cancellationToken);
+            return await CreateCopyOfAsync(ipfsFile, overwrite, cancellationToken);
 
         if (fileToCopy is IpnsFile ipnsFile)
-            return CreateCopyOfAsync(ipnsFile, overwrite, cancellationToken);
+            return await CreateCopyOfAsync(ipnsFile, overwrite, cancellationToken);
 
-        return fallback(this, fileToCopy, overwrite, cancellationToken);
+        if (fileToCopy is IGetCid getCid)
+        {
+            var cid = await getCid.GetCidAsync(cancellationToken);
+            
+            var newPath = $"{Path}{fileToCopy.Name}";
+            await Client.Mfs.CopyAsync($"/ipfs/{cid}", newPath, cancel: cancellationToken);
+            return new MfsFile(newPath, Client);
+        }
+
+        if (fileToCopy is IAddFileToGetCid addFileToGetCid)
+        {
+            var cid = await addFileToGetCid.GetCidAsync(AddFileOptions, cancellationToken);
+            
+            var newPath = $"{Path}{fileToCopy.Name}";
+            await Client.Mfs.CopyAsync($"/ipfs/{cid}", newPath, cancel: cancellationToken);
+            return new MfsFile(newPath, Client);
+        }
+        
+        return await fallback(this, fileToCopy, overwrite, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public Task<IChildFile> MoveFromAsync(IChildFile fileToMove, IModifiableFolder source, bool overwrite, CancellationToken cancellationToken,
-        MoveFromDelegate fallback)
+    public Task<IChildFile> MoveFromAsync(IChildFile fileToMove, IModifiableFolder source, bool overwrite, CancellationToken cancellationToken, MoveFromDelegate fallback)
     {
         if (fileToMove is MfsFile mfsFile)
             return MoveFromAsync(mfsFile, source, overwrite, cancellationToken);
@@ -51,8 +73,9 @@ public partial class MfsFolder : IModifiableFolder, IMoveFrom, ICreateCopyOf
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        await Client.Mfs.CopyAsync(fileToCopy.Path, Path, cancel: cancellationToken);
-        return new MfsFile($"{Path}{fileToCopy.Name}", Client);
+        var newPath = $"{Path}{fileToCopy.Name}";
+        await Client.Mfs.CopyAsync(fileToCopy.Path, newPath, cancel: cancellationToken);
+        return new MfsFile(newPath, Client);
     }
 
     /// <inheritdoc cref="CreateCopyOfAsync(IFile,bool,CancellationToken,CreateCopyOfDelegate)"/>
@@ -60,8 +83,9 @@ public partial class MfsFolder : IModifiableFolder, IMoveFrom, ICreateCopyOf
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        await Client.Mfs.CopyAsync($"/ipfs/{fileToCopy.Id}", Path, cancel: cancellationToken);
-        return new MfsFile($"{Path}{fileToCopy.Name}", Client);
+        var newPath = $"{Path}{fileToCopy.Name}";
+        await Client.Mfs.CopyAsync($"/ipfs/{fileToCopy.Id}", newPath, cancel: cancellationToken);
+        return new MfsFile(newPath, Client);
     }
 
     /// <inheritdoc cref="CreateCopyOfAsync(IFile,bool,CancellationToken,CreateCopyOfDelegate)"/>
@@ -69,10 +93,11 @@ public partial class MfsFolder : IModifiableFolder, IMoveFrom, ICreateCopyOf
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        var newPath = $"{Path}{fileToCopy.Name}";
         var cid = await fileToCopy.GetCidAsync(cancellationToken);
-        await Client.Mfs.CopyAsync($"/ipfs/{cid}", Path, cancel: cancellationToken);
+        await Client.Mfs.CopyAsync($"/ipfs/{cid}", newPath, cancel: cancellationToken);
 
-        return new MfsFile($"{Path}{fileToCopy.Name}", Client);
+        return new MfsFile(newPath, Client);
     }
 
     /// <inheritdoc cref="MoveFromAsync(IChildFile,IModifiableFolder,bool,CancellationToken,MoveFromDelegate)"/>
@@ -80,8 +105,9 @@ public partial class MfsFolder : IModifiableFolder, IMoveFrom, ICreateCopyOf
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        await Client.Mfs.MoveAsync(fileToMove.Path, $"{Path}{fileToMove.Name}", cancellationToken);
-        return new MfsFile($"{Path}{fileToMove.Name}", Client);
+        var newPath = $"{Path}{fileToMove.Name}";
+        await Client.Mfs.MoveAsync(fileToMove.Path, newPath, cancellationToken);
+        return new MfsFile(newPath, Client);
     }
 
     /// <inheritdoc cref="MoveFromAsync(IChildFile,IModifiableFolder,bool,CancellationToken,MoveFromDelegate)"/>

@@ -71,7 +71,7 @@ public class IpnsFolder : IMutableFolder, IChildFolder, IGetRoot, IGetItem, IGet
     /// <inheritdoc />
     public virtual async IAsyncEnumerable<IStorableChild> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var cid = await GetCidAsync(cancellationToken);
+        var cid = await GetCidAsync(Id, cancellationToken);
         var itemInfo = await Client.FileSystem.ListAsync(cid, cancellationToken);
         Guard.IsTrue(itemInfo.IsDirectory);
 

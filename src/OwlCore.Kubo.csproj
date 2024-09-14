@@ -14,13 +14,30 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.18.0</Version>
+    <Version>0.19.0</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.19.0 ---
+[New]
+Added IAddFileToGetCid interface. This is functionally identical to IGetCid, but instead of simply returning a CID already in ipfs, it computes the CID by providing data to ipfs using preferences in the AddFileOptions parameter.
+
+[Breaking]
+StorableKuboExtensions.GetCidAsync now takes an AddFileOptions parameter.
+ContentAddressedSystemFile and ContentAddressedSystemFolder now implement IAddFileToGetCid instead of IGetCid.
+
+[Fixes]
+Inherited fixes from OwlCore.ComponentModel 0.9.1.
+Fixed issues with MfsStream where it would return before the task was complete.
+MfsStream.ReadAsync and MfsStream.WriteAsync now respect the requested offset when operating on the provided buffer.
+
+[Improvement]
+Updated to IpfsShipyard.Ipfs.Http.Client 0.5.1.
+MfsStream.WriteAsync now supplies Flush = false when writing to mfs, instead of the default of flushing after every write. This improves performance when writing large files, but requires a manual call to FlushAsync to persist the changes. 
+
 --- 0.18.0 ---
 [Breaking]
 Inherited breaking changes from OwlCore.Storage 0.12.0 and OwlCore.ComponentModel 0.9.0.
@@ -443,15 +460,15 @@ Added unit tests.
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Common" Version="8.3.0" />
-    <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.3.0" />
-    <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.5.0" />
+    <PackageReference Include="CommunityToolkit.Common" Version="8.3.1" />
+    <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.3.1" />
+    <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.5.1" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
-    <PackageReference Include="OwlCore.ComponentModel.Settings" Version="0.1.0" />
+    <PackageReference Include="OwlCore.ComponentModel.Settings" Version="0.1.1" />
     <PackageReference Include="OwlCore.Diagnostics" Version="0.0.0" />
-    <PackageReference Include="OwlCore.ComponentModel" Version="0.9.0" />
-    <PackageReference Include="OwlCore.Extensions" Version="0.9.0" />
+    <PackageReference Include="OwlCore.ComponentModel" Version="0.9.1" />
+    <PackageReference Include="OwlCore.Extensions" Version="0.9.1" />
     <PackageReference Include="OwlCore.Storage" Version="0.12.0" />
     <PackageReference Include="OwlCore.Storage.SharpCompress" Version="0.1.0" />
     <PackageReference Include="PolySharp" Version="1.14.1">
