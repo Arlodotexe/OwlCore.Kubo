@@ -12,8 +12,16 @@ namespace OwlCore.Kubo;
 /// </summary>
 public static partial class StorableKuboExtensions
 {
-    /// <inheritdoc cref="IGetCid.GetCidAsync(CancellationToken)"/>
-    public static async Task<Cid> GetCidAsync(this IStorable item, ICoreApi client, CancellationToken cancellationToken)
+    /// <summary>
+    /// Gets a CID for the provided <paramref name="item"/>. If possible, a CID will be provided without adding the item to ipfs, otherwise the <paramref name="addFileOptions"/> will be used to add content to ipfs and compute the cid.
+    /// </summary>
+    /// <param name="item">The storable to get the cid for.</param>
+    /// <param name="client">The client to use for communicating with ipfs.</param>
+    /// <param name="addFileOptions">The options to use when adding content from the <paramref name="item"/> to ipfs.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
+    /// <returns>A task containing the cid of the <paramref name="item"/>.</returns>
+    /// <exception cref="NotSupportedException">An unsupported implementation of <see cref="IStorable"/> was provided for <paramref name="item"/>.</exception>
+    public static async Task<Cid> GetCidAsync(this IStorable item, ICoreApi client, AddFileOptions addFileOptions, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -24,15 +32,21 @@ public static partial class StorableKuboExtensions
         // You'd typically only do this if you can interact your Kubo node faster than a manually piped stream,
         // or if your implementation of IGetCid has enhanced capabilities (e.g. folder support).
         // ---
-        if (item is not IGetCid && item is SystemFile systemFile)
+        
+        // Get cid without adding to ipfs, if possible
+        if (item is IGetCid getCid)
+            return await getCid.GetCidAsync(cancellationToken);
+        
+        // Get cid by adding content to ipfs.
+        if (item is not IAddFileToGetCid && item is SystemFile systemFile)
             item = new ContentAddressedSystemFile(systemFile.Path, client);
 
-        if (item is not IGetCid && item is SystemFolder systemFolder)
+        if (item is not IAddFileToGetCid && item is SystemFolder systemFolder)
             item = new ContentAddressedSystemFolder(systemFolder.Path, client);
 
         // If the implementation can handle content addressing directly, use that.
-        if (item is IGetCid contentAddressedStorable)
-            return await contentAddressedStorable.GetCidAsync(cancellationToken);
+        if (item is IAddFileToGetCid contentAddressedStorable)
+            return await contentAddressedStorable.GetCidAsync(addFileOptions, cancellationToken);
 
         // Otherwise, a fallback approach that manually connects the streams together.
         // The Kubo API doesn't support this scenario for folders, without assuming that the Id is a local path,
@@ -40,12 +54,7 @@ public static partial class StorableKuboExtensions
         if (item is IFile file)
         {
             using var stream = await file.OpenStreamAsync(FileAccess.Read, cancellationToken);
-
-            var res = await client.FileSystem.AddAsync(stream, file.Name, new()
-            {
-                OnlyHash = true,
-                Pin = false,
-            }, cancellationToken);
+            var res = await client.FileSystem.AddAsync(stream, file.Name, addFileOptions, cancellationToken);
 
             Guard.IsFalse(res.IsDirectory);
             return res.ToLink().Id;

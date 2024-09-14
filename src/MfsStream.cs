@@ -57,7 +57,7 @@ public class MfsStream : Stream
     /// <inheritdoc/>
     public override void Flush()
     {
-        _ = Client.Mfs.FlushAsync(Path).Result;
+        Client.Mfs.FlushAsync(Path).Wait();
     }
 
     /// <inheritdoc/>
@@ -80,8 +80,7 @@ public class MfsStream : Stream
         var result = await Client.Mfs.ReadFileStreamAsync(Path, offset: Position, count: count, cancellationToken);
         var bytes = await result.ToBytesAsync(cancellationToken);
 
-        for (var i = 0; i < bytes.Length; i++)
-            buffer[i] = bytes[i];
+        bytes.CopyTo(buffer, offset);
 
         Position += bytes.Length;
 
@@ -108,7 +107,7 @@ public class MfsStream : Stream
         if (origin == SeekOrigin.Current)
         {
             Guard.IsLessThanOrEqualTo(Position + offset, Length);
-            Position = Position + offset;
+            Position += offset;
         }
 
         return Position;
@@ -124,7 +123,7 @@ public class MfsStream : Stream
     /// <inheritdoc/>
     public override void Write(byte[] buffer, int offset, int count)
     {
-        WriteAsync(buffer, offset, count, CancellationToken.None).GetResultOrDefault();
+        WriteAsync(buffer, offset, count, CancellationToken.None).Wait();
     }
 
     /// <inheritdoc/>
@@ -153,7 +152,8 @@ public class MfsStream : Stream
             SetLength(Position + count);
         }
 
-        await Client.Mfs.WriteAsync(Path, buffer, new() { Offset = Position, Count = count, Create = true }, cancellationToken);
+        await Client.Mfs.WriteAsync(Path, buffer.Skip(offset).ToArray(), new() { Offset = Position, Count = count, Create = true, Flush = false }, cancellationToken);
+
         Position += count;
     }
 

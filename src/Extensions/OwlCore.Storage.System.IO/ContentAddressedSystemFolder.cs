@@ -8,7 +8,7 @@ namespace OwlCore.Storage.System.IO;
 /// <summary>
 /// An implementation of <see cref="SystemFolder"/> with added support for <see cref="IGetCid"/>.
 /// </summary>
-public class ContentAddressedSystemFolder : SystemFolder, IGetCid
+public class ContentAddressedSystemFolder : SystemFolder, IAddFileToGetCid
 {
     /// <summary>
     /// Creates a new instance of <see cref="SystemFolder"/>.
@@ -27,13 +27,9 @@ public class ContentAddressedSystemFolder : SystemFolder, IGetCid
     public ICoreApi Client { get; }
 
     /// <inheritdoc/>
-    public async Task<Cid> GetCidAsync(CancellationToken cancellationToken)
+    public async Task<Cid> GetCidAsync(AddFileOptions addFileOptions, CancellationToken cancellationToken)
     {
-        var res = await Client.FileSystem.AddDirectoryAsync(Id, recursive: true, new()
-        {
-            OnlyHash = true,
-            Pin = false,
-        }, cancellationToken);
+        var res = await Client.FileSystem.AddDirectoryAsync(Id, recursive: true, addFileOptions, cancellationToken);
 
         Guard.IsTrue(res.IsDirectory);
         return res.ToLink().Id;
