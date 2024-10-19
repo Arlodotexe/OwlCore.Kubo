@@ -460,8 +460,8 @@ Added unit tests.
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Common" Version="8.3.1" />
-    <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.3.1" />
+    <PackageReference Include="CommunityToolkit.Common" Version="8.3.2" />
+    <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.3.2" />
     <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.5.1" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
@@ -476,6 +476,6 @@ Added unit tests.
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
-    <PackageReference Include="System.Text.Json" Version="8.0.4" />
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
 </Project>
