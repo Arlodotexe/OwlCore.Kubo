@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net8.0;</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net8.0;net9.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <LangVersion>12.0</LangVersion>
     <WarningsAsErrors>nullable</WarningsAsErrors>
@@ -14,13 +14,19 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.19.0</Version>
+    <Version>0.19.1</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.19.1 ---
+[Improvements]
+Updated vulnerable System.Text.Json to latest stable 9.0.0.
+Updated Microsoft.Bcl.AsyncInterfaces to 9.0.0.
+Added net9.0 to supported TargetFrameworks.
+
 --- 0.19.0 ---
 [New]
 Added IAddFileToGetCid interface. This is functionally identical to IGetCid, but instead of simply returning a CID already in ipfs, it computes the CID by providing data to ipfs using preferences in the AddFileOptions parameter.
@@ -463,7 +469,7 @@ Added unit tests.
     <PackageReference Include="CommunityToolkit.Common" Version="8.3.2" />
     <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.3.2" />
     <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.5.1" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.0" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
     <PackageReference Include="OwlCore.ComponentModel.Settings" Version="0.1.1" />
     <PackageReference Include="OwlCore.Diagnostics" Version="0.0.0" />
@@ -476,6 +482,6 @@ Added unit tests.
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
-    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <PackageReference Include="System.Text.Json" Version="9.0.0" />
   </ItemGroup>
 </Project>
