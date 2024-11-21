@@ -14,13 +14,20 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.20.0</Version>
+    <Version>0.20.1</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.20.1 ---
+[Fixes]
+Added NoCopy (filestore) support to ContentAddressedSystemFile.GetCidAsync().
+
+[Improvements]
+Updated to OwlCore.Storage 0.12.1.
+
 --- 0.20.0 ---
 [Improvements]
 Upgraded IpfsShipyard.Ipfs.Http.Client to 0.6.0 with numerous notable improvements and breaking fixes.
@@ -486,7 +493,7 @@ Added unit tests.
     <PackageReference Include="OwlCore.Diagnostics" Version="0.0.0" />
     <PackageReference Include="OwlCore.ComponentModel" Version="0.9.1" />
     <PackageReference Include="OwlCore.Extensions" Version="0.9.1" />
-    <PackageReference Include="OwlCore.Storage" Version="0.12.0" />
+    <PackageReference Include="OwlCore.Storage" Version="0.12.1" />
     <PackageReference Include="OwlCore.Storage.SharpCompress" Version="0.1.0" />
     <PackageReference Include="PolySharp" Version="1.14.1">
       <PrivateAssets>all</PrivateAssets>

@@ -29,7 +29,8 @@ public class ContentAddressedSystemFile : SystemFile, IAddFileToGetCid
     /// <inheritdoc/>
     public async Task<Cid> GetCidAsync(AddFileOptions addFileOptions, CancellationToken cancellationToken)
     {
-        var res = await Client.FileSystem.AddFileAsync(Id, addFileOptions, cancellationToken);
+        var fileStream = new FileStream(Path, FileMode.Open, FileAccess.Read, FileShare.Read, BufferSize, FileOptions.Asynchronous);
+        var res = await Client.FileSystem.AddAsync([new FilePart { Name = Name, Data = fileStream, AbsolutePath = Path }], [], addFileOptions, cancellationToken).FirstAsync();
 
         Guard.IsFalse(res.IsDirectory);
         return res.ToLink().Id;
