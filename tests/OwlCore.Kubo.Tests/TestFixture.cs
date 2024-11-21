@@ -60,11 +60,14 @@ public class TestFixture
             GatewayUri = new Uri($"http://127.0.0.1:{gatewayPort}"),
             RoutingMode = DhtRoutingMode.AutoClient,
             LaunchConflictMode = BootstrapLaunchConflictMode.Relaunch,
+            BinaryWorkingFolder = workingDirectory,
+            EnableFilestore = true,
         };
 
         OwlCore.Diagnostics.Logger.LogInformation($"Starting node {nodeRepoName}\n");
 
         await node.StartAsync();
+        await node.Client.IdAsync();
 
         Assert.IsNotNull(node.Process);
         return node;

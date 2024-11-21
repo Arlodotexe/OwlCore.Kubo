@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Diagnostics;
+using Ipfs.CoreApi;
 using OwlCore.Storage;
 using OwlCore.Storage.System.IO;
 using OwlCore.Storage.System.Net.Http;
@@ -39,11 +40,11 @@ namespace OwlCore.Kubo.Tests
 
             // Generate a large file
             var workingFile = new SystemFile(Path.GetTempFileName());
-            await workingFile.WriteRandomBytes(totalFileSize, bufferSize, CancellationToken.None);
+            await workingFile.WriteRandomBytesAsync(totalFileSize, bufferSize, CancellationToken.None);
 
             // Upload large file via RPC API
             using var srcFileStream = await workingFile.OpenReadAsync();
-            var added = await TestFixture.Client.FileSystem.AddAsync(srcFileStream);
+            var added = await TestFixture.Client.FileSystem.AddAsync([new FilePart { AbsolutePath = workingFile.Path, Data = srcFileStream, Name = workingFile.Name }], []).FirstAsync();
             srcFileStream.Position = 0;
 
             // Test with IpfsFile.
@@ -65,11 +66,11 @@ namespace OwlCore.Kubo.Tests
             
             // Generate a large file
             var sourceFile = new SystemFile(Path.GetTempFileName());
-            await sourceFile.WriteRandomBytes(totalFileSize, bufferSize, CancellationToken.None);
+            await sourceFile.WriteRandomBytesAsync(totalFileSize, bufferSize, CancellationToken.None);
 
             // Upload large file via RPC API
             var srcFileStream = await sourceFile.OpenReadAsync();
-            var added = await TestFixture.Client.FileSystem.AddAsync(srcFileStream);
+            var added = await TestFixture.Client.FileSystem.AddAsync([new FilePart { AbsolutePath = sourceFile.Path, Data = srcFileStream, Name = sourceFile.Name }], []).FirstAsync();
             srcFileStream.Position = 0;
 
             // Open large file via http gateway

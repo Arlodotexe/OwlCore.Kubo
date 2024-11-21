@@ -66,9 +66,6 @@ public class CachedCoreApi : ICoreApi, IDelegable<ICoreApi>, IFlushable, IAsyncI
     public INameApi Name { get; }
 
     /// <inheritdoc/>
-    public IObjectApi Object => Inner.Object;
-
-    /// <inheritdoc/>
     public IPinApi Pin => Inner.Pin;
 
     /// <inheritdoc/>

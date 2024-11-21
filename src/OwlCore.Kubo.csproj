@@ -14,13 +14,24 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.19.1</Version>
+    <Version>0.20.0</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.20.0 ---
+[Improvements]
+Upgraded IpfsShipyard.Ipfs.Http.Client to 0.6.0 with numerous notable improvements and breaking fixes.
+Added KuboBootstrapper.EnableFilestore flag for use in tandem with the `NoCopy` option now available in the underlying API.
+GetCidAsync supports the new `NoCopy` and all other AddFileOptions in the underlying API.
+ContentAddressedSystemFolder supports the new `NoCopy` and automatically handles absolute paths for the filestore to use.
+GetCidAsync now uses the new FilesystemApi.AddAsync method as the fallback implementation to crawl and upload an entire directory structure for any OwlCore.Storage implementation. 
+
+[Breaking]
+See inherited breaking changes in IpfsShipyard.Ipfs.Core 0.7.0 and IpfsShipyard.Ipfs.Http.Client 0.6.0 release notes. 
+
 --- 0.19.1 ---
 [Improvements]
 Updated vulnerable System.Text.Json to latest stable 9.0.0.
@@ -468,7 +479,7 @@ Added unit tests.
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Common" Version="8.3.2" />
     <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.3.2" />
-    <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.5.1" />
+    <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.6.0" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.0" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
     <PackageReference Include="OwlCore.ComponentModel.Settings" Version="0.1.1" />

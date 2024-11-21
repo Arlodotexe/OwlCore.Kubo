@@ -42,7 +42,7 @@ public class LoopbackPubSubApi : IPubSubApi
             {
                 var bytes = await message.ToBytesAsync(cancel);
                 message.Seek(0, SeekOrigin.Begin);
-                handler(new PublishedMessage(_senderPeer, topic.IntoList(), Array.Empty<byte>(), bytes, new MemoryStream(bytes), bytes.Length));
+                handler(new PublishedMessage(_senderPeer, topic.IntoList(), Array.Empty<byte>(), bytes));
             }
         }
 

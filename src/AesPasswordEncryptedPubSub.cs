@@ -111,7 +111,7 @@ public class AesPasswordEncryptedPubSub : IPubSubApi, IDelegable<IPubSubApi>
             var outputBytes = outputStream.ToBytes();
 
             outputStream.Seek(0, SeekOrigin.Begin);
-            return new PublishedMessage(publishedMessage.Sender, publishedMessage.Topics, publishedMessage.SequenceNumber, outputBytes, outputStream, publishedMessage.Size);
+            return new PublishedMessage(publishedMessage.Sender, publishedMessage.Topics, publishedMessage.SequenceNumber, outputBytes);
         }
         catch
         {
