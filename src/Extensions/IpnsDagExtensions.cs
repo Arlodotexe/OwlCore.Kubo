@@ -37,7 +37,7 @@ public static partial class IpnsDagExtensions
 
         // Resolve data
         progress?.Report(IpnsUpdateState.ResolvingDag);
-        var data = await client.Dag.GetAsync<TTransformType>(cid, cancellationToken);
+        var data = await client.Dag.GetAsync<TTransformType>(cid, cancel: cancellationToken);
         if (data is null)
             throw new InvalidOperationException("Failed to resolve data from the provided CID.");
         

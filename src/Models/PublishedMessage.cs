@@ -11,14 +11,12 @@ public class PublishedMessage : IPublishedMessage
     /// <summary>
     /// Creates a new instance of <see cref="PublishedMessage"/>.
     /// </summary>
-    public PublishedMessage(Peer sender, IEnumerable<string> topics, byte[] sequenceNumber, byte[] dataBytes, Stream dataStream, long size)
+    public PublishedMessage(Peer sender, IEnumerable<string> topics, byte[] sequenceNumber, byte[] dataBytes)
     {
         Sender = sender;
         Topics = topics;
         SequenceNumber = sequenceNumber;
         DataBytes = dataBytes;
-        DataStream = dataStream;
-        Size = size;
     }
 
     /// <inheritdoc/>
@@ -32,13 +30,4 @@ public class PublishedMessage : IPublishedMessage
 
     /// <inheritdoc/>
     public byte[] DataBytes { get; }
-
-    /// <inheritdoc/>
-    public Stream DataStream { get; }
-
-    /// <inheritdoc/>
-    public Cid Id { get; } = MultiHash.ComputeHash(Encoding.UTF8.GetBytes(nameof(PublishedMessage)));
-
-    /// <inheritdoc/>
-    public long Size { get; }
 }

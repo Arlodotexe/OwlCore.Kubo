@@ -1,12 +1,12 @@
 ﻿using CommunityToolkit.Diagnostics;
 using Ipfs;
+using Ipfs.CoreApi;
 using Ipfs.Http;
 using Newtonsoft.Json.Linq;
 using OwlCore.Extensions;
 using OwlCore.Storage;
 using OwlCore.Storage.System.IO;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -150,6 +150,14 @@ public class KuboBootstrapper : IDisposable
     /// 
     /// </remarks>
     public bool UseAcceleratedDHTClient { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the filestore feature should be enabled. Allows files to be added without duplicating the space they take up on disk.
+    /// </summary>
+    /// <remarks>
+    /// To add files using the filestore, pass the NoCopy option to <see cref="AddFileOptions"/> in the <see cref="IFileSystemApi.AddAsync(FilePart[], FolderPart[], AddFileOptions?, CancellationToken)"/> method.
+    /// </remarks>
+    public bool EnableFilestore { get; set; }
 
     /// <summary>
     /// The Kubo profiles that will be applied before starting the daemon.
@@ -474,6 +482,7 @@ public class KuboBootstrapper : IDisposable
             // ignored
         }
 
+        await ApplyExperimentalConfigSettingsAsync(cancellationToken);
         await ApplyRoutingSettingsAsync(cancellationToken);
         await ApplyPortSettingsAsync(cancellationToken);
         await ApplyStartupProfileSettingsAsync(cancellationToken);
@@ -490,6 +499,7 @@ public class KuboBootstrapper : IDisposable
         // Startup profiles
         foreach (var profile in StartupProfiles)
             RunExecutable(_kuboBinaryFile, $"config --repo-dir \"{RepoPath}\" profile apply {profile}", throwOnError: true);
+
         return Task.CompletedTask;
     }
 
@@ -524,6 +534,20 @@ public class KuboBootstrapper : IDisposable
     }
 
     /// <summary>
+    /// Initializes the local node with the provided experimental settings.
+    /// </summary>
+    /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
+    /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
+    protected virtual Task ApplyExperimentalConfigSettingsAsync(CancellationToken cancellationToken)
+    {
+        Guard.IsNotNullOrWhiteSpace(_kuboBinaryFile?.Path);
+
+        RunExecutable(_kuboBinaryFile, $"config Experimental.FilestoreEnabled \"{EnableFilestore.ToString().ToLower()}\" --json --repo-dir \"{RepoPath}\"", throwOnError: true);
+
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
     /// Initializes the local node with the provided routing settings.
     /// </summary>
     /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
@@ -532,8 +556,8 @@ public class KuboBootstrapper : IDisposable
         Guard.IsNotNullOrWhiteSpace(_kuboBinaryFile?.Path);
 
         RunExecutable(_kuboBinaryFile, $"config Routing.Type {RoutingMode.ToString().ToLowerInvariant()} --repo-dir \"{RepoPath}\"", throwOnError: true);
-
         RunExecutable(_kuboBinaryFile, $"config Routing.AcceleratedDHTClient \"{UseAcceleratedDHTClient.ToString().ToLower()}\" --json --repo-dir \"{RepoPath}\"", throwOnError: true);
+
         return Task.CompletedTask;
     }
 

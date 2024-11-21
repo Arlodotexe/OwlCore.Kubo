@@ -60,6 +60,47 @@ public static partial class StorableKuboExtensions
             return res.ToLink().Id;
         }
 
-        throw new NotSupportedException($"Provided storable item is not a supported type. Provide an {nameof(IFile)} or an implementation of {nameof(IGetCid)}");
+        // Process as folder
+        if (item is not IFolder folder)
+            throw new NotSupportedException($"Unsupported implementation of {nameof(IStorable)}: {item.GetType().Name}");
+
+        // Get child file and folder parts recursively
+        FilePart[] fileParts = [];
+        FolderPart[] folderParts = [new FolderPart { Name = folder.Name }];
+
+        var q = new Queue<IFolder>([folder]);
+        while (q.Count > 0)
+        {
+            await foreach (var folderItem in q.Dequeue().GetItemsAsync(StorableType.All, cancellationToken))
+            {
+                var relativePath = await folder.GetRelativePathToAsync(folderItem, cancellationToken);
+                var adjustedRelativePath = $"{folder.Name}{relativePath}";
+                
+                if (folderItem is IFile innerFile)
+                {
+                    fileParts = [.. fileParts, new FilePart { Name = adjustedRelativePath, Data = await innerFile.OpenReadAsync(cancellationToken) }];
+                }
+                else if (folderItem is IFolder innerFolder)
+                {
+                    folderParts = [.. folderParts, new FolderPart { Name = adjustedRelativePath }];
+                    q.Enqueue(innerFolder);
+                }
+            }
+        }
+
+        Cid? rootCid = null;
+
+        // Add to ipfs, dispose of data streams as they're processed
+        await foreach (var node in client.FileSystem.AddAsync(fileParts, folderParts, addFileOptions, cancellationToken))
+        {
+            var filePart = fileParts.FirstOrDefault(x => x.Name == node.Name);
+            filePart?.Data?.Dispose();
+
+            if (node.Name == folder.Name)
+                rootCid = node.Id;
+        }
+        
+        Guard.IsNotNull(rootCid);
+        return rootCid;
     }
 }

@@ -26,7 +26,7 @@ public static partial class GenericKuboExtensions
             cid = Cid.Decode(ipnsResResult.Replace("/ipfs/", ""));
         }
 
-        var res = await client.Dag.GetAsync<TResult>(cid, cancellationToken);
+        var res = await client.Dag.GetAsync<TResult>(cid, cancel: cancellationToken);
 
         Guard.IsNotNull(res);
         return (res, cid);
@@ -49,7 +49,7 @@ public static partial class GenericKuboExtensions
             cid = Cid.Decode(ipnsResResult.Replace("/ipfs/", ""));
         }
 
-        var res = await client.Dag.GetAsync<TResult>(cid, cancellationToken);
+        var res = await client.Dag.GetAsync<TResult>(cid, cancel: cancellationToken);
 
         return (res, cid);
     }
