@@ -19,6 +19,8 @@ public static partial class GenericKuboExtensions
     /// <returns>The deserialized DAG content, if any.</returns>
     public static async Task<(TResult? Result, Cid ResultCid)> ResolveDagCidAsync<TResult>(this Cid cid, ICoreApi client, bool nocache, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+        
         if (cid.ContentType == "libp2p-key")
         {
             var ipnsResResult = await client.Name.ResolveAsync($"/ipns/{cid}", recursive: true, nocache: nocache, cancel: cancellationToken);
@@ -42,6 +44,8 @@ public static partial class GenericKuboExtensions
     /// <returns>The deserialized DAG content, if any.</returns>
     public static async Task<(TResult? Result, Cid ResultCid)> ResolveDagCidAsync<TResult>(this ICoreApi client, Cid cid, bool nocache, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+        
         if (cid.ContentType == "libp2p-key")
         {
             var ipnsResResult = await client.Name.ResolveAsync($"/ipns/{cid}", recursive: true, nocache: nocache, cancel: cancellationToken);
@@ -94,6 +98,8 @@ public static partial class GenericKuboExtensions
     /// <returns>A task containing the created key.</returns>
     public static async Task<IKey> CreateKeyWithNameOfIdAsync(this IKeyApi keyApi, int size = 4096, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+        
         var key = await keyApi.CreateAsync(name: "temp", "ed25519", size, cancellationToken);
 
         // Rename key name to the key id
@@ -110,6 +116,8 @@ public static partial class GenericKuboExtensions
     /// <returns></returns>
     public static async Task<IKey> GetOrCreateKeyAsync(this IKeyApi keyApi, string keyName, int size = 4096, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+        
         // Get or create ipns key
         var keys = await keyApi.ListAsync(cancellationToken);
         if (keys.FirstOrDefault(x => x.Name == keyName) is not { } key)
@@ -133,6 +141,8 @@ public static partial class GenericKuboExtensions
     /// <param name="getDefaultValue">Given the created ipns key, provides the default value to be published to it.</param>
     public static async Task<(IKey Key, TResult Value)> GetOrCreateKeyAsync<TResult>(this ICoreApi client, string keyName, Func<IKey, TResult> getDefaultValue, TimeSpan ipnsLifetime, bool nocache, int size = 4096, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+        
         // Get or create ipns key
         var keys = await client.Key.ListAsync(cancellationToken);
         if (keys.FirstOrDefault(x => x.Name == keyName) is not { } key)
