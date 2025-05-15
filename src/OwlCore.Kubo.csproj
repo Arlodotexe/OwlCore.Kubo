@@ -14,13 +14,20 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.20.1</Version>
+    <Version>0.20.2</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.20.2 ---
+[Fixes]
+Fix file stream disposal in ContentAddressedSystemFile.GetCidAsync.
+
+[Improvements]
+Add cancellation checks on entry for all async methods in GenericKuboExtensions.
+
 --- 0.20.1 ---
 [Fixes]
 Added NoCopy (filestore) support to ContentAddressedSystemFile.GetCidAsync().
