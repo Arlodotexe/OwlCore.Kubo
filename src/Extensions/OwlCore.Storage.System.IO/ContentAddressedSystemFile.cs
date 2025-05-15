@@ -32,6 +32,12 @@ public class ContentAddressedSystemFile : SystemFile, IAddFileToGetCid
         var fileStream = new FileStream(Path, FileMode.Open, FileAccess.Read, FileShare.Read, BufferSize, FileOptions.Asynchronous);
         var res = await Client.FileSystem.AddAsync([new FilePart { Name = Name, Data = fileStream, AbsolutePath = Path }], [], addFileOptions, cancellationToken).FirstAsync();
 
+#if NET5_0_OR_GREATER
+        await fileStream.DisposeAsync();
+#else
+        fileStream.Dispose();
+#endif
+
         Guard.IsFalse(res.IsDirectory);
         return res.ToLink().Id;
     }
