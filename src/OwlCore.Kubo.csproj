@@ -14,13 +14,35 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.20.2</Version>
+    <Version>0.21.0</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.21.0 ---
+[Fixes]
+Fixed an issue where ContentAddressedSystemFile wouldn't dispose of the FileStream if an exception is hit while adding to ipfs.
+
+[New]
+Added OwlCore.Kubo.Key, a simple implementation of IKey provided primarily for serialization purposes.
+The public static PathHelpers now has all-public members, complete with xml documentation.
+PathHelpers.IpfsProtocolPathValues was added.
+PathHelpers.IpnsProtocolPathValues was added.
+PathHelpers.MfsProtocolPathValues was added.
+PathHelpers.TryGetFileNameFromPathQuery was added. This method extracts the filename parameter from the query on a given path, if it exists.
+PathHelpers.RemoveProtocols was added. This method removes the given protocols from a path, returning only the path itself.
+PathHelpers.RemoveQueries was added. This simply removes all text after the given query separator, which is '?' by default.
+IpnsFile now has a constructor that takes a custom name.
+
+[Improvements]
+ContentAddressedSystemFile now passes FileOptions.SequentialScan to read the underlying file stream.
+PathHelpers.GetFolderItemName is now public. This method gets the name of the last item in a folder path, regardless of whether it's a file or a folder.
+PathHelpers.GetParentPath is now public. This method gets the parent of the item at the given path (file or folder), or "/" if the path is the root.
+PathHelpers.GetParentDirectoryName is now public. This method parses the given relative path and returns only the name of the parent directory, or null if the path is the root.
+The existing IpnsFile(string ipnsAddress, ICoreApi ipfsClient) constructor now automatically extracts the filename query from the path parameters, if they exist. This exists to support when the root CID published to IPNS is a file and not a folder.
+
 --- 0.20.2 ---
 [Fixes]
 Fix file stream disposal in ContentAddressedSystemFile.GetCidAsync.

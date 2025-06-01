@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Diagnostics;
 using Ipfs;
 using Ipfs.CoreApi;
-using Ipfs.Http;
 using OwlCore.Storage;
 using OwlCore.Storage.System.IO;
 

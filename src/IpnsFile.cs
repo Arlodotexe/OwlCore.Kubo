@@ -18,7 +18,22 @@ public class IpnsFile : IFile, IChildFile, IGetCid
     public IpnsFile(string ipnsAddress, ICoreApi client)
     {
         Id = ipnsAddress;
-        Name = PathHelpers.GetFolderItemName(ipnsAddress);
+        // Handle named files in ipns addresses, both in folders and directly published to the root of an IPNS address.
+        // An IPNS address usually only has a filename in the path query if the published ipns value is a file and not a folder, otherwise names are assigned via the folder.
+        Name = PathHelpers.TryGetFileNameFromPathQuery(ipnsAddress) ?? PathHelpers.GetFolderItemName(ipnsAddress);
+        Client = client;
+    }
+
+    /// <summary>
+    /// Creates a new instance of <see cref="IpnsFile"/>.
+    /// </summary>
+    /// <param name="ipnsAddress">A resolvable IPNS address, such as "ipfs.tech" or "k51qzi5uqu5dip7dqovvkldk0lz03wjkc2cndoskxpyh742gvcd5fw4mudsorj".</param>
+    /// <param name="name">A custom name to use for the file.</param>
+    /// <param name="client">The IPFS Client to use for retrieving the content.</param>
+    public IpnsFile(string ipnsAddress, string name, ICoreApi client)
+    {
+        Id = ipnsAddress;
+        Name = name;
         Client = client;
     }
 
