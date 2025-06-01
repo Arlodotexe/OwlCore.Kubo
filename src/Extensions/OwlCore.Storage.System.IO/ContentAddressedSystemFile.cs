@@ -31,15 +31,20 @@ public class ContentAddressedSystemFile : SystemFile, IAddFileToGetCid
     {
         var fileStream = new FileStream(Path, FileMode.Open, FileAccess.Read, FileShare.Read, BufferSize, FileOptions.Asynchronous | FileOptions.SequentialScan);
 
-        var res = await Client.FileSystem.AddAsync([new FilePart { Name = Name, Data = fileStream, AbsolutePath = Path }], [], addFileOptions, cancellationToken).FirstAsync(cancellationToken: cancellationToken);
+        try
+        {
+            var res = await Client.FileSystem.AddAsync([new FilePart { Name = Name, Data = fileStream, AbsolutePath = Path }], [], addFileOptions, cancellationToken).FirstAsync(cancellationToken: cancellationToken);
 
+            Guard.IsFalse(res.IsDirectory);
+            return res.ToLink().Id;
+        }
+        finally
+        {
 #if NET5_0_OR_GREATER
-        await fileStream.DisposeAsync();
+            await fileStream.DisposeAsync();
 #else
-        fileStream.Dispose();
+            fileStream.Dispose();
 #endif
-
-        Guard.IsFalse(res.IsDirectory);
-        return res.ToLink().Id;
+        }
     }
 }
