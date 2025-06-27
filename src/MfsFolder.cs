@@ -124,15 +124,11 @@ public partial class MfsFolder : IFolder, IChildFolder, IGetItem, IGetItemRecurs
     /// <returns>A Task that represents the asynchronous operation. Value is the CID of the file that was flushed to disk.</returns>
     public virtual async Task<Cid> FlushAsync(CancellationToken cancellationToken = default)
     {
-        var serialized = await Client.Mfs.FlushAsync(Path, cancellationToken);
-        Guard.IsNotNullOrWhiteSpace(serialized);
-
-        var result = (FilesFlushResponse?)await JsonSerializer.DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(serialized)), typeof(FilesFlushResponse), ModelSerializer.Default, cancellationToken);
+        var cid = await Client.Mfs.FlushAsync(Path, cancellationToken);
 
         // This field is always present if the operation was successful.
-        Guard.IsNotNullOrWhiteSpace(result?.Cid);
-
-        return result.Cid;
+        Guard.IsNotNullOrWhiteSpace(cid);
+        return cid;
     }
 
     /// <inheritdoc/>
