@@ -14,13 +14,17 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.21.1</Version>
+    <Version>0.22.0</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.22.0 ---
+[Improvements]
+Updated OwlCore.Storage to 0.13.0, implemented ICreateRenamedCopyOf, IMoveRenamedFrom in MfsFolder.
+
 --- 0.21.1 ---
 [Fixes]
 Fixed MfsFolder regression where flushing would throw due to invalid internal usage of IMfsApi introduced in 0.16.0.
@@ -526,7 +530,6 @@ Added unit tests.
     <PackageReference Include="OwlCore.Diagnostics" Version="0.0.0" />
     <PackageReference Include="OwlCore.ComponentModel" Version="0.9.1" />
     <PackageReference Include="OwlCore.Extensions" Version="0.9.1" />
-    <PackageReference Include="OwlCore.Storage" Version="0.12.1" />
     <PackageReference Include="OwlCore.Storage.SharpCompress" Version="0.1.0" />
     <PackageReference Include="PolySharp" Version="1.14.1">
       <PrivateAssets>all</PrivateAssets>
@@ -534,5 +537,9 @@ Added unit tests.
     </PackageReference>
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
     <PackageReference Include="System.Text.Json" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\ocstorage\src\OwlCore.Storage.csproj" />
   </ItemGroup>
 </Project>
