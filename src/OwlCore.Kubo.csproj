@@ -540,6 +540,6 @@ Added unit tests.
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\ocstorage\src\OwlCore.Storage.csproj" />
+    <PackageReference Include="OwlCore.Storage" Version="0.13.0" />
   </ItemGroup>
 </Project>
