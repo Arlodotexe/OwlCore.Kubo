@@ -521,22 +521,22 @@ Added unit tests.
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Common" Version="8.3.2" />
-    <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.3.2" />
-    <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.6.0" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.0" />
+    <PackageReference Include="CommunityToolkit.Common" Version="8.4.0" />
+    <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.4.0" />
+    <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.7.0" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.8" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
     <PackageReference Include="OwlCore.ComponentModel.Settings" Version="0.1.1" />
     <PackageReference Include="OwlCore.Diagnostics" Version="0.0.0" />
     <PackageReference Include="OwlCore.ComponentModel" Version="0.9.1" />
-    <PackageReference Include="OwlCore.Extensions" Version="0.9.1" />
-    <PackageReference Include="OwlCore.Storage.SharpCompress" Version="0.1.0" />
-    <PackageReference Include="PolySharp" Version="1.14.1">
+    <PackageReference Include="OwlCore.Extensions" Version="0.10.0" />
+    <PackageReference Include="OwlCore.Storage.SharpCompress" Version="0.1.2" />
+    <PackageReference Include="PolySharp" Version="1.15.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Linq.Async" Version="6.0.1" />
-    <PackageReference Include="System.Text.Json" Version="9.0.0" />
+    <PackageReference Include="System.Linq.Async" Version="6.0.3" />
+    <PackageReference Include="System.Text.Json" Version="9.0.8" />
   </ItemGroup>
 
   <ItemGroup>

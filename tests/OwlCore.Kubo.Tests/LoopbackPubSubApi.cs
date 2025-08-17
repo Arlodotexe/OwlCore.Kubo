@@ -36,13 +36,27 @@ public class LoopbackPubSubApi : IPubSubApi
 
     public async Task PublishAsync(string topic, Stream message, CancellationToken cancel = default)
     {
+        if (cancel.IsCancellationRequested)
+            return;
+
         if (_handlers.TryGetValue(topic, out var handlers))
         {
             foreach (var handler in handlers.ToArray())
             {
-                var bytes = await message.ToBytesAsync(cancel);
-                message.Seek(0, SeekOrigin.Begin);
-                handler(new PublishedMessage(_senderPeer, topic.IntoList(), Array.Empty<byte>(), bytes));
+                if (cancel.IsCancellationRequested)
+                    return;
+
+                try
+                {
+                    var bytes = await message.ToBytesAsync(cancel);
+                    message.Seek(0, SeekOrigin.Begin);
+                    handler(new PublishedMessage(_senderPeer, topic.IntoList(), Array.Empty<byte>(), bytes));
+                }
+                catch (OperationCanceledException)
+                {
+                    // Ignore cancellation during shutdown.
+                    return;
+                }
             }
         }
 
