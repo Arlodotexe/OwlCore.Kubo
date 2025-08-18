@@ -14,13 +14,18 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.22.1</Version>
+    <Version>0.22.2</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.22.2 ---
+[Fixes]
+Fixed KuboDownloader disposing archives too early #22
+Fixed pattern matching ipns root by using a `.Contains` check instead of strict equality. If the full item Id is a substring of an Ipns root, null will be returned. This does *not* include when the protocol path prefix is in the Id, only when the Id is found within the path prefix. Follow-up to Fixed IpnsFolder returning /ipns/ root when getting parent starting from subfolder #20 in #23.
+
 --- 0.22.1 ---
 [Fixes]
 Fixed cancellation in PeerRoom.BroadcastHeartbeatAsync
