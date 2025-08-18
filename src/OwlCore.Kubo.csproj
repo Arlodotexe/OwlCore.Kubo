@@ -14,13 +14,22 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.22.0</Version>
+    <Version>0.22.1</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.22.1 ---
+[Fixes]
+Fixed cancellation in PeerRoom.BroadcastHeartbeatAsync
+Fixed malform XML docs in PathHelpers
+Fixed IpnsFolder returning /ipns/ root when getting parent starting from subfolder #20
+
+[Improvements]
+Updated dependencies to latest versions. No functional or structural changes to OwlCore.Kubo in response to these updates.
+
 --- 0.22.0 ---
 [Improvements]
 Updated OwlCore.Storage to 0.13.0, implemented ICreateRenamedCopyOf, IMoveRenamedFrom in MfsFolder.
