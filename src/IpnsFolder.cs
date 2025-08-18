@@ -23,7 +23,7 @@ public class IpnsFolder : IMutableFolder, IChildFolder, IGetRoot, IGetItem, IGet
 
         Client = client;
         Id = ipnsAddress;
-        Name = ipnsAddress == "/" ? "Root" : PathHelpers.GetFolderItemName(ipnsAddress);
+        Name = PathHelpers.IpnsProtocolPathValues.Any(x => x == Id) ? "Root" : PathHelpers.GetFolderItemName(ipnsAddress);
     }
 
     /// <inheritdoc />
@@ -48,7 +48,9 @@ public class IpnsFolder : IMutableFolder, IChildFolder, IGetRoot, IGetItem, IGet
         if (Parent is not null)
             return Task.FromResult<IFolder?>(Parent);
 
-        return Task.FromResult<IFolder?>(Id == "/" ? null : new IpnsFolder(PathHelpers.GetParentPath(Id), Client));
+        var parentId = PathHelpers.GetParentPath(Id);
+
+        return Task.FromResult<IFolder?>(PathHelpers.IpnsProtocolPathValues.Any(x => x == parentId) ? null : new IpnsFolder(parentId, Client));
     }
 
     /// <inheritdoc />
