@@ -4,6 +4,9 @@ using OwlCore.Storage;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using OwlCore.Storage.System.Net.Http;
+using OwlCore.Storage.SharpCompress;
+using OwlCore.ComponentModel;
+using OwlCore.Storage.System.IO;
 
 namespace OwlCore.Kubo;
 
@@ -50,12 +53,20 @@ public static class KuboDownloader
 
         // Set up the archive file and use ArchiveFolder to crawl the contents of the archive for the Kubo binary.
         var binaryArchive = new HttpFile($"{httpKuboSourcePath}/{rawVersion}/{binaryArchiveRelativeDownloadLink}", client);
-        var kuboBinary = await SearchArchiveForKuboBinaryAsync(binaryArchive, cancellationToken);
+        var found = await SearchArchiveForKuboBinaryAsync(binaryArchive, cancellationToken);
 
-        Guard.IsNotNull(kuboBinary);
+        Guard.IsNotNull(found);
+        Guard.IsNotNull(found.BinaryFile);
 
-        // The binary can be extracted from the archive by name, returning the file allows the consumer to copy the Stream directly from the internet to a new location.
-        return kuboBinary;
+        // Set up archive to be disposed when file is disposed.
+        var binaryStream = await found.BinaryFile.OpenReadAsync(cancellationToken);
+        var delegatedDisposableStream = new DelegatedDisposalStream(binaryStream)
+        {
+            Inner = found.ArchiveFolder,
+        };
+
+        // Returning the file allows the consumer to copy the Stream directly from the internet to a new location.
+        return new StreamFile(delegatedDisposableStream, id: found.BinaryFile.Id, name: found.BinaryFile.Name);
     }
 
     /// <summary>
@@ -81,12 +92,20 @@ public static class KuboDownloader
 
         // Set up the archive file and use ArchiveFolder to crawl the contents of the archive for the Kubo binary.
         var binaryArchive = new IpnsFile($"{ipfsKuboSourcePath}/{rawVersion}/{binaryArchiveRelativeDownloadLink}", client);
-        var kuboBinary = await SearchArchiveForKuboBinaryAsync(binaryArchive, cancellationToken);
+        var found = await SearchArchiveForKuboBinaryAsync(binaryArchive, cancellationToken);
 
-        Guard.IsNotNull(kuboBinary);
+        Guard.IsNotNull(found);
+        Guard.IsNotNull(found.BinaryFile);
 
-        // The binary can be extracted from the archive by name, returning the file allows the consumer to copy the Stream directly from the internet to a new location.
-        return kuboBinary;
+        // Set up archive to be disposed when file is disposed.
+        var binaryStream = await found.BinaryFile.OpenReadAsync(cancellationToken);
+        var delegatedDisposableStream = new DelegatedDisposalStream(binaryStream)
+        {
+            Inner = found.ArchiveFolder,
+        };
+
+        // Returning the file allows the consumer to copy the Stream directly from the internet to a new location.
+        return new StreamFile(delegatedDisposableStream);
     }
 
     /// <summary>
@@ -122,12 +141,20 @@ public static class KuboDownloader
 
         // Set up the archive file and use ArchiveFolder to crawl the contents of the archive for the Kubo binary.
         var binaryArchive = new HttpFile($"{httpKuboSourcePath}/{rawVersion}/{binaryArchiveRelativeDownloadLink}", client);
-        var kuboBinary = await SearchArchiveForKuboBinaryAsync(binaryArchive, cancellationToken);
+        var found = await SearchArchiveForKuboBinaryAsync(binaryArchive, cancellationToken);
 
-        Guard.IsNotNull(kuboBinary);
+        Guard.IsNotNull(found);
+        Guard.IsNotNull(found.BinaryFile);
 
-        // The binary can be extracted from the archive by name, returning the file allows the consumer to copy the Stream directly from the internet to a new location.
-        return kuboBinary;
+        // Set up archive to be disposed when file is disposed.
+        var binaryStream = await found.BinaryFile.OpenReadAsync(cancellationToken);
+        var delegatedDisposableStream = new DelegatedDisposalStream(binaryStream)
+        {
+            Inner = found.ArchiveFolder,
+        };
+
+        // Returning the file allows the consumer to copy the Stream directly from the internet to a new location.
+        return new StreamFile(delegatedDisposableStream);
     }
 
     /// <summary>
@@ -152,51 +179,49 @@ public static class KuboDownloader
 
         // Set up the archive file and use ArchiveFolder to crawl the contents of the archive for the Kubo binary.
         var binaryArchive = new IpnsFile($"{ipfsKuboSourcePath}/{rawVersion}/{binaryArchiveRelativeDownloadLink}", client);
-        var kuboBinary = await SearchArchiveForKuboBinaryAsync(binaryArchive, cancellationToken);
+        var found = await SearchArchiveForKuboBinaryAsync(binaryArchive, cancellationToken);
 
-        Guard.IsNotNull(kuboBinary);
+        Guard.IsNotNull(found);
+        Guard.IsNotNull(found.BinaryFile);
 
-        // The binary can be extracted from the archive by name, returning the file allows the consumer to copy the Stream directly from the internet to a new location.
-        return kuboBinary;
+        // Set up archive to be disposed when file is disposed.
+        var binaryStream = await found.BinaryFile.OpenReadAsync(cancellationToken);
+        var delegatedDisposableStream = new DelegatedDisposalStream(binaryStream)
+        {
+            Inner = found.ArchiveFolder,
+        };
+
+        // Returning the file allows the consumer to copy the Stream directly from the internet to a new location.
+        return new StreamFile(delegatedDisposableStream);
     }
 
     /// <summary>
     /// Recursively crawls the provided <paramref name="archiveFile"/> for a binary named ipfs or kubo.
     /// </summary>
-    /// <param name="archiveFile"></param>
-    /// <param name="cancellationToken"></param>
+    /// <param name="archiveFile">The archive file to read.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
     /// <returns></returns>
-    public static async Task<IFile?> SearchArchiveForKuboBinaryAsync(IFile archiveFile, CancellationToken cancellationToken = default)
+    public static async Task<(ReadOnlyArchiveFolder ArchiveFolder, IFile? BinaryFile)> SearchArchiveForKuboBinaryAsync(IFile archiveFile, CancellationToken cancellationToken = default)
     {
         // Open non-seekable archive file stream from HttpFile/IpnsFile
-        using var folder = new OwlCore.Storage.SharpCompress.ReadOnlyArchiveFolder(archiveFile);
+        var archiveFolder = new ReadOnlyArchiveFolder(archiveFile);
 
-        await foreach (var item in DepthFirstSearch(folder).WithCancellation(cancellationToken))
+        await foreach (var item in new DepthFirstRecursiveFolder(archiveFolder).GetFilesAsync(cancellationToken))
         {
             var noExtName = Path.GetFileNameWithoutExtension(item.Name);
             if (noExtName == "ipfs" || noExtName == "kubo")
-                return item;
+                return (archiveFolder, item);
 
             if (IsArchive(item))
             {
-                var foundBinary = await SearchArchiveForKuboBinaryAsync(item, cancellationToken);
-                if (foundBinary is not null)
-                    return foundBinary;
+                var found = await SearchArchiveForKuboBinaryAsync(item, cancellationToken);
+                if (found.ArchiveFolder is not null)
+                    return (archiveFolder, found.BinaryFile);
             }
         }
 
-        return null;
+        return (archiveFolder, null);
         static bool IsArchive(IFile file) => Path.GetExtension(file.Name) is string extension && (extension.Trim('.') == "zip" || extension.Trim('.') == "tar" || extension.Trim('.') == "gz");
-    }
-
-    private static async IAsyncEnumerable<IFile> DepthFirstSearch(IFolder folder)
-    {
-        await foreach (var file in folder.GetFilesAsync())
-            yield return file;
-
-        await foreach (var subfolder in folder.GetFoldersAsync())
-            await foreach (var subfile in DepthFirstSearch(subfolder))
-                yield return subfile;
     }
 
     /// <summary>
