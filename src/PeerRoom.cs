@@ -104,8 +104,17 @@ public class PeerRoom : IDisposable
     /// <returns></returns>
     public async Task BroadcastHeartbeatAsync()
     {
-        if (HeartbeatEnabled)
+        if (!HeartbeatEnabled)
+            return;
+
+        try
+        {
             await _pubSubApi.PublishAsync(TopicName, HeartbeatMessage, _disconnectTokenSource.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // Swallow cancellation during shutdown/dispose to avoid unhandled exceptions from timer thread.
+        }
     }
 
     /// <summary>

@@ -130,6 +130,7 @@ public static class PathHelpers
     /// <summary>
     /// Gets the name of the parent directory of a given relative path.
     /// If the provided path is the root ("/"), it returns "/".
+    /// </summary>
     /// <param name="relativePath">The relative path to get the parent directory name from.</param>
     /// <returns>The name of the parent directory.</returns>
     public static string GetParentDirectoryName(string relativePath)
