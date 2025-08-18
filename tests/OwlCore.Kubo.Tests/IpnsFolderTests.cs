@@ -7,9 +7,48 @@ namespace OwlCore.Kubo.Tests
     public class IpnsFolderTests
     {
         [TestMethod]
+        public void PathHelpers_GetParentPath_IpnsRoot()
+        {
+            var parent = PathHelpers.GetParentPath("/ipns/ipfs.tech");
+            Assert.AreEqual("/ipns", parent);
+        }
+
+        [TestMethod]
+        public async Task GetParent_FromItemInRoot_ReturnsRootThenNull()
+        {
+            // Arrange: an IPNS root folder (no trailing child path)
+            var start = new IpnsFolder("/ipns/ipfs.tech/api/", TestFixture.Client);
+
+            // Act
+            var root = (IChildFolder?)await start.GetParentAsync();
+            
+            // Assert: parent of "/ipns/<name>/<subfolder>/" should be "/ipns/<name>"
+            Assert.IsNotNull(root);
+
+            // Act
+            var shouldBeNull = await root.GetParentAsync();
+
+            // Assert: parent of "/ipns/<name>" should be null (no "/ipns" folder)
+            Assert.IsNull(shouldBeNull);
+        }
+
+        [TestMethod]
+        public async Task GetParent_OnIpnsRoot_ReturnsNull()
+        {
+            // Arrange: an IPNS root folder (no trailing child path)
+            var root = new IpnsFolder("/ipns/ipfs.tech/", TestFixture.Client);
+
+            // Act
+            var parent = await root.GetParentAsync();
+
+            // Assert: parent of "/ipns/<name>" should be null (no "/ipns" folder)
+            Assert.IsNull(parent);
+        }
+
+        [TestMethod]
         public async Task GetFilesAsync()
         {
-            var folder = new IpnsFolder("/ipns/ipfs.tech", TestFixture.Client);
+            var folder = new IpnsFolder("/ipns/ipfs.tech/", TestFixture.Client);
             var files = await folder.GetFilesAsync().ToListAsync();
 
             foreach (var item in files)
