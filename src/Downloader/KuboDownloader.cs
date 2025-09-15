@@ -105,7 +105,7 @@ public static class KuboDownloader
         };
 
         // Returning the file allows the consumer to copy the Stream directly from the internet to a new location.
-        return new StreamFile(delegatedDisposableStream);
+        return new StreamFile(delegatedDisposableStream, id: found.BinaryFile.Id, name: found.BinaryFile.Name);
     }
 
     /// <summary>
@@ -154,7 +154,7 @@ public static class KuboDownloader
         };
 
         // Returning the file allows the consumer to copy the Stream directly from the internet to a new location.
-        return new StreamFile(delegatedDisposableStream);
+        return new StreamFile(delegatedDisposableStream, id: found.BinaryFile.Id, name: found.BinaryFile.Name);
     }
 
     /// <summary>
@@ -192,7 +192,7 @@ public static class KuboDownloader
         };
 
         // Returning the file allows the consumer to copy the Stream directly from the internet to a new location.
-        return new StreamFile(delegatedDisposableStream);
+        return new StreamFile(delegatedDisposableStream, id: found.BinaryFile.Id, name: found.BinaryFile.Name);
     }
 
     /// <summary>
