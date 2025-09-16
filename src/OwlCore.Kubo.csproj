@@ -14,13 +14,17 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.22.2</Version>
+    <Version>0.22.3</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+-- 0.22.3 --
+[Fixes]
+Fixed an issue where KuboDownloader would use random file names (based on StreamFile's GetHashCode) when specific versions were requested, rather than using the original filename which we expect to start with ipfs or kubo.
+
 --- 0.22.2 ---
 [Fixes]
 Fixed KuboDownloader disposing archives too early #22
