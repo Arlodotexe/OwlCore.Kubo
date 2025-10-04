@@ -12,6 +12,7 @@ namespace OwlCore.Kubo;
 public class MfsStream : Stream
 {
     private long _length;
+    private bool _disposed;
 
     /// <summary>
     /// Creates a new instance of <see cref="MfsStream"/>.
@@ -116,8 +117,28 @@ public class MfsStream : Stream
     /// <inheritdoc/>
     public override void SetLength(long value)
     {
+        if (_disposed)
+            throw new ObjectDisposedException(nameof(MfsStream));
+            
         Guard.IsGreaterThanOrEqualTo(value, 0);
+        
+        // If shrinking the stream, truncate the file in IPFS MFS
+        if (value < _length)
+        {
+            // Use WriteAsync with Truncate=true to actually truncate the file in IPFS.
+            // Empty byte array because we're not writing data, just truncating.
+            // The Offset parameter sets where to truncate, and Truncate=true discards bytes beyond that point.
+            // Without this call, SetLength() would only update _length locally, leaving old data in the IPFS file.
+            Client.Mfs.WriteAsync(Path, Array.Empty<byte>(), new() { Offset = value, Count = 0, Truncate = true, Flush = false }).Wait();
+        }
+        
         _length = value;
+        
+        // Clamp Position to new Length if it now exceeds it (maintains Stream contract: Position <= Length)
+        if (Position > _length)
+        {
+            Position = _length;
+        }
     }
 
     /// <inheritdoc/>
@@ -129,6 +150,9 @@ public class MfsStream : Stream
     /// <inheritdoc/>
     protected override void Dispose(bool disposing)
     {
+        if (_disposed)
+            return;
+            
         try
         {
             Flush();
@@ -139,6 +163,7 @@ public class MfsStream : Stream
             // However, the containing file can be deleted before scope is left.
         }
 
+        _disposed = true;
         base.Dispose(disposing);
     }
 
