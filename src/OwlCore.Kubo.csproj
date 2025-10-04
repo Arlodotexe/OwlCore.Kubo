@@ -14,14 +14,23 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.22.3</Version>
+    <Version>0.22.4</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
--- 0.22.3 --
+--- 0.22.4 ---
+[Fixes]
+Fixed MfsStream.SetLength() not truncating files in IPFS when shrinking stream length. The method now correctly calls the IPFS MFS API with Truncate=true to update file size.
+Fixed MfsStream.SetLength() not clamping Position when new length is smaller than current position, violating Stream contract.
+Fixed MfsStream.SetLength() not throwing ObjectDisposedException on disposed streams.
+
+[Tests]
+Added 6 new tests covering SetLength truncation behavior and edge cases (position clamping, disposal, sparse files, deleted files).
+
+--- 0.22.3 ---
 [Fixes]
 Fixed an issue where KuboDownloader would use random file names (based on StreamFile's GetHashCode) when specific versions were requested, rather than using the original filename which we expect to start with ipfs or kubo.
 
