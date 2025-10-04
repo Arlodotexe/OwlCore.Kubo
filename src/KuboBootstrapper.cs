@@ -3,6 +3,7 @@ using Ipfs;
 using Ipfs.CoreApi;
 using Ipfs.Http;
 using Newtonsoft.Json.Linq;
+using OwlCore.Diagnostics;
 using OwlCore.Extensions;
 using OwlCore.Storage;
 using OwlCore.Storage.System.IO;
@@ -171,12 +172,15 @@ public class KuboBootstrapper : IDisposable
     /// <returns></returns>
     public virtual async Task StartAsync(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Get or download the Kubo binary, if needed.
         _kuboBinaryFile ??= await GetOrDownloadExecutableKuboBinary(cancellationToken);
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             SetExecutablePermissionsForBinary(_kuboBinaryFile);
 
+        OwlCore.Diagnostics.Logger.LogTrace($"Checking if repo at {RepoPath} is locked.");
         var repoLocked = await IsRepoLockedAsync(new SystemFolder(RepoPath), cancellationToken);
 
         // If the repo is locked, check the launch conflict mode
@@ -201,18 +205,21 @@ public class KuboBootstrapper : IDisposable
             }
         }
 
-        if (ApiUriMode == ConfigMode.UseExisting)
+        OwlCore.Diagnostics.Logger.LogTrace($"Getting existing ApiUri and GatewayUri for repo at {RepoPath} if they exist.");
         {
-            var apiMultiAddr = await GetApiAsync(cancellationToken);
-            if (apiMultiAddr is not null)
-                ApiUri = TcpIpv4MultiAddressToUri(apiMultiAddr);
-        }
+            if (ApiUriMode == ConfigMode.UseExisting)
+            {
+                var apiMultiAddr = await GetApiAsync(cancellationToken);
+                if (apiMultiAddr is not null)
+                    ApiUri = TcpIpv4MultiAddressToUri(apiMultiAddr);
+            }
 
-        if (GatewayUriMode == ConfigMode.UseExisting)
-        {
-            var gatewayMultiAddr = await GetGatewayAsync(cancellationToken);
-            if (gatewayMultiAddr is not null)
-                GatewayUri = TcpIpv4MultiAddressToUri(gatewayMultiAddr);
+            if (GatewayUriMode == ConfigMode.UseExisting)
+            {
+                var gatewayMultiAddr = await GetGatewayAsync(cancellationToken);
+                if (gatewayMultiAddr is not null)
+                    GatewayUri = TcpIpv4MultiAddressToUri(gatewayMultiAddr);
+            }
         }
 
         if (LaunchConflictMode == BootstrapLaunchConflictMode.Attach && repoLocked)
@@ -223,6 +230,7 @@ public class KuboBootstrapper : IDisposable
         }
 
         // Settings must be applied before bootstrapping.
+        OwlCore.Diagnostics.Logger.LogTrace($"Applying settings to repo at {RepoPath}.");
         await ApplySettingsAsync(cancellationToken);
 
         // Setup process info
@@ -235,11 +243,14 @@ public class KuboBootstrapper : IDisposable
         foreach (var item in EnvironmentVariables)
             processStartInfo.EnvironmentVariables.Add(item.Key, item.Value);
 
+        OwlCore.Diagnostics.Logger.LogTrace($"Process info ready, starting process.");
         await StartAsync(processStartInfo, cancellationToken);
     }
 
-    private async Task StartAsync(ProcessStartInfo processStartInfo, CancellationToken cancellationToken)
+    protected virtual async Task StartAsync(ProcessStartInfo processStartInfo, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Setup process
         Process = new Process
         {
@@ -254,23 +265,29 @@ public class KuboBootstrapper : IDisposable
         process.StartInfo.RedirectStandardError = true;
         process.StartInfo.UseShellExecute = false;
 
-        // Start
-        process.Start();
-
-        // Close the process if cancellation is called early.
-        var cancellationCleanup = cancellationToken.Register(() => process.Dispose());
-
-        process.BeginOutputReadLine();
-        process.BeginErrorReadLine();
-
         // Create a task completion source to wait for the daemon to be ready.
         var startupCompletion = new TaskCompletionSource<object?>();
         process.OutputDataReceived += Process_OutputDataReceived;
         process.ErrorDataReceived += ProcessOnErrorDataReceived;
 
+        // Start
+        Logger.LogTrace($"Starting process {process.StartInfo.FileName} {process.StartInfo.Arguments}");
+        process.Start();
+
+        // Close the process if cancellation is called early.
+        var cancellationCleanup = cancellationToken.Register(() =>
+        {
+            startupCompletion.TrySetCanceled();
+            process.Dispose();
+        });
+
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
+
         cancellationToken.ThrowIfCancellationRequested();
 
         // Wait for daemon to be ready
+        Logger.LogTrace($"Waiting for daemon to start...");
         await startupCompletion.Task;
 
         cancellationToken.ThrowIfCancellationRequested();
@@ -282,15 +299,25 @@ public class KuboBootstrapper : IDisposable
 
         void Process_OutputDataReceived(object? sender, DataReceivedEventArgs e)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (e.Data is not null)
                 OwlCore.Diagnostics.Logger.LogInformation(e.Data);
 
             if (e.Data?.Contains("Daemon is ready") ?? false)
+            {
                 startupCompletion.SetResult(null);
+                Logger.LogTrace($"Daemon has started successfully.");
+            }
         }
 
         async void ProcessOnErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (e.Data is not null)
+                OwlCore.Diagnostics.Logger.LogError(e.Data);
+
             if (!string.IsNullOrWhiteSpace(e.Data) && e.Data.Contains("Error: "))
             {
                 if (e.Data.Contains($"/ip4/{ApiUri.Host}/tcp/{ApiUri.Port}") && e.Data.Contains("bind"))
@@ -332,16 +359,21 @@ public class KuboBootstrapper : IDisposable
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
     protected virtual async Task<SystemFile> GetOrDownloadExecutableKuboBinary(CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         IFile? existingBinary = await BinaryWorkingFolder
             .GetFilesAsync(cancellationToken)
             .FirstOrDefaultAsync(x => x.Name.StartsWith("ipfs") || x.Name.StartsWith("kubo"), cancellationToken: cancellationToken);
 
         if (existingBinary is null)
         {
+            OwlCore.Diagnostics.Logger.LogTrace($"Binary not found in working folder at {BinaryWorkingFolder.Path}, retrieving it.");
+
             // Retrieve the kubo binary if we don't have it
             existingBinary ??= await _getKuboBinaryFile(cancellationToken);
 
             // Copy it into the binary working folder, store the new file for use.
+            OwlCore.Diagnostics.Logger.LogTrace($"Copying binary to working folder at {BinaryWorkingFolder.Path}.");
             return (SystemFile)await BinaryWorkingFolder.CreateCopyOfAsync(existingBinary, overwrite: false, cancellationToken);
         }
 
@@ -377,6 +409,8 @@ public class KuboBootstrapper : IDisposable
     /// <returns></returns>
     public static async Task<bool> IsRepoLockedAsync(IFolder kuboRepo, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         try
         {
             var target = await kuboRepo.GetFirstByNameAsync("repo.lock", cancellationToken);
@@ -439,6 +473,8 @@ public class KuboBootstrapper : IDisposable
     /// <returns>The <see cref="MultiAddress"/> formatted api address, if found.</returns>
     public static async Task<MultiAddress?> GetApiAsync(IFolder kuboRepo, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         IFile? file = null;
         try
         {
@@ -470,6 +506,8 @@ public class KuboBootstrapper : IDisposable
     /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
     public virtual async Task ApplySettingsAsync(CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         Guard.IsNotNullOrWhiteSpace(_kuboBinaryFile?.Path);
 
         // Init if needed
