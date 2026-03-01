@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Common;
+using CommunityToolkit.Common;
 using CommunityToolkit.Diagnostics;
 using Ipfs.CoreApi;
 using System.Text;
@@ -87,6 +87,21 @@ public class MfsStream : Stream
 
         return bytes.Length;
     }
+
+#if !NETSTANDARD2_0
+    /// <inheritdoc/>
+    public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+    {
+        var result = await Client.Mfs.ReadFileStreamAsync(Path, offset: Position, count: buffer.Length, cancellationToken);
+        var bytes = await result.ToBytesAsync(cancellationToken);
+
+        bytes.CopyTo(buffer);
+
+        Position += bytes.Length;
+
+        return bytes.Length;
+    }
+#endif
 
     /// <inheritdoc/>
     public override long Seek(long offset, SeekOrigin origin)

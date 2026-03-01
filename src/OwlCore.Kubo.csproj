@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net8.0;net9.0;net10.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <LangVersion>12.0</LangVersion>
     <WarningsAsErrors>nullable</WarningsAsErrors>
@@ -14,13 +14,28 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.22.4</Version>
+    <Version>0.23.0</Version>
     <Product>OwlCore</Product>
     <Description>
       An essential toolkit for Kubo, IPFS and the distributed web. 
     </Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>
+--- 0.23.0 ---
+[New]
+IpfsFile, IpfsFolder, IpnsFile, IpnsFolder, MfsFile and MfsFolder now implement ILastModifiedAt via the new IpfsLastModifiedAtProperty, IpnsLastModifiedAtProperty and MfsLastModifiedAtProperty.
+
+[Improvements]
+Added MfsStream.ReadAsync(Memory&lt;byte&gt;, CancellationToken) overload for net8.0 and above.
+Added argument validation in OpenStreamAsync — throws ArgumentOutOfRangeException when FileAccess is zero.
+Added argument validation in GetItemsAsync — throws ArgumentOutOfRangeException when StorableType.None is passed.
+Added cancellation checks on entry for all async methods.
+Updated dependencies to latest versions. Added net10.0 to supported TargetFrameworks.
+
+[Tests]
+Added MfsFileTests.
+Expanded coverage in IpfsFileTests, IpfsFolderTests and MfsFolderTests.
+
 --- 0.22.4 ---
 [Fixes]
 Fixed MfsStream.SetLength() not truncating files in IPFS when shrinking stream length. The method now correctly calls the IPFS MFS API with Truncate=true to update file size.
@@ -550,23 +565,20 @@ Added unit tests.
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Common" Version="8.4.0" />
     <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.4.0" />
-    <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.7.0" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.8" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
-    <PackageReference Include="OwlCore.ComponentModel" Version="0.10.0" />
-    <PackageReference Include="OwlCore.ComponentModel.Settings" Version="0.1.1" />
+    <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.8.0" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.3" Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.103" PrivateAssets="All" />
+    <PackageReference Include="OwlCore.ComponentModel" Version="0.11.1" />
+    <PackageReference Include="OwlCore.ComponentModel.Settings" Version="0.1.2" />
     <PackageReference Include="OwlCore.Diagnostics" Version="0.0.0" />
-    <PackageReference Include="OwlCore.Extensions" Version="0.10.0" />
-    <PackageReference Include="OwlCore.Storage.SharpCompress" Version="0.1.2" />
+    <PackageReference Include="OwlCore.Extensions" Version="0.11.1" />
+    <PackageReference Include="OwlCore.Storage" Version="0.15.0" />
+    <PackageReference Include="OwlCore.Storage.SharpCompress" Version="0.2.0" />
     <PackageReference Include="PolySharp" Version="1.15.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Linq.Async" Version="6.0.3" />
-    <PackageReference Include="System.Text.Json" Version="9.0.8" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="OwlCore.Storage" Version="0.14.0" />
+    <PackageReference Include="System.Linq.Async" Version="7.0.0" Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
+    <PackageReference Include="System.Text.Json" Version="10.0.3" />
   </ItemGroup>
 </Project>

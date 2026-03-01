@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Diagnostics;
+using CommunityToolkit.Diagnostics;
 using Ipfs;
 using Ipfs.CoreApi;
 using OwlCore.Storage;
@@ -8,10 +8,12 @@ namespace OwlCore.Kubo;
 /// <summary>
 /// A file that resides on IPFS behind an IPNS Address.
 /// </summary>
-public class IpnsFile : IFile, IChildFile, IGetCid
+public class IpnsFile : IFile, IChildFile, IGetCid, ILastModifiedAt
 {
+    private IpnsLastModifiedAtProperty? _lastModifiedAt;
+
     /// <summary>
-    /// Creates a new instance of <see cref="IpnsFolder"/>.
+    /// Creates a new instance of <see cref="IpnsFile"/>.
     /// </summary>
     /// <param name="ipnsAddress">A resolvable IPNS address, such as "ipfs.tech" or "k51qzi5uqu5dip7dqovvkldk0lz03wjkc2cndoskxpyh742gvcd5fw4mudsorj".</param>
     /// <param name="client">The IPFS Client to use for retrieving the content.</param>
@@ -80,4 +82,7 @@ public class IpnsFile : IFile, IChildFile, IGetCid
         Guard.IsNotNull(cidOfResolvedIpfsPath.Hash);
         return cidOfResolvedIpfsPath.Hash;
     }
+
+    /// <inheritdoc/>
+    public ILastModifiedAtProperty LastModifiedAt => _lastModifiedAt ??= new IpnsLastModifiedAtProperty(this, Client, Id);
 }

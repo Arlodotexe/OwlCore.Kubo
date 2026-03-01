@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Diagnostics;
+using CommunityToolkit.Diagnostics;
 using Ipfs;
 using Ipfs.CoreApi;
 using OwlCore.Storage;
@@ -8,7 +8,7 @@ namespace OwlCore.Kubo;
 /// <summary>
 /// An file that resides in Kubo's Mutable Filesystem.
 /// </summary>
-public class MfsFile : IFile, IChildFile, IGetCid
+public class MfsFile : IFile, IChildFile, IGetCid, ILastModifiedAt
 {
     /// <summary>
     /// Creates a new instance of <see cref="MfsFile"/>.
@@ -54,6 +54,11 @@ public class MfsFile : IFile, IChildFile, IGetCid
     /// <inheritdoc/>
     public async Task<Stream> OpenStreamAsync(FileAccess accessMode = FileAccess.Read, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (accessMode == 0)
+            throw new ArgumentOutOfRangeException(nameof(accessMode), accessMode, "FileAccess mode cannot be zero.");
+
         var data = await Client.Mfs.StatAsync(Path, cancellationToken);
 
         Guard.IsNotNull(data);
@@ -77,4 +82,8 @@ public class MfsFile : IFile, IChildFile, IGetCid
 
     /// <inheritdoc/>
     public Task<Cid> GetCidAsync(CancellationToken cancellationToken) => FlushAsync(cancellationToken);
+
+    /// <inheritdoc />
+    public ILastModifiedAtProperty LastModifiedAt => new MfsLastModifiedAtProperty(this, Client, Path);
 }
+

@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Diagnostics;
+using CommunityToolkit.Diagnostics;
 using Ipfs;
 using Ipfs.CoreApi;
 using OwlCore.Storage;
@@ -9,8 +9,9 @@ namespace OwlCore.Kubo;
 /// <summary>
 /// A folder that resides on IPFS.
 /// </summary>
-public class IpfsFolder : IFolder, IChildFolder, IGetCid
+public class IpfsFolder : IFolder, IChildFolder, IGetCid, ILastModifiedAt
 {
+    private IpfsLastModifiedAtProperty? _lastModifiedAt;
 
     /// <summary>
     /// Creates a new instance of <see cref="IpfsFolder"/>.
@@ -60,6 +61,11 @@ public class IpfsFolder : IFolder, IChildFolder, IGetCid
     /// <inheritdoc/>
     public virtual async IAsyncEnumerable<IStorableChild> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (type == StorableType.None)
+            throw new ArgumentOutOfRangeException(nameof(type), type, "StorableType.None is not a valid value for GetItemsAsync.");
+
         var itemInfo = await Client.FileSystem.ListAsync(Id, cancellationToken);
         Guard.IsTrue(itemInfo.IsDirectory);
 
@@ -69,23 +75,32 @@ public class IpfsFolder : IFolder, IChildFolder, IGetCid
             Guard.IsNotNull(link.Name);
 
             var linkedItemInfo = await Client.Mfs.StatAsync($"/ipfs/{link.Id}", cancellationToken);
-            if (linkedItemInfo.IsDirectory && type.HasFlag(StorableType.Folder))
+            if (linkedItemInfo.IsDirectory)
             {
-                yield return new IpfsFolder(link.Id, link.Name, Client)
+                if (type.HasFlag(StorableType.Folder))
                 {
-                    Parent = this,
-                };
+                    yield return new IpfsFolder(link.Id, link.Name, Client)
+                    {
+                        Parent = this,
+                    };
+                }
             }
-            else if (type.HasFlag(StorableType.File))
+            else
             {
-                yield return new IpfsFile(link.Id, link.Name, Client)
+                if (type.HasFlag(StorableType.File))
                 {
-                    Parent = this,
-                };
+                    yield return new IpfsFile(link.Id, link.Name, Client)
+                    {
+                        Parent = this,
+                    };
+                }
             }
         }
     }
 
     /// <inheritdoc/>
     public Task<Cid> GetCidAsync(CancellationToken cancellationToken) => Task.FromResult<Cid>(Id);
+
+    /// <inheritdoc/>
+    public ILastModifiedAtProperty LastModifiedAt => _lastModifiedAt ??= new IpfsLastModifiedAtProperty(this, Client, Id);
 }
