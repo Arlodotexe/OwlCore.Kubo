@@ -563,10 +563,10 @@ Added unit tests.
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Common" Version="8.4.0" />
-    <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.4.0" />
+    <PackageReference Include="CommunityToolkit.Common" Version="8.4.2" />
+    <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.4.2" />
     <PackageReference Include="IpfsShipyard.Ipfs.Http.Client" Version="0.8.0" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.3" Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.10" Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.103" PrivateAssets="All" />
     <PackageReference Include="OwlCore.ComponentModel" Version="0.12.0" />
     <PackageReference Include="OwlCore.ComponentModel.Settings" Version="0.2.0" />
@@ -578,7 +578,7 @@ Added unit tests.
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Linq.Async" Version="7.0.0" />
-    <PackageReference Include="System.Text.Json" Version="10.0.3" />
+    <PackageReference Include="System.Linq.Async" Version="7.0.1" />
+    <PackageReference Include="System.Text.Json" Version="10.0.10" />
   </ItemGroup>
 </Project>
