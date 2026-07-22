@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Diagnostics;
+using CommunityToolkit.Diagnostics;
 using Ipfs;
 using Ipfs.CoreApi;
 using OwlCore.Kubo.FolderWatchers;
@@ -10,8 +10,10 @@ namespace OwlCore.Kubo;
 /// <summary>
 /// A folder that resides on IPFS behind an IPNS Address.
 /// </summary>
-public class IpnsFolder : IMutableFolder, IChildFolder, IGetRoot, IGetItem, IGetItemRecursive, IGetCid
+public class IpnsFolder : IMutableFolder, IChildFolder, IGetRoot, IGetItem, IGetItemRecursive, IGetCid, ILastModifiedAt
 {
+    private IpnsLastModifiedAtProperty? _lastModifiedAt;
+
     /// <summary>
     /// Creates a new instance of <see cref="IpnsFolder"/>.
     /// </summary>
@@ -135,4 +137,7 @@ public class IpnsFolder : IMutableFolder, IChildFolder, IGetRoot, IGetItem, IGet
         Guard.IsNotNull(cidOfResolvedPath.Hash);
         return cidOfResolvedPath.Hash;
     }
+
+    /// <inheritdoc/>
+    public ILastModifiedAtProperty LastModifiedAt => _lastModifiedAt ??= new IpnsLastModifiedAtProperty(this, Client, Id);
 }

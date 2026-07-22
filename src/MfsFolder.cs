@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Diagnostics;
+using CommunityToolkit.Diagnostics;
 using Ipfs;
 using Ipfs.CoreApi;
 using Ipfs.Http;
@@ -13,7 +13,7 @@ namespace OwlCore.Kubo;
 /// <summary>
 /// A folder that resides in Kubo's Mutable Filesystem.
 /// </summary>
-public partial class MfsFolder : IFolder, IChildFolder, IGetItem, IGetItemRecursive, IGetFirstByName, IGetRoot, IGetCid
+public partial class MfsFolder : IFolder, IChildFolder, IGetItem, IGetItemRecursive, IGetFirstByName, IGetRoot, IGetCid, ILastModifiedAt
 {
     /// <summary>
     /// Creates a new instance of <see cref="MfsFolder"/>.
@@ -53,6 +53,11 @@ public partial class MfsFolder : IFolder, IChildFolder, IGetItem, IGetItemRecurs
     /// <inheritdoc/>
     public virtual async IAsyncEnumerable<IStorableChild> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (type == StorableType.None)
+            throw new ArgumentOutOfRangeException(nameof(type), type, "StorableType.None is not a valid value for GetItemsAsync.");
+
         var result = await Client.Mfs.ListAsync(Path, cancel: cancellationToken);
 
         foreach (var link in result ?? Enumerable.Empty<FileSystemNode>())
@@ -133,4 +138,7 @@ public partial class MfsFolder : IFolder, IChildFolder, IGetItem, IGetItemRecurs
 
     /// <inheritdoc/>
     public Task<Cid> GetCidAsync(CancellationToken cancellationToken) => FlushAsync(cancellationToken);
+
+    /// <inheritdoc />
+    public ILastModifiedAtProperty LastModifiedAt => new MfsLastModifiedAtProperty(this, Client, Path);
 }

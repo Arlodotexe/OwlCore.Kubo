@@ -1,4 +1,4 @@
-﻿using Ipfs;
+using Ipfs;
 using Ipfs.CoreApi;
 using OwlCore.ComponentModel;
 using OwlCore.Storage;
@@ -8,8 +8,10 @@ namespace OwlCore.Kubo;
 /// <summary>
 /// A file that resides on IPFS.
 /// </summary>
-public class IpfsFile : IFile, IChildFile, IGetCid
+public class IpfsFile : IFile, IChildFile, IGetCid, ILastModifiedAt
 {
+    private IpfsLastModifiedAtProperty? _lastModifiedAt;
+
     /// <summary>
     /// Creates a new instance of <see cref="IpfsFile"/>.
     /// </summary>
@@ -57,6 +59,11 @@ public class IpfsFile : IFile, IChildFile, IGetCid
     /// <inheritdoc/>
     public virtual async Task<Stream> OpenStreamAsync(FileAccess accessMode = FileAccess.Read, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (accessMode == 0)
+            throw new ArgumentOutOfRangeException(nameof(accessMode), accessMode, "FileAccess mode cannot be zero.");
+
         if (accessMode.HasFlag(FileAccess.Write))
             throw new NotSupportedException("Attempted to write data to an immutable file on IPFS.");
 
@@ -70,5 +77,8 @@ public class IpfsFile : IFile, IChildFile, IGetCid
 
     /// <inheritdoc/>
     public Task<Cid> GetCidAsync(CancellationToken cancellationToken) => Task.FromResult<Cid>(Id);
+
+    /// <inheritdoc/>
+    public ILastModifiedAtProperty LastModifiedAt => _lastModifiedAt ??= new IpfsLastModifiedAtProperty(this, Client, Id);
 }
 
